@@ -1,0 +1,104 @@
+{
+  "entities": {
+    "Business": {
+      "title": "Business",
+      "description": "Stores business-level settings and information.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "description": "The name of the business." },
+        "ownerUid": { "type": "string", "description": "The UID of the user who owns this business." },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "plan": { "type": "string", "enum": ["FREE", "STARTER", "GROWTH", "SCALE"] },
+        "totalMinutes": { "type": "number" },
+        "usedMinutes": { "type": "number" },
+        "settings": {
+          "type": "object",
+          "properties": {
+            "timezone": { "type": "string" },
+            "language": { "type": "string" }
+          }
+        }
+      },
+      "required": ["name", "ownerUid", "createdAt"]
+    },
+    "Agent": {
+      "title": "Agent",
+      "description": "Configuration for an AI voice agent.",
+      "type": "object",
+      "properties": {
+        "businessId": { "type": "string", "description": "The ID of the business this agent belongs to." },
+        "name": { "type": "string" },
+        "voiceId": { "type": "string" },
+        "prompt": { "type": "string" },
+        "isActive": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["businessId", "name", "isActive"]
+    },
+    "Call": {
+      "title": "Call",
+      "description": "Log of a voice call.",
+      "type": "object",
+      "properties": {
+        "businessId": { "type": "string" },
+        "agentId": { "type": "string" },
+        "contactId": { "type": "string" },
+        "phoneNumber": { "type": "string" },
+        "duration": { "type": "number" },
+        "status": { "type": "string", "enum": ["IN_PROGRESS", "BOOKED", "INQUIRY", "COMPLAINT", "FOLLOW_UP", "DROPPED", "PENDING_PROCESSING", "PROCESSING_ERROR"] },
+        "summary": { "type": "string" },
+        "transcript": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["businessId", "phoneNumber", "status", "createdAt"]
+    },
+    "Contact": {
+      "title": "Contact",
+      "description": "Customer contact information.",
+      "type": "object",
+      "properties": {
+        "businessId": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "phone": { "type": "string" },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["businessId", "name", "createdAt"]
+    },
+    "User": {
+      "title": "User",
+      "description": "System user profile.",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string", "format": "email" },
+        "name": { "type": "string" },
+        "role": { "type": "string", "enum": ["user", "admin"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["email", "name", "role", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/businesses/{businessId}": {
+      "schema": "Business",
+      "description": "Business profiles."
+    },
+    "/businesses/{businessId}/agents/{agentId}": {
+      "schema": "Agent",
+      "description": "Agents belonging to a business."
+    },
+    "/businesses/{businessId}/calls/{callId}": {
+      "schema": "Call",
+      "description": "Call logs for a business."
+    },
+    "/businesses/{businessId}/contacts/{contactId}": {
+      "schema": "Contact",
+      "description": "Contacts for a business."
+    },
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profiles."
+    }
+  }
+}

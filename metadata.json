@@ -1,0 +1,5 @@
+{
+  "name": "Vico",
+  "description": "Enterprise-grade AI Voice Receptionist.",
+  "requestFramePermissions": ["microphone", "screen-wake-lock"]
+}

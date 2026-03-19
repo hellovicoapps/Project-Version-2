@@ -1,0 +1,139 @@
+import { useEffect } from "react";
+import { 
+  collection, 
+  query, 
+  where, 
+  onSnapshot, 
+  updateDoc,
+  doc,
+  increment,
+  serverTimestamp,
+  getDocs,
+  setDoc
+} from "firebase/firestore";
+import { db } from "../firebase";
+import { getGeminiService } from "../services/geminiService";
+import { CallStatus } from "../types";
+import { AuthService } from "../services/authService";
+
+export const BookingProcessor = () => {
+  const authState = AuthService.getAuthState();
+  const businessId = authState.user?.id;
+
+  useEffect(() => {
+    if (!businessId) return;
+
+    console.log(`BookingProcessor: Starting listener for business ${businessId}`);
+
+    const q = query(
+      collection(db, `businesses/${businessId}/calls`),
+      where("status", "==", "PENDING_PROCESSING")
+    );
+
+    const unsubscribe = onSnapshot(q, async (snapshot) => {
+      const gemini = await getGeminiService();
+      if (!gemini) {
+        console.warn("BookingProcessor: Gemini service not available");
+        return;
+      }
+
+      for (const change of snapshot.docChanges()) {
+        if (change.type === "added" || change.type === "modified") {
+          const callDoc = change.doc;
+          const callData = callDoc.data();
+          
+          if (callData.status !== "PENDING_PROCESSING") continue;
+
+          console.log(`BookingProcessor: Processing call ${callDoc.id}...`);
+
+          try {
+            const result = await gemini.processTranscript(callData.transcript || "");
+            console.log(`BookingProcessor: Gemini result for ${callDoc.id}:`, result);
+
+            const updateData: any = {
+              summary: result.summary,
+              status: result.status as CallStatus,
+              processedAt: serverTimestamp(),
+            };
+
+            let callerName = callData.callerName;
+            let phoneNumber = callData.phoneNumber;
+            let callerEmail = callData.callerEmail;
+
+            if (result.bookingDetails) {
+              if (result.bookingDetails.name) {
+                updateData.callerName = result.bookingDetails.name;
+                callerName = result.bookingDetails.name;
+              }
+              if (result.bookingDetails.phone) {
+                updateData.phoneNumber = result.bookingDetails.phone;
+                phoneNumber = result.bookingDetails.phone;
+              }
+              if (result.bookingDetails.email) {
+                updateData.callerEmail = result.bookingDetails.email;
+                callerEmail = result.bookingDetails.email;
+              }
+              if (result.bookingDetails.dateTime) updateData.bookingTime = result.bookingDetails.dateTime;
+              if (result.bookingDetails.purpose) updateData.bookingPurpose = result.bookingDetails.purpose;
+            }
+
+            await updateDoc(callDoc.ref, updateData);
+            
+            // CRM Integration: Update or Create Contact
+            if (phoneNumber && phoneNumber !== "Unknown") {
+              const contactsRef = collection(db, `businesses/${businessId}/contacts`);
+              const contactQuery = query(contactsRef, where("phone", "==", phoneNumber));
+              const contactSnapshot = await getDocs(contactQuery);
+              
+              const contactStatus = result.status === CallStatus.BOOKED ? "BOOKED" : "INQUIRED";
+              const contactData = {
+                name: callerName || "Unknown",
+                phone: phoneNumber,
+                email: callerEmail || "",
+                status: contactStatus,
+                lastCallId: callDoc.id,
+                lastCallSummary: result.summary,
+                updatedAt: serverTimestamp(),
+                createdAt: serverTimestamp(), // Will be merged if exists
+              };
+
+              if (!contactSnapshot.empty) {
+                const contactDoc = contactSnapshot.docs[0];
+                // Don't overwrite createdAt
+                const { createdAt, ...updateContactData } = contactData;
+                await updateDoc(contactDoc.ref, updateContactData);
+                console.log(`BookingProcessor: Updated contact ${contactDoc.id}`);
+              } else {
+                const newContactRef = doc(contactsRef);
+                await setDoc(newContactRef, contactData);
+                console.log(`BookingProcessor: Created new contact ${newContactRef.id}`);
+              }
+            }
+
+            // Deduct credits
+            const businessRef = doc(db, "businesses", businessId);
+            const minutesUsed = Math.max(0.1, (callData.duration || 0) / 60);
+            await updateDoc(businessRef, {
+              usedMinutes: increment(minutesUsed)
+            });
+
+            console.log(`BookingProcessor: Successfully processed call ${callDoc.id}`);
+          } catch (error) {
+            console.error(`BookingProcessor: Error processing call ${callDoc.id}:`, error);
+            // Optionally update status to ERROR to avoid infinite loops
+            await updateDoc(callDoc.ref, { 
+              status: "PROCESSING_ERROR",
+              processingError: error instanceof Error ? error.message : String(error)
+            });
+          }
+        }
+      }
+    }, (error) => {
+      console.error("BookingProcessor: Snapshot error:", error);
+    });
+
+    return () => unsubscribe();
+  }, [businessId]);
+
+  return null; // Headless component
+};

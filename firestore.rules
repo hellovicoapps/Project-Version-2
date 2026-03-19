@@ -1,0 +1,182 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: businesses
+    // Document ID: businessId (matches owner UID)
+    // Fields:
+    //   - name: string (1-100)
+    //   - ownerId: string
+    //   - email: string (valid email)
+    //   - timezone: string
+    //   - plan: string (FREE, STARTER, GROWTH, SCALE)
+    //   - totalMinutes: number
+    //   - usedMinutes: number
+    //   - calendarConnected: bool
+    //
+    // Collection: businesses/{businessId}/agents
+    // Fields:
+    //   - name: string (1-100)
+    //   - voice: string
+    //   - instructions: string (< 5000)
+    //   - businessId: string
+    //
+    // Collection: businesses/{businessId}/calls
+    // Fields:
+    //   - businessId: string
+    //   - agentId: string
+    //   - duration: number
+    //   - status: string (IN_PROGRESS, BOOKED, INQUIRY, COMPLAINT, FOLLOW_UP, DROPPED)
+    //   - phoneNumber: string
+    //   - createdAt: timestamp
+    //   - summary: string (< 5000)
+    //   - transcript: string (< 100000)
+    //
+    // Collection: businesses/{businessId}/contacts
+    // Fields:
+    //   - name: string (1-100)
+    //   - phone: string
+    //   - businessId: string
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        ((exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin') ||
+         (request.auth.token.email == "hello.vicoapps@gmail.com"));
+    }
+
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    function isValidEmail(email) {
+      return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    function isRecent(time) {
+      return time is timestamp && 
+             time > request.time - duration.value(5, 'm') &&
+             time < request.time + duration.value(5, 'm');
+    }
+
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+    function isValidBusiness(data) {
+      return true;
+    }
+
+    function isValidAgent(data) {
+      return hasRequiredFields(['name', 'voice', 'instructions', 'businessId']) &&
+             data.name is string && data.name.size() >= 0 && data.name.size() < 100 &&
+             data.voice is string &&
+             data.instructions is string && data.instructions.size() < 10000 &&
+             data.businessId is string &&
+             (!('elevenLabsAgentId' in data) || (data.elevenLabsAgentId is string && data.elevenLabsAgentId.size() < 100)) &&
+             (!('template' in data) || data.template is string);
+    }
+
+    function isValidContact(data) {
+      return hasRequiredFields(['name', 'phone']) &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
+             data.phone is string && data.phone.size() > 0 && data.phone.size() < 30 &&
+             (!('email' in data) || (data.email is string && data.email.size() < 200)) &&
+             (!('status' in data) || (data.status is string && data.status.size() < 50)) &&
+             (!('businessId' in data) || (data.businessId is string && data.businessId.size() < 100)) &&
+             (!('lastCallId' in data) || (data.lastCallId is string && data.lastCallId.size() < 100)) &&
+             (!('lastCallSummary' in data) || (data.lastCallSummary is string && data.lastCallSummary.size() < 10000)) &&
+             (!('updatedAt' in data) || data.updatedAt is timestamp) &&
+             (!('createdAt' in data) || data.createdAt is timestamp);
+    }
+
+    function isValidCall(data, businessId) {
+      let validStatuses = ['IN_PROGRESS', 'BOOKED', 'INQUIRY', 'COMPLAINT', 'FOLLOW_UP', 'DROPPED', 'PENDING_PROCESSING', 'PROCESSING_ERROR'];
+      return hasRequiredFields(['businessId', 'agentId', 'duration', 'status', 'createdAt', 'phoneNumber']) &&
+             data.businessId == businessId &&
+             data.agentId is string &&
+             data.duration is number &&
+             data.status in validStatuses &&
+             data.phoneNumber is string &&
+             (data.createdAt is timestamp || data.createdAt == request.time) &&
+             (!('summary' in data) || (data.summary is string && data.summary.size() < 5000)) &&
+             (!('transcript' in data) || (data.transcript is string && data.transcript.size() < 100000)) &&
+             (!('callerName' in data) || (data.callerName is string && data.callerName.size() < 200)) &&
+             (!('callerEmail' in data) || (data.callerEmail is string && data.callerEmail.size() < 200)) &&
+             (!('bookingTime' in data) || (data.bookingTime is string && data.bookingTime.size() < 200)) &&
+             (!('bookingPurpose' in data) || (data.bookingPurpose is string && data.bookingPurpose.size() < 1000));
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /test/connection {
+      allow read: if true;
+    }
+
+    match /businesses/{businessId} {
+      // Public read for the call page
+      allow read: if true; 
+      
+      allow create: if isAuthenticated() && request.auth.uid == businessId && isValidBusiness(request.resource.data);
+      
+      allow update: if (isAuthenticated() && (request.auth.uid == businessId || isAdmin()) && isValidBusiness(request.resource.data)) || 
+                    (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['usedMinutes']) && 
+                     request.resource.data.usedMinutes is number);
+      
+      match /agents/{agentId} {
+        // Public read for the call page
+        allow read: if true; 
+        allow create, update: if isAuthenticated() && (request.auth.uid == businessId || isAdmin()) && isValidAgent(request.resource.data);
+        allow delete: if isAuthenticated() && request.auth.uid == businessId;
+      }
+      
+      match /calls/{callId} {
+        // Anyone can create or update a call log (from the public call page)
+        // We allow update because ElevenLabs webhooks might create the record first
+        allow create: if isValidCall(request.resource.data, businessId);
+        allow update: if (isValidCall(request.resource.data, businessId) && 
+                         (resource.data.status == 'IN_PROGRESS' || resource.data.status == 'PENDING_PROCESSING')) ||
+                        (isAuthenticated() && (request.auth.uid == businessId || isAdmin()));
+        
+        // Only owner or admin can read/manage logs
+        allow read: if isAuthenticated() && (request.auth.uid == businessId || isAdmin());
+        allow delete: if isAuthenticated() && (request.auth.uid == businessId || isAdmin());
+      }
+      
+      match /contacts/{contactId} {
+        allow read: if isAuthenticated() && (request.auth.uid == businessId || isAdmin());
+        allow create, update: if isAuthenticated() && (request.auth.uid == businessId || isAdmin()) && isValidContact(request.resource.data);
+        allow delete: if isAuthenticated() && request.auth.uid == businessId;
+      }
+    }
+
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId) && 
+                    (request.resource.data.role == 'user' || 
+                     (request.resource.data.role == 'admin' && request.auth.token.email == "hello.vicoapps@gmail.com"));
+      allow update: if isOwner(userId) && request.resource.data.role == resource.data.role;
+    }
+  }
+}
