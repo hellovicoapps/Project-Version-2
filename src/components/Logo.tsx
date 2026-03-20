@@ -18,14 +18,17 @@ export const Logo: React.FC<LogoProps> = ({
   const [imageError, setImageError] = useState(false);
   const logoUrl = "/logo.png";
 
+  // Calculate container size based on iconSize to maintain proportions
+  const containerSize = iconSize * 1.5;
+
   return (
     <div className={`flex items-center group ${className}`}>
-      <div className="relative">
+      <div className="relative" style={{ width: containerSize, height: containerSize }}>
         <div className={`
-          transition-all duration-300 flex items-center justify-center overflow-hidden
+          transition-all duration-300 flex items-center justify-center overflow-hidden w-full h-full
           ${imageLoaded && !imageError 
-            ? "w-28 h-28 rounded-3xl" 
-            : "p-4 bg-[var(--brand-primary)] rounded-3xl shadow-lg shadow-[var(--brand-primary)]/20 group-hover:scale-110"
+            ? "rounded-xl" 
+            : "bg-[var(--brand-primary)] rounded-xl shadow-lg shadow-[var(--brand-primary)]/20 group-hover:scale-110"
           }
         `}>
           {!imageError && (
@@ -35,6 +38,7 @@ export const Logo: React.FC<LogoProps> = ({
               className={`w-full h-full object-contain transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0 absolute'}`}
               onLoad={() => setImageLoaded(true)}
               onError={() => setImageError(true)}
+              referrerPolicy="no-referrer"
             />
           )}
           {(!imageLoaded || imageError) && (
