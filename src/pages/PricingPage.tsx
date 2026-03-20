@@ -204,30 +204,30 @@ export default function PricingPage() {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-[var(--bg-card)] border border-[var(--border-main)] rounded-3xl p-8 max-w-md w-full shadow-2xl"
+              className="bg-white text-gray-900 border border-gray-200 rounded-3xl p-8 max-w-md w-full shadow-2xl max-h-[90vh] overflow-y-auto"
             >
               <div className="flex justify-between items-center mb-6">
-                <h3 className="text-2xl font-bold text-[var(--text-main)]">Complete Purchase</h3>
+                <h3 className="text-2xl font-bold text-gray-900">Complete Purchase</h3>
                 <button 
                   onClick={() => setSelectedPlan(null)}
-                  className="p-2 hover:bg-[var(--bg-main)] rounded-full transition-colors"
+                  className="p-2 hover:bg-gray-100 rounded-full transition-colors"
                 >
-                  <X className="w-6 h-6" />
+                  <X className="w-6 h-6 text-gray-500" />
                 </button>
               </div>
 
-              <div className="mb-8 p-6 bg-[var(--bg-main)] rounded-2xl border border-[var(--border-main)]">
+              <div className="mb-8 p-6 bg-gray-50 rounded-2xl border border-gray-100">
                 <div className="flex justify-between items-center mb-2">
-                  <span className="text-[var(--text-muted)]">Plan</span>
-                  <span className="font-bold text-[var(--text-main)]">{selectedPlan.name}</span>
+                  <span className="text-gray-500">Plan</span>
+                  <span className="font-bold text-gray-900">{selectedPlan.name}</span>
                 </div>
                 <div className="flex justify-between items-center mb-4">
-                  <span className="text-[var(--text-muted)]">Minutes</span>
-                  <span className="font-bold text-[var(--text-main)]">{selectedPlan.minutes.toLocaleString()}</span>
+                  <span className="text-gray-500">Minutes</span>
+                  <span className="font-bold text-gray-900">{selectedPlan.minutes.toLocaleString()}</span>
                 </div>
-                <div className="h-px bg-[var(--border-main)] mb-4" />
+                <div className="h-px bg-gray-200 mb-4" />
                 <div className="flex justify-between items-center">
-                  <span className="text-lg font-bold text-[var(--text-main)]">Total</span>
+                  <span className="text-lg font-bold text-gray-900">Total</span>
                   <span className="text-2xl font-bold text-[var(--brand-primary)]">${selectedPlan.price}</span>
                 </div>
               </div>
@@ -238,7 +238,7 @@ export default function PricingPage() {
                 onError={(err) => showToast("Payment failed. Please try again.", "error")}
               />
 
-              <p className="mt-6 text-center text-xs text-[var(--text-muted)]">
+              <p className="mt-6 text-center text-xs text-gray-500">
                 Secure payment processed by PayPal. By completing your purchase, you agree to our Terms of Service.
               </p>
             </motion.div>
