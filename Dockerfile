@@ -34,7 +34,7 @@ COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/firebase-applet-config.json ./
 
 # Expose the port the app runs on
-EXPOSE 3000
+EXPOSE 8080
 
 # Start the application
 CMD ["npm", "start"]
