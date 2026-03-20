@@ -25,7 +25,7 @@ export const Logo: React.FC<LogoProps> = ({
           transition-all duration-300 flex items-center justify-center overflow-hidden
           ${imageLoaded && !imageError 
             ? "w-28 h-28 rounded-3xl" 
-            : "p-4 bg-blue-500 rounded-3xl shadow-lg shadow-blue-500/20 group-hover:scale-110"
+            : "p-4 bg-[var(--brand-primary)] rounded-3xl shadow-lg shadow-[var(--brand-primary)]/20 group-hover:scale-110"
           }
         `}>
           {!imageError && (
@@ -38,12 +38,12 @@ export const Logo: React.FC<LogoProps> = ({
             />
           )}
           {(!imageLoaded || imageError) && (
-            <Zap size={iconSize} className="text-zinc-950" />
+            <Zap size={iconSize} className="text-white" />
           )}
         </div>
       </div>
       {showText && (
-        <span className={`ml-4 ${textSize} font-bold tracking-tighter text-white`}>
+        <span className={`ml-4 ${textSize} font-bold tracking-tighter text-[var(--text-main)]`}>
           Vico
         </span>
       )}

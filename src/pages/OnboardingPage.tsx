@@ -69,8 +69,8 @@ const AGENT_TEMPLATES = [
     description: "Handles bookings, answers general questions, and routes calls.",
     useCase: "Receptionist",
     icon: Calendar,
-    color: "text-blue-400",
-    bg: "bg-blue-500/10",
+    color: "text-[var(--color-info)]",
+    bg: "bg-[var(--color-info)]/10",
     instructions: "You are a professional and helpful AI Receptionist. Your goal is to greet callers, handle bookings, and answer general questions about the business using the knowledge base provided. Be polite, organized, and efficient.\n\nBOOKING INSTRUCTIONS:\nIf the user wants to book an appointment, you MUST collect:\n1. Their full name\n2. Their email address\n3. Their phone number\n4. The specific date and time for the booking\n\nConfirm these details with the user before ending the call."
   },
   {
@@ -79,8 +79,8 @@ const AGENT_TEMPLATES = [
     description: "Qualifies leads, explains pricing, and schedules demos.",
     useCase: "Sales",
     icon: Zap,
-    color: "text-purple-400",
-    bg: "bg-purple-500/10",
+    color: "text-[var(--color-accent)]",
+    bg: "bg-[var(--color-accent)]/10",
     instructions: "You are an energetic and persuasive Sales Representative. Your goal is to understand the customer's needs, highlight the key benefits of our products/services, and guide them towards a purchase or a follow-up meeting.\n\nDATA COLLECTION:\nTo provide the best service, you MUST collect:\n1. Their full name\n2. Their email address\n3. Their phone number\n4. The purpose of their inquiry or the service they are interested in\n5. A preferred time for a follow-up demo or call\n\nConfirm these details with the user before ending the call."
   },
   {
@@ -89,8 +89,8 @@ const AGENT_TEMPLATES = [
     description: "Troubleshoots issues and provides technical information.",
     useCase: "Support",
     icon: MessageSquare,
-    color: "text-emerald-400",
-    bg: "bg-emerald-500/10",
+    color: "text-[var(--color-success)]",
+    bg: "bg-[var(--color-success)]/10",
     instructions: "You are a professional and empathetic Customer Support Assistant. Your goal is to help customers with their inquiries, resolve issues, and provide accurate information about our services based on the knowledge base.\n\nDATA COLLECTION:\nTo assist the customer properly and create a support ticket, you MUST collect:\n1. Their full name\n2. Their email address\n3. Their phone number\n4. A detailed description of the issue or purpose of the call\n5. A preferred time for a technician to call back if needed\n\nConfirm these details with the user before ending the call."
   }
 ];
@@ -122,26 +122,26 @@ const StepIndicator = ({ currentStep }: { currentStep: number }) => {
         <React.Fragment key={label}>
           <div className="flex flex-col items-center space-y-2 relative">
             <div 
-              className={`w-6 h-6 rounded-full flex items-center justify-center text-[8px] font-bold transition-all duration-500 ${
+              className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold transition-all duration-500 ${
                 idx + 1 <= currentStep 
-                  ? "bg-blue-500 text-zinc-950 shadow-lg shadow-blue-500/20" 
-                  : "bg-zinc-900 text-zinc-600 border border-zinc-800"
+                  ? "bg-[var(--brand-primary)] text-white shadow-lg shadow-[var(--brand-primary)]/20" 
+                  : "bg-[var(--bg-card)] text-[var(--text-muted)] border border-[var(--border-main)]"
               }`}
             >
               {idx + 1 < currentStep ? <Check className="w-3 h-3" /> : idx + 1}
             </div>
-            <span className={`text-[7px] font-bold uppercase tracking-widest absolute -bottom-5 whitespace-nowrap ${
-              idx + 1 <= currentStep ? "text-blue-400" : "text-zinc-600"
+            <span className={`text-[9px] font-bold uppercase tracking-widest absolute -bottom-5 whitespace-nowrap ${
+              idx + 1 <= currentStep ? "text-[var(--brand-primary)]" : "text-[var(--text-muted)]"
             }`}>
               {label}
             </span>
           </div>
           {idx < steps.length - 1 && (
-            <div className="flex-1 h-[1px] mx-2 bg-zinc-900 relative overflow-hidden">
+            <div className="flex-1 h-[1px] mx-2 bg-[var(--border-main)] relative overflow-hidden">
               <motion.div 
                 initial={{ width: 0 }}
                 animate={{ width: idx + 1 < currentStep ? "100%" : "0%" }}
-                className="absolute inset-0 bg-blue-500"
+                className="absolute inset-0 bg-[var(--brand-primary)]"
               />
             </div>
           )}
@@ -514,7 +514,7 @@ export default function OnboardingPage() {
   };
 
   return (
-    <div className="h-screen bg-zinc-950 flex flex-col items-center justify-start overflow-hidden relative">
+    <div className="h-screen bg-[var(--bg-main)] flex flex-col items-center justify-start overflow-hidden relative">
       <audio 
         ref={audioRef} 
         hidden 
@@ -529,8 +529,8 @@ export default function OnboardingPage() {
       />
       
       {/* Header */}
-      <div className="w-full p-6 flex items-center justify-between bg-zinc-950/80 backdrop-blur-md z-50 shrink-0">
-        <Link to={ROUTES.HOME} className="flex items-center space-x-2 text-zinc-500 hover:text-white transition-colors group">
+      <div className="w-full p-6 flex items-center justify-between bg-[var(--bg-main)]/80 backdrop-blur-md z-50 shrink-0">
+        <Link to={ROUTES.HOME} className="flex items-center space-x-2 text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors group">
           <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
           <span className="text-sm font-medium tracking-tight">Back to Home</span>
         </Link>
@@ -558,10 +558,10 @@ export default function OnboardingPage() {
                 className="space-y-8"
               >
                 <div className="text-center space-y-2">
-                  <h2 className="text-3xl font-bold text-white tracking-tight">Create your account</h2>
-                  <p className="text-zinc-500">
+                  <h2 className="text-3xl font-bold text-[var(--text-main)] tracking-tight">Create your account</h2>
+                  <p className="text-[var(--text-muted)]">
                     Start your 14-day free trial. Already have an account?{" "}
-                    <Link to={ROUTES.LOGIN} className="text-blue-400 hover:text-blue-300 font-medium">
+                    <Link to={ROUTES.LOGIN} className="text-[var(--brand-primary)] hover:underline font-medium">
                       Sign in
                     </Link>
                   </p>
@@ -569,7 +569,7 @@ export default function OnboardingPage() {
 
                 <div className="grid grid-cols-1 gap-6 max-w-md mx-auto">
                   <div className="space-y-2">
-                    <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest flex items-center space-x-2">
+                    <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest flex items-center space-x-2">
                       <Building2 className="w-3 h-3" />
                       <span>Business Name</span>
                     </label>
@@ -578,11 +578,11 @@ export default function OnboardingPage() {
                       value={data.businessName}
                       onChange={(e) => updateData({ businessName: e.target.value })}
                       placeholder="e.g. Acme Corp"
-                      className="w-full px-4 py-3 bg-zinc-900 border border-zinc-800 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
+                      className="input-field"
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest flex items-center space-x-2">
+                    <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest flex items-center space-x-2">
                       <Mail className="w-3 h-3" />
                       <span>Email Address</span>
                     </label>
@@ -591,11 +591,11 @@ export default function OnboardingPage() {
                       value={data.email}
                       onChange={(e) => updateData({ email: e.target.value })}
                       placeholder="you@company.com"
-                      className="w-full px-4 py-3 bg-zinc-900 border border-zinc-800 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
+                      className="input-field"
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest flex items-center space-x-2">
+                    <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest flex items-center space-x-2">
                       <Lock className="w-3 h-3" />
                       <span>Password</span>
                     </label>
@@ -604,7 +604,7 @@ export default function OnboardingPage() {
                       value={data.password || ""}
                       onChange={(e) => updateData({ password: e.target.value })}
                       placeholder="••••••••"
-                      className="w-full px-4 py-3 bg-zinc-900 border border-zinc-800 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
+                      className="input-field"
                     />
                   </div>
                 </div>
@@ -621,8 +621,8 @@ export default function OnboardingPage() {
                 className="space-y-8"
               >
                 <div className="text-center space-y-2">
-                  <h2 className="text-3xl font-bold text-white tracking-tight">Choose your agent type</h2>
-                  <p className="text-zinc-500">Select a template that best fits your business needs. <span className="text-blue-400/80 italic">Don't worry, you can change this anytime later.</span></p>
+                  <h2 className="text-3xl font-bold text-[var(--text-main)] tracking-tight">Choose your agent type</h2>
+                  <p className="text-[var(--text-muted)]">Select a template that best fits your business needs. <span className="text-[var(--brand-primary)]/80 italic">Don't worry, you can change this anytime later.</span></p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -632,21 +632,21 @@ export default function OnboardingPage() {
                       onClick={() => updateData({ agentTemplate: template.id })}
                       className={`p-6 rounded-2xl border transition-all text-left group relative ${
                         data.agentTemplate === template.id 
-                          ? "bg-blue-500/10 border-blue-500 shadow-lg shadow-blue-500/10" 
-                          : "bg-zinc-900/50 border-zinc-800 hover:border-zinc-700"
+                          ? "bg-[var(--brand-primary)]/10 border-[var(--brand-primary)] shadow-lg shadow-[var(--brand-primary)]/10" 
+                          : "bg-[var(--bg-card)]/50 border-[var(--border-main)] hover:border-[var(--text-muted)]/50"
                       }`}
                     >
                       {data.agentTemplate === template.id && (
-                        <div className="absolute top-4 right-4 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
-                          <Check className="w-4 h-4 text-zinc-950" />
+                        <div className="absolute top-4 right-4 w-6 h-6 bg-[var(--brand-primary)] rounded-full flex items-center justify-center">
+                          <Check className="w-4 h-4 text-white" />
                         </div>
                       )}
                       <div className={`w-12 h-12 ${template.bg} rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform`}>
                         <template.icon className={`w-6 h-6 ${template.color}`} />
                       </div>
-                      <h3 className="text-lg font-bold text-white mb-2">{template.name}</h3>
-                      <p className="text-sm text-zinc-500 leading-relaxed">{template.description}</p>
-                      <div className="mt-4 inline-block px-3 py-1 bg-zinc-800 rounded-full text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
+                      <h3 className="text-lg font-bold text-[var(--text-main)] mb-2">{template.name}</h3>
+                      <p className="text-sm text-[var(--text-muted)] leading-relaxed">{template.description}</p>
+                      <div className="mt-4 inline-block px-3 py-1 bg-[var(--bg-card)] border border-[var(--border-main)] rounded-full text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest">
                         {template.useCase}
                       </div>
                     </button>
@@ -665,14 +665,14 @@ export default function OnboardingPage() {
                 className="space-y-8"
               >
                 <div className="text-center space-y-2">
-                  <h2 className="text-3xl font-bold text-white tracking-tight">Configure your agent</h2>
-                  <p className="text-zinc-500">Give your agent a personality and a voice.</p>
+                  <h2 className="text-3xl font-bold text-[var(--text-main)] tracking-tight">Configure your agent</h2>
+                  <p className="text-[var(--text-muted)]">Give your agent a personality and a voice.</p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                   <div className="space-y-6">
                     <div className="space-y-2">
-                      <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest flex items-center space-x-2">
+                      <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest flex items-center space-x-2">
                         <Bot className="w-3 h-3" />
                         <span>Agent Name</span>
                       </label>
@@ -681,23 +681,23 @@ export default function OnboardingPage() {
                         value={data.agentName}
                         onChange={(e) => updateData({ agentName: e.target.value })}
                         placeholder="e.g. Sarah, Alex, Vico"
-                        className="w-full px-4 py-3 bg-zinc-900 border border-zinc-800 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
+                        className="input-field"
                       />
                     </div>
 
-                    <div className="p-6 bg-blue-500/5 rounded-2xl border border-blue-500/10">
+                    <div className="p-6 bg-[var(--brand-primary)]/5 rounded-2xl border border-[var(--brand-primary)]/10">
                       <div className="flex items-center space-x-3 mb-4">
-                        <Sparkles className="w-5 h-5 text-blue-400" />
-                        <h4 className="text-sm font-bold text-white">Pro Tip</h4>
+                        <Sparkles className="w-5 h-5 text-[var(--brand-primary)]" />
+                        <h4 className="text-sm font-bold text-[var(--text-main)]">Pro Tip</h4>
                       </div>
-                      <p className="text-xs text-zinc-400 leading-relaxed">
+                      <p className="text-xs text-[var(--text-muted)] leading-relaxed">
                         Choose a name that reflects your brand. Friendly names like "Sarah" often perform better for customer support.
                       </p>
                     </div>
                   </div>
 
                   <div className="space-y-4">
-                    <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest flex items-center space-x-2">
+                    <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest flex items-center space-x-2">
                       <Mic className="w-3 h-3" />
                       <span>Select Voice</span>
                     </label>
@@ -709,17 +709,17 @@ export default function OnboardingPage() {
                           onClick={() => updateData({ agentVoice: voice.id })}
                           className={`p-4 rounded-xl border transition-all flex items-center justify-between group cursor-pointer ${
                             data.agentVoice === voice.id 
-                              ? "bg-blue-500/10 border-blue-500" 
-                              : "bg-zinc-900 border-zinc-800 hover:border-zinc-700"
+                              ? "bg-[var(--brand-primary)]/10 border-[var(--brand-primary)]" 
+                              : "bg-[var(--bg-card)] border-[var(--border-main)] hover:border-[var(--text-muted)]/50"
                           }`}
                         >
                           <div className="flex items-center space-x-3">
-                            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${data.agentVoice === voice.id ? "bg-blue-500 text-zinc-950" : "bg-zinc-800 text-zinc-500"}`}>
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${data.agentVoice === voice.id ? "bg-[var(--brand-primary)] text-white" : "bg-[var(--bg-main)] text-[var(--text-muted)]"}`}>
                               <Mic className="w-4 h-4" />
                             </div>
                             <div className="text-left">
-                              <p className="text-sm font-bold text-white">{voice.name}</p>
-                              <p className="text-[10px] text-zinc-500 uppercase tracking-widest">{voice.sample}</p>
+                              <p className="text-sm font-bold text-[var(--text-main)]">{voice.name}</p>
+                              <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-widest">{voice.sample}</p>
                             </div>
                           </div>
                           <div 
@@ -730,8 +730,8 @@ export default function OnboardingPage() {
                             }}
                             className={`p-2 rounded-lg transition-all cursor-pointer ${
                               playingVoiceId === voice.id 
-                                ? "text-blue-400 bg-blue-500/20" 
-                                : "text-zinc-500 hover:text-blue-400 hover:bg-blue-500/10"
+                                ? "text-[var(--brand-primary)] bg-[var(--brand-primary)]/20" 
+                                : "text-[var(--text-muted)] hover:text-[var(--brand-primary)] hover:bg-[var(--brand-primary)]/10"
                             }`}
                           >
                             {playingVoiceId === voice.id ? (
@@ -758,13 +758,13 @@ export default function OnboardingPage() {
                 className="space-y-8"
               >
                 <div className="text-center space-y-2">
-                  <h2 className="text-3xl font-bold text-white tracking-tight">Knowledge & Settings</h2>
-                  <p className="text-zinc-500">Tell your agent about your business and set your availability.</p>
+                  <h2 className="text-3xl font-bold text-[var(--text-main)] tracking-tight">Knowledge & Settings</h2>
+                  <p className="text-[var(--text-muted)]">Tell your agent about your business and set your availability.</p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                   <div className="space-y-4">
-                    <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest flex items-center space-x-2">
+                    <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest flex items-center space-x-2">
                       <FileText className="w-3 h-3" />
                       <span>Knowledge Base</span>
                     </label>
@@ -772,20 +772,20 @@ export default function OnboardingPage() {
                       value={data.knowledgeBase}
                       onChange={(e) => updateData({ knowledgeBase: e.target.value })}
                       placeholder="Add information your agent should know (e.g. pricing, hours, services offered)..."
-                      className="w-full h-48 px-4 py-4 bg-zinc-900 border border-zinc-800 rounded-2xl text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all resize-none custom-scrollbar"
+                      className="w-full h-48 px-4 py-4 bg-[var(--bg-card)] border border-[var(--border-main)] rounded-2xl text-sm text-[var(--text-main)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/50 transition-all resize-none custom-scrollbar"
                     />
                   </div>
 
                   <div className="space-y-6">
                     <div className="space-y-2">
-                      <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest flex items-center space-x-2">
+                      <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest flex items-center space-x-2">
                         <Globe className="w-3 h-3" />
                         <span>Timezone</span>
                       </label>
                       <select 
                         value={data.timezone}
                         onChange={(e) => updateData({ timezone: e.target.value })}
-                        className="w-full px-4 py-3 bg-zinc-900 border border-zinc-800 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
+                        className="w-full px-4 py-3 bg-[var(--bg-card)] border border-[var(--border-main)] rounded-xl text-[var(--text-main)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/50 transition-all"
                       >
                         {TIMEZONES.map(tz => (
                           <option key={tz} value={tz}>{tz}</option>
@@ -793,20 +793,20 @@ export default function OnboardingPage() {
                       </select>
                     </div>
 
-                    <div className="p-6 bg-zinc-900 rounded-2xl border border-zinc-800 space-y-4">
+                    <div className="p-6 bg-[var(--bg-card)] rounded-2xl border border-[var(--border-main)] space-y-4">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-3">
-                          <Clock className="w-5 h-5 text-zinc-500" />
-                          <h4 className="text-sm font-bold text-white">Business Hours</h4>
+                          <Clock className="w-5 h-5 text-[var(--text-muted)]" />
+                          <h4 className="text-sm font-bold text-[var(--text-main)]">Business Hours</h4>
                         </div>
                       </div>
                       <div className="space-y-3">
                         {(data.businessHours || DEFAULT_HOURS).map((bh, idx) => (
                           <div key={bh.day} className="flex items-center justify-between">
-                            <span className="text-xs text-zinc-500 w-20">{bh.day}</span>
+                            <span className="text-xs text-[var(--text-muted)] w-20">{bh.day}</span>
                             <div className="flex items-center space-x-2">
                               {bh.closed ? (
-                                <span className="text-[10px] font-bold text-rose-500 uppercase tracking-widest">Closed</span>
+                                <span className="text-[10px] font-bold text-[var(--color-danger)] uppercase tracking-widest">Closed</span>
                               ) : (
                                 <>
                                   <input 
@@ -817,9 +817,9 @@ export default function OnboardingPage() {
                                       newHours[idx].open = e.target.value;
                                       updateData({ businessHours: newHours });
                                     }}
-                                    className="bg-zinc-800 border border-zinc-700 rounded px-1 text-[10px] text-white focus:outline-none"
+                                    className="bg-[var(--bg-main)] border border-[var(--border-main)] rounded px-1 text-[10px] text-[var(--text-main)] focus:outline-none"
                                   />
-                                  <span className="text-zinc-600">-</span>
+                                  <span className="text-[var(--text-muted)]/50">-</span>
                                   <input 
                                     type="time" 
                                     value={bh.close}
@@ -828,7 +828,7 @@ export default function OnboardingPage() {
                                       newHours[idx].close = e.target.value;
                                       updateData({ businessHours: newHours });
                                     }}
-                                    className="bg-zinc-800 border border-zinc-700 rounded px-1 text-[10px] text-white focus:outline-none"
+                                    className="bg-[var(--bg-main)] border border-[var(--border-main)] rounded px-1 text-[10px] text-[var(--text-main)] focus:outline-none"
                                   />
                                 </>
                               )}
@@ -838,7 +838,7 @@ export default function OnboardingPage() {
                                   newHours[idx].closed = !newHours[idx].closed;
                                   updateData({ businessHours: newHours });
                                 }}
-                                className={`p-1 rounded transition-colors ${bh.closed ? "text-emerald-500 hover:bg-emerald-500/10" : "text-rose-500 hover:bg-rose-500/10"}`}
+                                className={`p-1 rounded transition-colors ${bh.closed ? "text-[var(--color-success)] hover:bg-[var(--color-success)]/10" : "text-[var(--color-danger)] hover:bg-[var(--color-danger)]/10"}`}
                               >
                                 {bh.closed ? <CheckCircle2 className="w-3 h-3" /> : <Zap className="w-3 h-3" />}
                               </button>
@@ -892,9 +892,9 @@ export default function OnboardingPage() {
                         }
                       }}
                       disabled={loading}
-                      className="w-full py-4 px-4 bg-zinc-900 hover:bg-zinc-800 text-white rounded-2xl text-xs font-bold uppercase tracking-widest transition-all flex items-center justify-center space-x-3 border border-zinc-800 hover:border-zinc-700 shadow-lg"
+                      className="w-full py-4 px-4 bg-[var(--bg-card)] hover:bg-[var(--bg-card)]/80 text-[var(--text-main)] rounded-2xl text-xs font-bold uppercase tracking-widest transition-all flex items-center justify-center space-x-3 border border-[var(--border-main)] hover:border-[var(--text-muted)]/50 shadow-lg"
                     >
-                      <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : "text-blue-400"}`} />
+                      <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : "text-[var(--brand-primary)]"}`} />
                       <span>{data.elevenLabsAgentId ? "Update & Sync Agent" : "Create & Sync Agent"}</span>
                     </button>
                   </div>
@@ -912,23 +912,23 @@ export default function OnboardingPage() {
                 className="space-y-8"
               >
                 <div className="text-center space-y-2">
-                  <h2 className="text-3xl font-bold text-white tracking-tight">Branding & Appearance</h2>
-                  <p className="text-zinc-500">Customize the look of your calling page. This will be shown to your customers.</p>
+                  <h2 className="text-3xl font-bold text-[var(--text-main)] tracking-tight">Branding & Appearance</h2>
+                  <p className="text-[var(--text-muted)]">Customize the look of your calling page. This will be shown to your customers.</p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                   <div className="space-y-6">
                     <div className="space-y-4">
-                      <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest flex items-center space-x-2">
+                      <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest flex items-center space-x-2">
                         <Building2 className="w-3 h-3" />
                         <span>Business Logo</span>
                       </label>
                       <div className="flex items-center space-x-6">
-                        <div className="w-24 h-24 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center overflow-hidden relative group">
+                        <div className="w-24 h-24 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-main)] flex items-center justify-center overflow-hidden relative group">
                           {data.logoUrl ? (
                             <img src={data.logoUrl} alt="Logo" className="w-full h-full object-cover" />
                           ) : (
-                            <Bot className="w-8 h-8 text-zinc-700" />
+                            <Bot className="w-8 h-8 text-[var(--text-muted)]/30" />
                           )}
                           <label className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
                             <span className="text-[10px] font-bold text-white uppercase tracking-widest">Change</span>
@@ -936,10 +936,10 @@ export default function OnboardingPage() {
                           </label>
                         </div>
                         <div className="flex-1 space-y-1">
-                          <p className="text-sm font-bold text-white">Upload Logo</p>
-                          <p className="text-xs text-zinc-500">Recommended: Square PNG or JPG, max 2MB.</p>
+                          <p className="text-sm font-bold text-[var(--text-main)]">Upload Logo</p>
+                          <p className="text-xs text-[var(--text-muted)]">Recommended: Square PNG or JPG, max 2MB.</p>
                           {!data.logoUrl && (
-                            <label className="inline-block mt-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white text-[10px] font-bold uppercase tracking-widest rounded-lg cursor-pointer transition-colors">
+                            <label className="inline-block mt-2 px-4 py-2 bg-[var(--bg-card)] hover:bg-[var(--border-main)] text-[var(--text-main)] text-[10px] font-bold uppercase tracking-widest rounded-lg cursor-pointer transition-colors border border-[var(--border-main)]">
                               Select File
                               <input type="file" accept="image/*" onChange={(e) => handleFileUpload(e, 'logo')} className="hidden" />
                             </label>
@@ -949,18 +949,18 @@ export default function OnboardingPage() {
                     </div>
 
                     <div className="space-y-4">
-                      <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest flex items-center space-x-2">
+                      <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest flex items-center space-x-2">
                         <Globe className="w-3 h-3" />
                         <span>Background Image</span>
                       </label>
                       <div className="space-y-4">
-                        <div className="w-full aspect-video rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center overflow-hidden relative group">
+                        <div className="w-full aspect-video rounded-2xl bg-[var(--bg-card)] border border-[var(--border-main)] flex items-center justify-center overflow-hidden relative group">
                           {data.backgroundUrl ? (
                             <img src={data.backgroundUrl} alt="Background" className="w-full h-full object-cover" />
                           ) : (
                             <div className="text-center space-y-2">
-                              <Sparkles className="w-8 h-8 text-zinc-700 mx-auto" />
-                              <p className="text-[10px] text-zinc-600 uppercase tracking-widest">No background selected</p>
+                              <Sparkles className="w-8 h-8 text-[var(--text-muted)]/30 mx-auto" />
+                              <p className="text-[10px] text-[var(--text-muted)]/50 uppercase tracking-widest">No background selected</p>
                             </div>
                           )}
                           <label className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
@@ -969,8 +969,8 @@ export default function OnboardingPage() {
                           </label>
                         </div>
                         <div className="flex items-center justify-between">
-                          <p className="text-xs text-zinc-500">Recommended: 1920x1080, max 2MB.</p>
-                          <label className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white text-[10px] font-bold uppercase tracking-widest rounded-lg cursor-pointer transition-colors">
+                          <p className="text-xs text-[var(--text-muted)]">Recommended: 1920x1080, max 2MB.</p>
+                          <label className="px-4 py-2 bg-[var(--bg-card)] hover:bg-[var(--border-main)] text-[var(--text-main)] text-[10px] font-bold uppercase tracking-widest rounded-lg cursor-pointer transition-colors border border-[var(--border-main)]">
                             Upload New
                             <input type="file" accept="image/*" onChange={(e) => handleFileUpload(e, 'background')} className="hidden" />
                           </label>
@@ -980,43 +980,43 @@ export default function OnboardingPage() {
                   </div>
 
                   <div className="space-y-6">
-                    <div className="p-6 bg-blue-500/5 rounded-3xl border border-blue-500/10 space-y-4">
-                      <h4 className="text-sm font-bold text-white flex items-center space-x-2">
-                        <Sparkles className="w-4 h-4 text-blue-400" />
+                    <div className="p-6 bg-[var(--brand-primary)]/5 rounded-3xl border border-[var(--brand-primary)]/10 space-y-4">
+                      <h4 className="text-sm font-bold text-[var(--text-main)] flex items-center space-x-2">
+                        <Sparkles className="w-4 h-4 text-[var(--brand-primary)]" />
                         <span>Live Preview</span>
                       </h4>
-                      <div className="aspect-[9/16] max-w-[200px] mx-auto rounded-[2rem] border-4 border-zinc-800 bg-zinc-950 overflow-hidden relative shadow-2xl">
+                      <div className="aspect-[9/16] max-w-[200px] mx-auto rounded-[2rem] border-4 border-[var(--border-main)] bg-[var(--bg-main)] overflow-hidden relative shadow-2xl">
                         {/* Mock Calling Page */}
                         <div className="absolute inset-0">
                           {data.backgroundUrl ? (
                             <img src={data.backgroundUrl} alt="" className="w-full h-full object-cover opacity-40" />
                           ) : (
-                            <div className="w-full h-full bg-gradient-to-b from-blue-500/10 to-zinc-950" />
+                            <div className="w-full h-full bg-gradient-to-b from-[var(--brand-primary)]/10 to-[var(--bg-main)]" />
                           )}
                         </div>
                         <div className="relative h-full flex flex-col items-center justify-center p-4 space-y-4">
-                          <div className="w-16 h-16 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center overflow-hidden shadow-xl">
+                          <div className="w-16 h-16 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-main)] flex items-center justify-center overflow-hidden shadow-xl">
                             {data.logoUrl ? (
                               <img src={data.logoUrl} alt="" className="w-full h-full object-cover" />
                             ) : (
-                              <Bot className="w-8 h-8 text-blue-500" />
+                              <Bot className="w-8 h-8 text-[var(--brand-primary)]" />
                             )}
                           </div>
                           <div className="text-center">
-                            <p className="text-[10px] font-bold text-white truncate w-32">{data.businessName || "Your Business"}</p>
-                            <p className="text-[8px] text-blue-400 uppercase tracking-widest mt-1">Calling...</p>
+                            <p className="text-[10px] font-bold text-[var(--text-main)] truncate w-32">{data.businessName || "Your Business"}</p>
+                            <p className="text-[8px] text-[var(--brand-primary)] uppercase tracking-widest mt-1">Calling...</p>
                           </div>
                           <div className="flex space-x-2">
-                            <div className="w-8 h-8 rounded-full bg-rose-500 flex items-center justify-center">
+                            <div className="w-8 h-8 rounded-full bg-[var(--color-danger)] flex items-center justify-center">
                               <Phone className="w-3 h-3 text-white rotate-[135deg]" />
                             </div>
-                            <div className="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center">
+                            <div className="w-8 h-8 rounded-full bg-[var(--color-success)] flex items-center justify-center">
                               <Mic className="w-3 h-3 text-white" />
                             </div>
                           </div>
                         </div>
                       </div>
-                      <p className="text-[10px] text-zinc-500 text-center italic">
+                      <p className="text-[10px] text-[var(--text-muted)] text-center italic">
                         This is how your customers will see your calling page.
                       </p>
                     </div>
@@ -1035,58 +1035,58 @@ export default function OnboardingPage() {
                 className="space-y-8"
               >
                 <div className="text-center space-y-2">
-                  <h2 className="text-3xl font-bold text-white tracking-tight">Test your agent</h2>
-                  <p className="text-zinc-500">Have a real voice conversation with {data.agentName || "your agent"} to see how it handles your business info.</p>
+                  <h2 className="text-3xl font-bold text-[var(--text-main)] tracking-tight">Test your agent</h2>
+                  <p className="text-[var(--text-muted)]">Have a real voice conversation with {data.agentName || "your agent"} to see how it handles your business info.</p>
                 </div>
 
-                <div className="max-w-3xl mx-auto bg-zinc-950 rounded-3xl border border-zinc-800 overflow-hidden flex flex-col h-[600px] relative shadow-2xl">
+                <div className="max-w-3xl mx-auto bg-[var(--bg-main)] rounded-3xl border border-[var(--border-main)] overflow-hidden flex flex-col h-[750px] relative shadow-2xl">
                   {/* Background Image with Gradient Overlay */}
                   <div className="absolute inset-0 pointer-events-none">
                     {data.backgroundUrl ? (
                       <>
                         <img src={data.backgroundUrl} alt="" className="w-full h-full object-cover opacity-30" />
-                        <div className="absolute inset-0 bg-gradient-to-b from-zinc-950/20 via-zinc-950/80 to-zinc-950" />
+                        <div className="absolute inset-0 bg-gradient-to-b from-[var(--bg-main)]/20 via-[var(--bg-main)]/80 to-[var(--bg-main)]" />
                       </>
                     ) : (
-                      <div className="w-full h-full bg-gradient-to-b from-blue-500/5 to-zinc-950" />
+                      <div className="w-full h-full bg-gradient-to-b from-[var(--brand-primary)]/5 to-[var(--bg-main)]" />
                     )}
                   </div>
 
-                  <div className="p-4 border-b border-zinc-800/50 flex items-center justify-between bg-zinc-900/40 backdrop-blur-md relative z-10">
+                  <div className="p-4 border-b border-[var(--border-main)] flex items-center justify-between bg-[var(--bg-card)]/40 backdrop-blur-md relative z-10">
                     <div className="flex items-center space-x-3">
-                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all overflow-hidden ${isConnected ? "bg-blue-500 shadow-lg shadow-blue-500/20" : "bg-zinc-800"}`}>
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all overflow-hidden ${isConnected ? "bg-[var(--brand-primary)] shadow-lg shadow-[var(--brand-primary)]/20" : "bg-[var(--bg-card)]"}`}>
                         {data.logoUrl ? (
                           <img src={data.logoUrl} alt="" className="w-full h-full object-cover" />
                         ) : (
-                          <Bot className={`w-5 h-5 ${isConnected ? "text-zinc-950" : "text-zinc-500"}`} />
+                          <Bot className={`w-5 h-5 ${isConnected ? "text-white" : "text-[var(--text-muted)]"}`} />
                         )}
                       </div>
                       <div>
-                        <p className="text-sm font-bold text-white">{data.agentName || "Vico"}</p>
-                        <p className={`text-[10px] font-bold uppercase tracking-widest ${isConnected ? "text-emerald-500" : "text-zinc-500"}`}>
+                        <p className="text-sm font-bold text-[var(--text-main)]">{data.agentName || "Vico"}</p>
+                        <p className={`text-[10px] font-bold uppercase tracking-widest ${isConnected ? "text-[var(--color-success)]" : "text-[var(--text-muted)]"}`}>
                           {isConnected ? "Live" : isConnecting ? "Connecting..." : "Offline"}
                         </p>
                       </div>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <div className={`w-2 h-2 rounded-full ${isConnected ? "bg-emerald-500 animate-pulse" : "bg-zinc-700"}`} />
-                      <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">{status}</span>
+                      <div className={`w-2 h-2 rounded-full ${isConnected ? "bg-[var(--color-success)] animate-pulse" : "bg-[var(--text-muted)]/30"}`} />
+                      <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest">{status}</span>
                     </div>
                   </div>
 
-                  <div className="flex-1 p-6 overflow-y-auto space-y-4 custom-scrollbar bg-zinc-950/40 backdrop-blur-sm relative z-10">
+                  <div className="flex-1 p-6 overflow-y-auto space-y-4 custom-scrollbar bg-[var(--bg-main)]/40 backdrop-blur-sm relative z-10">
                     {transcript.length === 0 ? (
                       <div className="h-full flex flex-col items-center justify-center text-center space-y-4 opacity-30">
-                        <MessageSquare className="w-12 h-12 text-zinc-600" />
-                        <p className="text-sm text-zinc-500">Transcript will appear here <br /> once the call starts.</p>
+                        <MessageSquare className="w-12 h-12 text-[var(--text-muted)]" />
+                        <p className="text-sm text-[var(--text-muted)]">Transcript will appear here <br /> once the call starts.</p>
                       </div>
                     ) : (
                       transcript.map((msg, i) => (
                         <div key={i} className={`flex ${msg.role === "ai" ? "justify-start" : "justify-end"}`}>
                           <div className={`max-w-[80%] p-4 rounded-2xl text-sm ${
                             msg.role === "ai" 
-                              ? "bg-zinc-800 text-zinc-300 rounded-tl-none border border-zinc-700/50" 
-                              : "bg-blue-500 text-zinc-950 font-medium rounded-tr-none"
+                              ? "bg-[var(--bg-card)] text-[var(--text-main)] rounded-tl-none border border-[var(--border-main)]" 
+                              : "bg-[var(--brand-primary)] text-white font-medium rounded-tr-none"
                           }`}>
                             {msg.text}
                           </div>
@@ -1095,10 +1095,10 @@ export default function OnboardingPage() {
                     )}
                   </div>
 
-                  <div className="p-6 bg-zinc-900/60 backdrop-blur-md border-t border-zinc-800/50 flex flex-col items-center space-y-4 relative z-10">
+                  <div className="p-6 bg-[var(--bg-card)]/60 backdrop-blur-md border-t border-[var(--border-main)] flex flex-col items-center space-y-4 relative z-10">
                     {!data.elevenLabsAgentId && !isConnecting && (
-                      <div className="p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl text-center">
-                        <p className="text-xs text-rose-400">
+                      <div className="p-3 bg-[var(--color-danger)]/10 border border-[var(--color-danger)]/20 rounded-xl text-center">
+                        <p className="text-xs text-[var(--color-danger)]">
                           ElevenLabs Agent not created. Please check your API key in settings or try going back and clicking Next again.
                         </p>
                       </div>
@@ -1113,7 +1113,7 @@ export default function OnboardingPage() {
                               : [4, 4 + Math.random() * 8, 4] 
                           }}
                           transition={{ duration: 0.5, repeat: Infinity, delay: i * 0.05 }}
-                          className={`w-1 rounded-full ${isAiSpeaking ? "bg-blue-500" : "bg-blue-500/30"}`}
+                          className={`w-1 rounded-full ${isAiSpeaking ? "bg-[var(--brand-primary)]" : "bg-[var(--brand-primary)]/30"}`}
                         />
                       ))}
                     </div>
@@ -1123,8 +1123,8 @@ export default function OnboardingPage() {
                       disabled={isConnecting}
                       className={`w-16 h-16 rounded-full flex items-center justify-center transition-all transform active:scale-95 shadow-xl ${
                         isConnected 
-                          ? "bg-rose-500 hover:bg-rose-600 text-white shadow-rose-500/20 rotate-[135deg]" 
-                          : "bg-blue-500 hover:bg-blue-400 text-zinc-950 shadow-blue-500/20"
+                          ? "bg-[var(--color-danger)] hover:bg-[var(--color-danger)]/90 text-white shadow-[var(--color-danger)]/20 rotate-[135deg]" 
+                          : "bg-[var(--brand-primary)] hover:bg-[var(--brand-secondary)] text-white shadow-[var(--brand-primary)]/20"
                       }`}
                     >
                       {isConnecting ? (
@@ -1133,7 +1133,7 @@ export default function OnboardingPage() {
                         <Phone className="w-8 h-8" />
                       )}
                     </button>
-                    <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
+                    <p className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest">
                       {isConnected ? "End Call" : "Start Voice Test"}
                     </p>
                   </div>
@@ -1145,12 +1145,12 @@ export default function OnboardingPage() {
           </div>
 
           {/* Navigation Buttons */}
-          <div className="p-6 border-t border-zinc-900 flex items-center justify-between shrink-0 bg-zinc-900/20">
+          <div className="p-6 border-t border-[var(--border-main)] flex items-center justify-between shrink-0 bg-[var(--bg-card)]/20">
             <button 
               onClick={handleBack}
               disabled={data.step === 1 || loading}
               className={`flex items-center space-x-2 text-sm font-bold transition-all ${
-                data.step === 1 || loading ? "opacity-0 pointer-events-none" : "text-zinc-500 hover:text-white"
+                data.step === 1 || loading ? "opacity-0 pointer-events-none" : "text-[var(--text-muted)] hover:text-[var(--text-main)]"
               }`}
             >
               <ArrowLeft className="w-4 h-4" />
@@ -1160,10 +1160,10 @@ export default function OnboardingPage() {
             <button 
               onClick={handleNext}
               disabled={loading}
-              className="px-8 py-3 bg-blue-500 text-zinc-950 rounded-xl text-sm font-bold hover:bg-blue-400 transition-all shadow-lg shadow-blue-500/20 flex items-center space-x-2 disabled:opacity-50"
+              className="btn-primary"
             >
               {loading ? (
-                <div className="w-5 h-5 border-2 border-zinc-950 border-t-transparent rounded-full animate-spin" />
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
               ) : (
                 <>
                   <span>{data.step === 6 ? "Proceed to Dashboard" : "Next Step"}</span>
@@ -1177,8 +1177,8 @@ export default function OnboardingPage() {
 
       {/* Background Accents */}
       <div className="fixed top-0 left-0 w-full h-full -z-10 overflow-hidden pointer-events-none">
-        <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-500/5 blur-[120px] rounded-full" />
-        <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-purple-500/5 blur-[120px] rounded-full" />
+        <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-[var(--brand-primary)]/5 blur-[120px] rounded-full" />
+        <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-[var(--color-accent)]/5 blur-[120px] rounded-full" />
       </div>
     </div>
   );

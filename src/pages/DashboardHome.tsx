@@ -62,17 +62,17 @@ const StatCard = ({ title, value, icon: Icon, trend, trendValue }: any) => (
     className="glass-card p-6 space-y-4"
   >
     <div className="flex items-center justify-between">
-      <div className="p-3 bg-blue-500/10 rounded-xl border border-blue-500/20">
-        <Icon className="w-6 h-6 text-blue-400" />
+      <div className="p-3 bg-[var(--brand-primary)]/10 rounded-xl border border-[var(--brand-primary)]/20">
+        <Icon className="w-6 h-6 text-[var(--brand-primary)]" />
       </div>
-      <div className={`flex items-center space-x-1 text-sm ${trend === "up" ? "text-blue-400" : "text-rose-400"}`}>
+      <div className={`flex items-center space-x-1 text-sm ${trend === "up" ? "text-[var(--color-success)]" : "text-[var(--color-danger)]"}`}>
         <span>{trendValue}%</span>
         {trend === "up" ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownRight className="w-4 h-4" />}
       </div>
     </div>
     <div>
-      <p className="text-zinc-500 text-sm font-medium">{title}</p>
-      <h3 className="text-3xl font-bold text-white mt-1">{value}</h3>
+      <p className="text-[var(--text-muted)] text-sm font-medium">{title}</p>
+      <h3 className="text-3xl font-bold text-[var(--text-main)] mt-1">{value}</h3>
     </div>
   </motion.div>
 );
@@ -222,27 +222,27 @@ export default function DashboardHome() {
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="p-4 bg-rose-500/10 border border-rose-500/20 rounded-2xl flex items-center justify-between"
+          className="p-4 bg-[var(--color-danger)]/10 border border-[var(--color-danger)]/20 rounded-2xl flex items-center justify-between"
         >
           <div className="flex items-center space-x-3">
-            <div className="p-2 bg-rose-500/20 rounded-lg">
-              <AlertCircle className="w-5 h-5 text-rose-400" />
+            <div className="p-2 bg-[var(--color-danger)]/20 rounded-lg">
+              <AlertCircle className="w-5 h-5 text-[var(--color-danger)]" />
             </div>
             <div>
-              <p className="text-sm font-bold text-white">Voice Credits Exceeded</p>
-              <p className="text-xs text-rose-400/80">Your business has exceeded its monthly voice credit limit. Overage will be billed at the end of your billing cycle.</p>
+              <p className="text-sm font-bold text-[var(--text-main)]">Voice Credits Exceeded</p>
+              <p className="text-xs text-[var(--color-danger)]/80">Your business has exceeded its monthly voice credit limit. Overage will be billed at the end of your billing cycle.</p>
             </div>
           </div>
           <button 
             onClick={handleResetCredits}
             disabled={isResetting}
-            className="px-4 py-2 bg-zinc-800 text-white text-xs font-bold rounded-xl hover:bg-zinc-700 transition-all mr-2"
+            className="px-4 py-2 bg-[var(--bg-card)] text-[var(--text-main)] text-xs font-bold rounded-xl hover:bg-[var(--border-main)] transition-all mr-2"
           >
             {isResetting ? "Resetting..." : "Reset Test Credits"}
           </button>
           <button 
             onClick={() => navigate(ROUTES.PRICING)}
-            className="px-4 py-2 bg-rose-500 text-white text-xs font-bold rounded-xl hover:bg-rose-600 transition-all"
+            className="px-4 py-2 bg-[var(--color-danger)] text-white text-xs font-bold rounded-xl hover:bg-[var(--color-danger)]/90 transition-all"
           >
             Upgrade Now
           </button>
@@ -251,10 +251,10 @@ export default function DashboardHome() {
 
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-4xl font-bold text-white tracking-tight">
-            Welcome, <span className="text-blue-400">{authState.user?.name}</span>
+          <h1 className="text-4xl font-bold text-[var(--text-main)] tracking-tight">
+            Welcome, <span className="text-[var(--brand-primary)]">{authState.user?.name}</span>
           </h1>
-          <p className="text-zinc-500 mt-1">Here's what's happening with your business today.</p>
+          <p className="text-[var(--text-muted)] mt-1">Here's what's happening with your business today.</p>
         </div>
         <div className="flex items-center space-x-3">
           <button 
@@ -284,11 +284,11 @@ export default function DashboardHome() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="glass-card p-6">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-semibold text-white">Call Activity</h3>
+            <h3 className="text-lg font-semibold text-[var(--text-main)]">Call Activity</h3>
             <div className="flex items-center space-x-4 text-sm">
               <div className="flex items-center space-x-2">
-                <div className="w-3 h-3 bg-blue-500 rounded-full" />
-                <span className="text-zinc-400">Calls</span>
+                <div className="w-3 h-3 bg-[var(--brand-primary)] rounded-full" />
+                <span className="text-[var(--text-muted)]">Calls</span>
               </div>
             </div>
           </div>
@@ -297,36 +297,38 @@ export default function DashboardHome() {
               <AreaChart data={chartData.length > 0 ? chartData : data}>
                 <defs>
                   <linearGradient id="colorCalls" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="var(--brand-primary)" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="var(--brand-primary)" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border-main)" vertical={false} />
                 <XAxis 
                   dataKey="name" 
-                  stroke="#71717a" 
+                  stroke="var(--text-muted)" 
                   fontSize={12} 
                   tickLine={false} 
                   axisLine={false} 
                 />
                 <YAxis 
-                  stroke="#71717a" 
+                  stroke="var(--text-muted)" 
                   fontSize={12} 
                   tickLine={false} 
                   axisLine={false} 
                 />
                 <Tooltip 
                   contentStyle={{ 
-                    backgroundColor: "#18181b", 
-                    borderColor: "#3f3f46",
+                    backgroundColor: "var(--bg-card)", 
+                    borderColor: "var(--border-main)",
                     borderRadius: "12px",
-                    color: "#fff"
+                    color: "var(--text-main)"
                   }} 
+                  itemStyle={{ color: "var(--text-main)" }}
+                  labelStyle={{ color: "var(--text-muted)" }}
                 />
                 <Area 
                   type="monotone" 
                   dataKey="calls" 
-                  stroke="#3b82f6" 
+                  stroke="var(--brand-primary)" 
                   fillOpacity={1} 
                   fill="url(#colorCalls)" 
                   strokeWidth={2}
@@ -337,37 +339,37 @@ export default function DashboardHome() {
         </div>
 
         <div className="glass-card p-6">
-          <h3 className="text-lg font-semibold text-white mb-6">Recent Activity</h3>
+          <h3 className="text-lg font-semibold text-[var(--text-main)] mb-6">Recent Activity</h3>
           <div className="space-y-6">
             {recentActivity.length === 0 ? (
               <div className="text-center py-10">
-                <p className="text-zinc-500">No recent activity yet.</p>
+                <p className="text-[var(--text-muted)]">No recent activity yet.</p>
               </div>
             ) : (
               recentActivity.map((call) => (
                 <div key={call.id} className="flex items-center justify-between">
                   <div className="flex items-center space-x-4">
-                    <div className="p-2 bg-zinc-800 rounded-lg">
-                      <Phone className="w-5 h-5 text-zinc-400" />
+                    <div className="p-2 bg-[var(--bg-card)] border border-[var(--border-main)] rounded-lg">
+                      <Phone className="w-5 h-5 text-[var(--text-muted)]" />
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-white">
+                      <p className="text-sm font-medium text-[var(--text-main)]">
                         {call.callerName ? `Call from ${call.callerName}` : `Call from ${call.phoneNumber}`}
                       </p>
                       <div className="flex items-center space-x-2">
-                        {call.callerName && <p className="text-[10px] text-zinc-500">{call.phoneNumber}</p>}
-                        {call.callerName && call.summary && <span className="text-zinc-800">•</span>}
+                        {call.callerName && <p className="text-[10px] text-[var(--text-muted)]">{call.phoneNumber}</p>}
+                        {call.callerName && call.summary && <span className="text-[var(--border-main)]">•</span>}
                         {call.summary && (
-                          <p className="text-[10px] text-blue-400/80 italic line-clamp-1 max-w-[200px]">{call.summary}</p>
+                          <p className="text-[10px] text-[var(--brand-primary)]/80 italic line-clamp-1 max-w-[200px]">{call.summary}</p>
                         )}
                       </div>
-                      <p className="text-[10px] text-zinc-500 mt-0.5">
+                      <p className="text-[10px] text-[var(--text-muted)] mt-0.5">
                         {call.createdAt?.toDate ? new Date(call.createdAt.toDate()).toLocaleString() : "Just now"} • Duration: {call.duration}s
                       </p>
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <span className={`px-2 py-1 bg-blue-500/10 text-blue-400 text-[10px] font-bold uppercase tracking-wider rounded-full border border-blue-500/20`}>
+                    <span className={`px-2 py-1 bg-[var(--brand-primary)]/10 text-[var(--brand-primary)] text-[10px] font-bold uppercase tracking-wider rounded-full border border-[var(--brand-primary)]/20`}>
                       {call.status}
                     </span>
                   </div>
@@ -377,7 +379,7 @@ export default function DashboardHome() {
           </div>
           <button 
             onClick={() => navigate(ROUTES.INBOX)}
-            className="w-full mt-6 py-2 text-sm text-zinc-500 hover:text-white transition-colors border-t border-zinc-800 pt-4"
+            className="w-full mt-6 py-2 text-sm text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors border-t border-[var(--border-main)] pt-4"
           >
             View All Activity
           </button>

@@ -33,8 +33,8 @@ const SettingSection = ({ title, description, children, onSave, isSaving }: any)
   <div className="glass-card p-8 space-y-6">
     <div className="flex items-center justify-between">
       <div>
-        <h3 className="text-xl font-bold text-white tracking-tight">{title}</h3>
-        <p className="text-zinc-500 text-sm mt-1">{description}</p>
+        <h3 className="text-xl font-bold text-[var(--text-main)] tracking-tight">{title}</h3>
+        <p className="text-[var(--text-muted)] text-sm mt-1">{description}</p>
       </div>
       <button 
         onClick={onSave}
@@ -45,7 +45,7 @@ const SettingSection = ({ title, description, children, onSave, isSaving }: any)
         <span>{isSaving ? "Saving..." : "Save Changes"}</span>
       </button>
     </div>
-    <div className="h-px bg-zinc-900" />
+    <div className="h-px bg-[var(--border-main)]" />
     <div className="space-y-6">
       {children}
     </div>
@@ -54,9 +54,9 @@ const SettingSection = ({ title, description, children, onSave, isSaving }: any)
 
 const InputGroup = ({ label, icon: Icon, type = "text", placeholder, value, onChange }: any) => (
   <div className="space-y-2">
-    <label className="text-sm font-semibold text-zinc-400 ml-1">{label}</label>
+    <label className="text-sm font-semibold text-[var(--text-muted)] ml-1">{label}</label>
     <div className="relative group">
-      <Icon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-600 group-focus-within:text-blue-400 transition-colors" />
+      <Icon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--text-muted)] group-focus-within:text-[var(--brand-primary)] transition-colors" />
       <input 
         type={type} 
         value={value || ""}
@@ -232,7 +232,7 @@ export default function SettingsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+        <div className="w-12 h-12 border-4 border-[var(--brand-primary)] border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
@@ -241,12 +241,12 @@ export default function SettingsPage() {
     <div className="max-w-4xl mx-auto space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-4xl font-bold text-white tracking-tight">Settings</h1>
-          <p className="text-zinc-500 mt-1">Manage your account, business, and AI preferences.</p>
+          <h1 className="text-4xl font-bold text-[var(--text-main)] tracking-tight">Settings</h1>
+          <p className="text-[var(--text-muted)] mt-1">Manage your account, business, and AI preferences.</p>
         </div>
-        <div className="flex items-center space-x-2 px-4 py-2 bg-blue-500/10 border border-blue-500/20 rounded-xl">
-          <Zap className="w-4 h-4 text-blue-400" />
-          <span className="text-xs font-bold text-blue-400 uppercase tracking-wider">Pro Account</span>
+        <div className="flex items-center space-x-2 px-4 py-2 bg-[var(--brand-primary)]/10 border border-[var(--brand-primary)]/20 rounded-xl">
+          <Zap className="w-4 h-4 text-[var(--brand-primary)]" />
+          <span className="text-xs font-bold text-[var(--brand-primary)] uppercase tracking-wider">Pro Account</span>
         </div>
       </div>
 
@@ -293,9 +293,9 @@ export default function SettingsPage() {
               onChange={(val: string) => setBusiness({ ...business, phone: val })}
             />
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-zinc-400 ml-1">Timezone</label>
+              <label className="text-sm font-semibold text-[var(--text-muted)] ml-1">Timezone</label>
               <div className="relative group">
-                <Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-600 group-focus-within:text-blue-400 transition-colors" />
+                <Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--text-muted)] group-focus-within:text-[var(--brand-primary)] transition-colors" />
                 <select 
                   className="input-field pl-12 appearance-none"
                   value={business?.timezone || "UTC"}
@@ -305,7 +305,7 @@ export default function SettingsPage() {
                     <option key={tz} value={tz}>{tz}</option>
                   ))}
                 </select>
-                <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600 rotate-90 pointer-events-none" />
+                <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)] rotate-90 pointer-events-none" />
               </div>
             </div>
           </div>
@@ -320,8 +320,8 @@ export default function SettingsPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {/* Logo Upload */}
             <div className="space-y-4">
-              <label className="text-sm font-semibold text-zinc-400 ml-1">Business Logo</label>
-              <div className="relative group aspect-square max-w-[200px] bg-zinc-900 rounded-2xl border-2 border-dashed border-zinc-800 hover:border-blue-500/50 transition-all overflow-hidden flex flex-col items-center justify-center text-center p-4">
+              <label className="text-sm font-semibold text-[var(--text-muted)] ml-1">Business Logo</label>
+              <div className="relative group aspect-square max-w-[200px] bg-[var(--bg-main)] rounded-2xl border-2 border-dashed border-[var(--border-main)] hover:border-[var(--brand-primary)]/50 transition-all overflow-hidden flex flex-col items-center justify-center text-center p-4">
                 {business?.logoUrl ? (
                   <>
                     <img 
@@ -341,13 +341,13 @@ export default function SettingsPage() {
                   <label className="cursor-pointer flex flex-col items-center space-y-2">
                     {isUploadingLogo ? (
                       <div className="flex flex-col items-center space-y-2">
-                        <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
-                        <span className="text-[10px] text-blue-400 font-bold">{uploadProgress.logo || 0}%</span>
+                        <Loader2 className="w-8 h-8 text-[var(--brand-primary)] animate-spin" />
+                        <span className="text-[10px] text-[var(--brand-primary)] font-bold">{uploadProgress.logo || 0}%</span>
                       </div>
                     ) : (
                       <>
-                        <ImageIcon className="w-8 h-8 text-zinc-600" />
-                        <span className="text-xs text-zinc-500 font-medium">Upload Logo</span>
+                        <ImageIcon className="w-8 h-8 text-[var(--text-muted)]" />
+                        <span className="text-xs text-[var(--text-muted)] font-medium">Upload Logo</span>
                       </>
                     )}
                     <input type="file" className="hidden" accept="image/*" onChange={(e) => handleFileUpload(e, 'logo')} />
@@ -362,13 +362,13 @@ export default function SettingsPage() {
                   </div>
                 )}
               </div>
-              <p className="text-[10px] text-zinc-600 uppercase tracking-widest font-bold">Recommended: Square PNG/SVG, min 200x200px.</p>
+              <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-widest font-bold">Recommended: Square PNG/SVG, min 200x200px.</p>
             </div>
 
             {/* Background Upload */}
             <div className="space-y-4">
-              <label className="text-sm font-semibold text-zinc-400 ml-1">Link Background</label>
-              <div className="relative group aspect-video bg-zinc-900 rounded-2xl border-2 border-dashed border-zinc-800 hover:border-blue-500/50 transition-all overflow-hidden flex flex-col items-center justify-center text-center p-4">
+              <label className="text-sm font-semibold text-[var(--text-muted)] ml-1">Link Background</label>
+              <div className="relative group aspect-video bg-[var(--bg-main)] rounded-2xl border-2 border-dashed border-[var(--border-main)] hover:border-[var(--brand-primary)]/50 transition-all overflow-hidden flex flex-col items-center justify-center text-center p-4">
                 {business?.backgroundUrl ? (
                   <>
                     <img 
@@ -388,13 +388,13 @@ export default function SettingsPage() {
                   <label className="cursor-pointer flex flex-col items-center space-y-2">
                     {isUploadingBg ? (
                       <div className="flex flex-col items-center space-y-2">
-                        <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
-                        <span className="text-[10px] text-blue-400 font-bold">{uploadProgress.background || 0}%</span>
+                        <Loader2 className="w-8 h-8 text-[var(--brand-primary)] animate-spin" />
+                        <span className="text-[10px] text-[var(--brand-primary)] font-bold">{uploadProgress.background || 0}%</span>
                       </div>
                     ) : (
                       <>
-                        <ImageIcon className="w-8 h-8 text-zinc-600" />
-                        <span className="text-xs text-zinc-500 font-medium">Upload Background</span>
+                        <ImageIcon className="w-8 h-8 text-[var(--text-muted)]" />
+                        <span className="text-xs text-[var(--text-muted)] font-medium">Upload Background</span>
                       </>
                     )}
                     <input type="file" className="hidden" accept="image/*" onChange={(e) => handleFileUpload(e, 'background')} />
@@ -409,7 +409,7 @@ export default function SettingsPage() {
                   </div>
                 )}
               </div>
-              <p className="text-[10px] text-zinc-600 uppercase tracking-widest font-bold">Recommended: 1920x1080px, max 2MB.</p>
+              <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-widest font-bold">Recommended: 1920x1080px, max 2MB.</p>
             </div>
           </div>
         </SettingSection>
@@ -437,8 +437,8 @@ export default function SettingsPage() {
               onChange={(val: string) => setBusiness({ ...business, botcakePageId: val })}
             />
           </div>
-          <div className="p-4 bg-blue-500/5 border border-blue-500/10 rounded-xl">
-            <p className="text-xs text-blue-400 leading-relaxed">
+          <div className="p-4 bg-[var(--brand-primary)]/5 border border-[var(--brand-primary)]/10 rounded-xl">
+            <p className="text-xs text-[var(--brand-primary)] leading-relaxed">
               <span className="font-bold uppercase tracking-wider mr-2">Tip:</span>
               Use the Botcake-specific link in your Botcake flows to automatically greet customers by their Facebook name. 
               You can find this link in the <span className="font-bold underline cursor-pointer" onClick={() => navigate(ROUTES.LINKS)}>Links</span> section.
@@ -470,32 +470,32 @@ export default function SettingsPage() {
               onChange={setConfirmPassword}
             />
           </div>
-          <div className="flex items-center justify-between p-4 bg-zinc-900/50 border border-zinc-900 rounded-xl">
+          <div className="flex items-center justify-between p-4 bg-[var(--bg-main)]/50 border border-[var(--border-main)] rounded-xl">
             <div className="flex items-center space-x-3">
-              <Shield className="w-5 h-5 text-blue-400" />
+              <Shield className="w-5 h-5 text-[var(--brand-primary)]" />
               <div>
-                <p className="text-sm font-semibold text-white">Two-Factor Authentication</p>
-                <p className="text-xs text-zinc-500">Add an extra layer of security to your account.</p>
+                <p className="text-sm font-semibold text-[var(--text-main)]">Two-Factor Authentication</p>
+                <p className="text-xs text-[var(--text-muted)]">Add an extra layer of security to your account.</p>
               </div>
             </div>
             <button 
               onClick={() => showToast("2FA setup is not implemented in this demo.", "info")}
-              className="text-xs font-bold text-blue-500 hover:text-blue-400 transition-colors uppercase tracking-widest"
+              className="text-xs font-bold text-[var(--brand-primary)] hover:text-[var(--brand-primary)]/80 transition-colors uppercase tracking-widest"
             >
               Enable
             </button>
           </div>
         </SettingSection>
 
-        <div className="glass-card p-8 border-rose-500/10">
+        <div className="glass-card p-8 border-[var(--color-danger)]/10">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-xl font-bold text-rose-400 tracking-tight">Danger Zone</h3>
-              <p className="text-zinc-500 text-sm mt-1">Irreversibly delete your account and all associated data.</p>
+              <h3 className="text-xl font-bold text-[var(--color-danger)] tracking-tight">Danger Zone</h3>
+              <p className="text-[var(--text-muted)] text-sm mt-1">Irreversibly delete your account and all associated data.</p>
             </div>
             <button 
               onClick={handleDeleteAccount}
-              className="px-6 py-2.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 font-semibold rounded-xl transition-all border border-rose-500/20"
+              className="px-6 py-2.5 bg-[var(--color-danger)]/10 hover:bg-[var(--color-danger)]/20 text-[var(--color-danger)] font-semibold rounded-xl transition-all border border-[var(--color-danger)]/20"
             >
               Delete Account
             </button>

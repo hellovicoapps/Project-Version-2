@@ -33,10 +33,21 @@ import { ToastProvider } from "./components/Toast";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { BookingProcessor } from "./components/BookingProcessor";
 
+import { ThemeProvider, useTheme } from "./context/ThemeContext";
+
 export default function App() {
+  return (
+    <ThemeProvider>
+      <AppContent />
+    </ThemeProvider>
+  );
+}
+
+function AppContent() {
   const [authState, setAuthState] = useState<AuthState>(AuthService.getAuthState());
   const [loading, setLoading] = useState(true);
   const location = useLocation();
+  const { theme } = useTheme();
 
   useEffect(() => {
     fetchConfig();
@@ -51,8 +62,8 @@ export default function App() {
   const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     if (loading) {
       return (
-        <div className="flex items-center justify-center min-h-screen bg-zinc-950">
-          <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+        <div className="flex items-center justify-center min-h-screen bg-[var(--bg-main)]">
+          <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
         </div>
       );
     }
@@ -67,7 +78,7 @@ export default function App() {
   return (
     <ToastProvider>
       <BookingProcessor />
-      <div className="flex min-h-screen bg-zinc-950 text-zinc-100">
+      <div className="flex min-h-screen bg-[var(--bg-main)] text-[var(--text-main)] transition-colors duration-300">
         {authState.isAuthenticated && !isPublicCallPage && location.pathname !== ROUTES.ONBOARDING && <Sidebar />}
         <div className="flex-1 flex flex-col min-h-screen">
           {authState.isAuthenticated && !isPublicCallPage && location.pathname !== ROUTES.ONBOARDING && <Navbar user={authState.user} />}

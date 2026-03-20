@@ -31,12 +31,12 @@ const SidebarItem = ({ to, icon: Icon, label, active }: any) => (
       whileTap={{ scale: 0.98 }}
       className={`flex items-center justify-between px-4 py-3 rounded-xl transition-all group ${
         active 
-          ? "bg-blue-500 text-zinc-950 shadow-lg shadow-blue-500/20" 
-          : "text-zinc-400 hover:bg-zinc-900 hover:text-white"
+          ? "bg-[var(--brand-primary)] text-white shadow-lg shadow-[var(--brand-primary)]/20" 
+          : "text-[var(--text-muted)] hover:bg-[var(--bg-card)] hover:text-[var(--text-main)]"
       }`}
     >
       <div className="flex items-center space-x-3">
-        <Icon className={`w-5 h-5 ${active ? "text-zinc-950" : "text-zinc-500 group-hover:text-blue-400"}`} />
+        <Icon className={`w-5 h-5 ${active ? "text-white" : "text-[var(--text-muted)] group-hover:text-[var(--brand-primary)]"}`} />
         <span className="font-medium">{label}</span>
       </div>
       {active && <ChevronRight className="w-4 h-4" />}
@@ -63,11 +63,11 @@ export default function Sidebar() {
   }, [businessId]);
 
   return (
-    <aside className="w-72 border-r border-zinc-900 flex flex-col h-screen sticky top-0 bg-zinc-950/80 backdrop-blur-xl z-50">
+    <aside className="w-72 border-r border-[var(--border-main)] flex flex-col h-screen sticky top-0 bg-[var(--bg-main)] transition-colors duration-300 z-50">
       <div className="p-8">
         <Link to={ROUTES.HOME} className="flex items-center space-x-3 group">
           {business?.logoUrl ? (
-            <div className="w-10 h-10 rounded-lg overflow-hidden shadow-lg shadow-blue-500/10 group-hover:scale-110 transition-transform">
+            <div className="w-10 h-10 rounded-lg overflow-hidden shadow-lg shadow-[var(--brand-primary)]/10 group-hover:scale-110 transition-transform">
               <img 
                 src={business.logoUrl} 
                 alt="Logo" 
@@ -79,7 +79,7 @@ export default function Sidebar() {
             <Logo iconSize={48} />
           )}
           {business?.name && (
-            <span className="text-2xl font-bold tracking-tighter text-white truncate max-w-[140px] block">
+            <span className="text-2xl font-bold tracking-tighter text-[var(--text-main)] truncate max-w-[140px] block">
               {business.name}
             </span>
           )}
@@ -87,7 +87,7 @@ export default function Sidebar() {
       </div>
 
       <nav className="flex-1 px-4 space-y-2 overflow-y-auto custom-scrollbar">
-        <div className="px-4 py-2 text-[10px] font-bold text-zinc-600 uppercase tracking-widest">Main Menu</div>
+        <div className="px-4 py-2 text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest">Main Menu</div>
         <SidebarItem to={ROUTES.DASHBOARD} icon={LayoutDashboard} label="Dashboard" active={location.pathname === ROUTES.DASHBOARD || location.pathname === ROUTES.HOME} />
         <SidebarItem to={ROUTES.INBOX} icon={Inbox} label="Recent Calls" active={location.pathname === ROUTES.INBOX} />
         <SidebarItem to={ROUTES.CONTACTS} icon={Users} label="Contacts" active={location.pathname === ROUTES.CONTACTS} />
@@ -98,21 +98,21 @@ export default function Sidebar() {
         
         {authState.user?.role === "admin" && (
           <>
-            <div className="px-4 py-6 text-[10px] font-bold text-blue-500 uppercase tracking-widest">Administration</div>
+            <div className="px-4 py-6 text-[10px] font-bold text-[var(--brand-primary)] uppercase tracking-widest">Administration</div>
             <SidebarItem to={ROUTES.ADMIN_DASHBOARD} icon={ShieldCheck} label="System Admin" active={location.pathname === ROUTES.ADMIN_DASHBOARD} />
           </>
         )}
 
-        <div className="px-4 py-6 text-[10px] font-bold text-zinc-600 uppercase tracking-widest">Account</div>
+        <div className="px-4 py-6 text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest">Account</div>
         <SidebarItem to={ROUTES.PRICING} icon={CreditCard} label="Subscription" active={location.pathname === ROUTES.PRICING} />
         <SidebarItem to={ROUTES.SETTINGS} icon={Settings} label="Settings" active={location.pathname === ROUTES.SETTINGS} />
         <SidebarItem to="/help" icon={HelpCircle} label="Help Center" active={location.pathname === "/help"} />
       </nav>
 
-      <div className="p-6 border-t border-zinc-900">
+      <div className="p-6 border-t border-[var(--border-main)]">
         <button 
           onClick={() => AuthService.logout()}
-          className="flex items-center space-x-3 px-4 py-3 w-full text-zinc-500 hover:text-rose-400 hover:bg-rose-500/5 rounded-xl transition-all group"
+          className="flex items-center space-x-3 px-4 py-3 w-full text-[var(--text-muted)] hover:text-danger hover:bg-danger/10 rounded-xl transition-all group"
         >
           <LogOut className="w-5 h-5 group-hover:rotate-12 transition-transform" />
           <span className="font-medium">Sign Out</span>

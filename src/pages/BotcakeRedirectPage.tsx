@@ -72,16 +72,16 @@ export default function BotcakeRedirectPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-zinc-950 flex items-center justify-center p-6">
-        <div className="max-w-md w-full bg-zinc-900 border border-zinc-800 rounded-3xl p-8 text-center space-y-4">
-          <div className="w-16 h-16 bg-rose-500/10 rounded-full flex items-center justify-center mx-auto">
-            <AlertCircle className="w-8 h-8 text-rose-500" />
+      <div className="min-h-screen bg-[var(--bg-main)] flex items-center justify-center p-6">
+        <div className="max-w-md w-full bg-[var(--bg-card)] border border-[var(--border-main)] rounded-3xl p-8 text-center space-y-4">
+          <div className="w-16 h-16 bg-[var(--color-danger)]/10 rounded-full flex items-center justify-center mx-auto">
+            <AlertCircle className="w-8 h-8 text-[var(--color-danger)]" />
           </div>
           <h1 className="text-2xl font-bold text-white">Redirect Error</h1>
-          <p className="text-zinc-400">{error}</p>
+          <p className="text-[var(--text-muted)]">{error}</p>
           <button 
             onClick={() => navigate("/")}
-            className="w-full py-3 bg-zinc-800 hover:bg-zinc-700 text-white font-bold rounded-xl transition-all"
+            className="w-full py-3 bg-[var(--bg-card-hover)] hover:bg-[var(--bg-card-hover)]/80 text-white font-bold rounded-xl transition-all"
           >
             Back to Home
           </button>
@@ -91,16 +91,16 @@ export default function BotcakeRedirectPage() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center p-6 space-y-6">
+    <div className="min-h-screen bg-[var(--bg-main)] flex flex-col items-center justify-center p-6 space-y-6">
       <div className="relative">
-        <div className="w-24 h-24 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin" />
+        <div className="w-24 h-24 border-4 border-[var(--brand-primary)]/20 border-t-[var(--brand-primary)] rounded-full animate-spin" />
         <div className="absolute inset-0 flex items-center justify-center">
-          <Loader2 className="w-8 h-8 text-blue-500 animate-pulse" />
+          <Loader2 className="w-8 h-8 text-[var(--brand-primary)] animate-pulse" />
         </div>
       </div>
       <div className="text-center space-y-2">
         <h2 className="text-xl font-bold text-white">Connecting to Agent...</h2>
-        <p className="text-zinc-500 animate-pulse">Fetching your profile from Botcake</p>
+        <p className="text-[var(--text-muted)] animate-pulse">Fetching your profile from Botcake</p>
       </div>
     </div>
   );

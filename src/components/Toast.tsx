@@ -52,10 +52,10 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
               exit={{ opacity: 0, x: 20, scale: 0.9 }}
               className={`pointer-events-auto flex items-center space-x-3 px-4 py-3 rounded-2xl border shadow-2xl min-w-[300px] ${
                 toast.type === "success"
-                  ? "bg-zinc-900 border-blue-500/20 text-blue-400"
+                  ? "bg-[var(--bg-card)] border-[var(--color-success)]/20 text-[var(--color-success)]"
                   : toast.type === "error"
-                  ? "bg-zinc-900 border-rose-500/20 text-rose-400"
-                  : "bg-zinc-900 border-blue-500/20 text-blue-400"
+                  ? "bg-[var(--bg-card)] border-[var(--color-danger)]/20 text-[var(--color-danger)]"
+                  : "bg-[var(--bg-card)] border-[var(--color-info)]/20 text-[var(--color-info)]"
               }`}
             >
               <div className="flex-shrink-0">
@@ -66,7 +66,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
               <p className="flex-1 text-sm font-medium">{toast.message}</p>
               <button
                 onClick={() => removeToast(toast.id)}
-                className="flex-shrink-0 p-1 hover:bg-white/5 rounded-lg transition-colors"
+                className="flex-shrink-0 p-1 hover:bg-[var(--text-muted)]/10 rounded-lg transition-colors"
               >
                 <X className="w-4 h-4 opacity-50" />
               </button>

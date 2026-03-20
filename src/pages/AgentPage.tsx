@@ -341,7 +341,7 @@ export default function AgentPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+        <div className="w-12 h-12 border-4 border-[var(--brand-primary)] border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
@@ -352,13 +352,13 @@ export default function AgentPage() {
     <div className="max-w-4xl mx-auto space-y-8 pb-12">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-4xl font-bold text-white tracking-tight">Agent Configuration</h1>
-          <p className="text-zinc-500 mt-1">Customize your AI receptionist's personality and voice.</p>
+          <h1 className="text-4xl font-bold text-main tracking-tight">Agent Configuration</h1>
+          <p className="text-muted mt-1">Customize your AI receptionist's personality and voice.</p>
         </div>
         <div className="flex items-center space-x-3">
           <button 
             onClick={() => setShowTemplatesModal(true)}
-            className="px-4 py-2 rounded-xl border border-zinc-800 text-zinc-300 hover:text-white hover:border-zinc-600 transition-all text-sm font-medium flex items-center space-x-2"
+            className="px-4 py-2 rounded-xl border border-border-main text-muted hover:text-main hover:border-muted transition-all text-sm font-medium flex items-center space-x-2"
           >
             <Layout className="w-4 h-4" />
             <span>Use Template</span>
@@ -367,25 +367,25 @@ export default function AgentPage() {
             <motion.span 
               initial={{ opacity: 0, x: 10 }}
               animate={{ opacity: 1, x: 0 }}
-              className={`text-sm font-medium ${saveStatus.includes("Error") ? "text-rose-400" : "text-blue-400"}`}
+              className={`text-sm font-medium ${saveStatus.includes("Error") ? "text-danger" : "text-brand-primary"}`}
             >
               {saveStatus}
             </motion.span>
           )}
           {showResetConfirm ? (
-            <div className="flex items-center space-x-2 bg-rose-500/10 border border-rose-500/20 rounded-xl px-3 py-1.5">
-              <span className="text-xs text-rose-500 font-bold">Are you sure?</span>
+            <div className="flex items-center space-x-2 bg-danger/10 border border-danger/20 rounded-xl px-3 py-1.5">
+              <span className="text-xs text-danger font-bold">Are you sure?</span>
               <button 
                 onClick={handleResetAgent}
                 disabled={isSaving}
-                className="px-3 py-1 bg-rose-500 text-white text-xs font-bold rounded-lg hover:bg-rose-600 transition-all"
+                className="px-3 py-1 bg-danger text-white text-xs font-bold rounded-lg hover:bg-danger/90 transition-all"
               >
                 Yes
               </button>
               <button 
                 onClick={() => setShowResetConfirm(false)}
                 disabled={isSaving}
-                className="px-3 py-1 bg-zinc-800 text-zinc-400 text-xs font-bold rounded-lg hover:bg-zinc-700 transition-all"
+                className="px-3 py-1 bg-border-main text-muted text-xs font-bold rounded-lg hover:bg-bg-card-hover transition-all"
               >
                 No
               </button>
@@ -394,7 +394,7 @@ export default function AgentPage() {
             <button 
               onClick={handleResetAgent}
               disabled={isSaving}
-              className="px-4 py-2 rounded-xl border border-zinc-800 text-zinc-500 hover:text-zinc-300 hover:border-zinc-700 transition-all text-sm font-medium disabled:opacity-50"
+              className="px-4 py-2 rounded-xl border border-border-main text-muted hover:text-main hover:border-muted transition-all text-sm font-medium disabled:opacity-50"
             >
               Reset AI ID
             </button>
@@ -419,22 +419,22 @@ export default function AgentPage() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setShowTemplatesModal(false)}
-              className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+              className="absolute inset-0 bg-[var(--bg-main)]/80 backdrop-blur-sm"
             />
             <motion.div 
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative w-full max-w-4xl max-h-[85vh] bg-zinc-950 border border-zinc-800 rounded-3xl shadow-2xl overflow-hidden flex flex-col"
+              className="relative w-full max-w-4xl max-h-[85vh] bg-bg-main border border-border-main rounded-3xl shadow-2xl overflow-hidden flex flex-col"
             >
-              <div className="p-6 border-bottom border-zinc-900 flex items-center justify-between bg-zinc-950/50 backdrop-blur-md sticky top-0 z-10">
+              <div className="p-6 border-b border-border-main flex items-center justify-between bg-bg-main/50 backdrop-blur-md sticky top-0 z-10">
                 <div>
-                  <h2 className="text-2xl font-bold text-white">Agent Templates</h2>
-                  <p className="text-zinc-500 text-sm mt-1">Select a pre-built personality for your AI agent.</p>
+                  <h2 className="text-2xl font-bold text-main">Agent Templates</h2>
+                  <p className="text-muted text-sm mt-1">Select a pre-built personality for your AI agent.</p>
                 </div>
                 <button 
                   onClick={() => setShowTemplatesModal(false)}
-                  className="p-2 hover:bg-zinc-900 rounded-full text-zinc-500 hover:text-white transition-colors"
+                  className="p-2 hover:bg-bg-card-hover rounded-full text-muted hover:text-main transition-colors"
                 >
                   <X className="w-6 h-6" />
                 </button>
@@ -446,20 +446,20 @@ export default function AgentPage() {
                     <motion.div
                       key={template.id}
                       whileHover={{ y: -4 }}
-                      className="group p-5 bg-zinc-900/50 border border-zinc-800 rounded-2xl hover:border-blue-500/50 hover:bg-zinc-900 transition-all cursor-pointer flex flex-col h-full"
+                      className="group p-5 bg-bg-card border border-border-main rounded-2xl hover:border-brand-primary/50 hover:bg-bg-card-hover transition-all cursor-pointer flex flex-col h-full"
                       onClick={() => handleApplyTemplate(template)}
                     >
                       <div className="flex items-start justify-between mb-3">
-                        <div className="px-2 py-1 bg-zinc-800 rounded text-[10px] font-bold text-zinc-400 uppercase tracking-wider">
+                        <div className="px-2 py-1 bg-bg-card-hover rounded text-[10px] font-bold text-muted uppercase tracking-wider">
                           {template.category}
                         </div>
-                        <div className="w-8 h-8 rounded-full bg-blue-500/10 border border-blue-500/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Check className="w-4 h-4 text-blue-400" />
+                        <div className="w-8 h-8 rounded-full bg-brand-primary/10 border border-brand-primary/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Check className="w-4 h-4 text-brand-primary" />
                         </div>
                       </div>
-                      <h3 className="text-lg font-bold text-white mb-2 group-hover:text-blue-400 transition-colors">{template.name}</h3>
-                      <p className="text-zinc-500 text-sm flex-1">{template.description}</p>
-                      <div className="mt-4 pt-4 border-t border-zinc-800/50 flex items-center text-xs font-semibold text-blue-400">
+                      <h3 className="text-lg font-bold text-main mb-2 group-hover:text-brand-primary transition-colors">{template.name}</h3>
+                      <p className="text-muted text-sm flex-1">{template.description}</p>
+                      <div className="mt-4 pt-4 border-t border-border-main/50 flex items-center text-xs font-semibold text-brand-primary">
                         <span>Apply Template</span>
                         <ChevronRight className="w-3 h-3 ml-1 group-hover:translate-x-1 transition-transform" />
                       </div>
@@ -468,8 +468,8 @@ export default function AgentPage() {
                 </div>
               </div>
 
-              <div className="p-6 border-t border-zinc-900 bg-zinc-950/50 text-center">
-                <p className="text-xs text-zinc-600">Templates will overwrite your current System Instructions.</p>
+              <div className="p-6 border-t border-border-main bg-bg-main/50 text-center">
+                <p className="text-xs text-muted">Templates will overwrite your current System Instructions.</p>
               </div>
             </motion.div>
           </div>
@@ -480,17 +480,17 @@ export default function AgentPage() {
         {/* Basic Info */}
         <div className="glass-card p-8 space-y-6">
           <div className="flex items-center space-x-3">
-            <div className="p-2 bg-blue-500/10 rounded-lg border border-blue-500/20">
-              <User className="w-5 h-5 text-blue-400" />
+            <div className="p-2 bg-brand-primary/10 rounded-lg border border-brand-primary/20">
+              <User className="w-5 h-5 text-brand-primary" />
             </div>
-            <h2 className="text-xl font-bold text-white tracking-tight">Basic Identity</h2>
+            <h2 className="text-xl font-bold text-main tracking-tight">Basic Identity</h2>
           </div>
-          <div className="h-px bg-zinc-900" />
+          <div className="h-px bg-border-main" />
           <div className="space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-zinc-400 ml-1">Agent Name</label>
+              <label className="text-sm font-semibold text-muted ml-1">Agent Name</label>
               <div className="relative group">
-                <Zap className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-600 group-focus-within:text-blue-400 transition-colors" />
+                <Zap className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted group-focus-within:text-brand-primary transition-colors" />
                 <input 
                   type="text" 
                   value={agent.name}
@@ -499,13 +499,13 @@ export default function AgentPage() {
                   className="input-field pl-12"
                 />
               </div>
-              <p className="text-[10px] text-zinc-600 uppercase tracking-widest font-bold ml-1">This is how the agent will introduce itself.</p>
+              <p className="text-[10px] text-muted uppercase tracking-widest font-bold ml-1">This is how the agent will introduce itself.</p>
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-zinc-400 ml-1">Primary Language</label>
+              <label className="text-sm font-semibold text-muted ml-1">Primary Language</label>
               <div className="relative group">
-                <Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-600 group-focus-within:text-blue-400 transition-colors" />
+                <Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted group-focus-within:text-brand-primary transition-colors" />
                 <select 
                   value={agent.language || "en"}
                   onChange={(e) => setAgent({ ...agent, language: e.target.value })}
@@ -515,9 +515,9 @@ export default function AgentPage() {
                     <option key={lang.code} value={lang.code}>{lang.name}</option>
                   ))}
                 </select>
-                <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600 rotate-90 pointer-events-none" />
+                <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted rotate-90 pointer-events-none" />
               </div>
-              <p className="text-[10px] text-zinc-600 uppercase tracking-widest font-bold ml-1">The primary language your agent will speak and understand.</p>
+              <p className="text-[10px] text-muted uppercase tracking-widest font-bold ml-1">The primary language your agent will speak and understand.</p>
             </div>
           </div>
         </div>
@@ -525,20 +525,20 @@ export default function AgentPage() {
         {/* Voice Selection */}
         <div className="glass-card p-8 space-y-6">
           <div className="flex items-center space-x-3">
-            <div className="p-2 bg-blue-500/10 rounded-lg border border-blue-500/20">
-              <Mic className="w-5 h-5 text-blue-400" />
+            <div className="p-2 bg-brand-primary/10 rounded-lg border border-brand-primary/20">
+              <Mic className="w-5 h-5 text-brand-primary" />
             </div>
-            <h2 className="text-xl font-bold text-white tracking-tight">Voice Persona</h2>
+            <h2 className="text-xl font-bold text-main tracking-tight">Voice Persona</h2>
           </div>
-          <div className="h-px bg-zinc-900" />
+          <div className="h-px bg-border-main" />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {availableVoices.map((voice) => (
               <div
                 key={voice.id}
                 className={`p-4 rounded-2xl border transition-all flex items-center justify-between group ${
                   agent.voice === voice.id 
-                    ? "bg-blue-500/10 border-blue-500/30 text-white" 
-                    : "bg-zinc-900/50 border-zinc-800 text-zinc-400 hover:border-zinc-700"
+                    ? "bg-brand-primary/10 border-brand-primary/30 text-main" 
+                    : "bg-bg-card border-border-main text-muted hover:border-muted"
                 }`}
               >
                 <div 
@@ -546,7 +546,7 @@ export default function AgentPage() {
                   onClick={() => setAgent({ ...agent, voice: voice.id })}
                 >
                   <div className={`p-2 rounded-xl transition-colors ${
-                    agent.voice === voice.id ? "bg-blue-500 text-zinc-950" : "bg-zinc-800 group-hover:bg-zinc-700"
+                    agent.voice === voice.id ? "bg-brand-primary text-white" : "bg-bg-card-hover group-hover:bg-border-main"
                   }`}>
                     <Volume2 className="w-4 h-4" />
                   </div>
@@ -561,8 +561,8 @@ export default function AgentPage() {
                     onClick={() => handlePlayPreview(voice.id)}
                     className={`p-2 rounded-full transition-all ${
                       playingVoiceId === voice.id 
-                        ? "bg-blue-500 text-zinc-950" 
-                        : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
+                        ? "bg-brand-primary text-white" 
+                        : "bg-bg-card-hover text-muted hover:bg-border-main"
                     }`}
                   >
                     {playingVoiceId === voice.id ? (
@@ -579,18 +579,18 @@ export default function AgentPage() {
                       language: voice.lang || agent.language 
                     })}
                     className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all cursor-pointer ${
-                      agent.voice === voice.id ? "border-blue-500 bg-blue-500" : "border-zinc-700"
+                      agent.voice === voice.id ? "border-brand-primary bg-brand-primary" : "border-border-main"
                     }`}
                   >
-                    {agent.voice === voice.id && <div className="w-2 h-2 bg-zinc-950 rounded-full" />}
+                    {agent.voice === voice.id && <div className="w-2 h-2 bg-white rounded-full" />}
                   </div>
                 </div>
               </div>
             ))}
           </div>
-          <div className="p-4 bg-zinc-900/50 border border-zinc-800 rounded-xl flex items-start space-x-3">
-            <Info className="w-5 h-5 text-zinc-500 flex-shrink-0 mt-0.5" />
-            <p className="text-xs text-zinc-500 leading-relaxed">
+          <div className="p-4 bg-bg-card border border-border-main rounded-xl flex items-start space-x-3">
+            <Info className="w-5 h-5 text-muted flex-shrink-0 mt-0.5" />
+            <p className="text-xs text-muted leading-relaxed">
               Voices are powered by ElevenLabs. Each voice has a unique tone and personality suitable for different business types.
             </p>
           </div>
@@ -599,15 +599,15 @@ export default function AgentPage() {
         {/* Instructions */}
         <div className="glass-card p-8 space-y-6">
           <div className="flex items-center space-x-3">
-            <div className="p-2 bg-blue-500/10 rounded-lg border border-blue-500/20">
-              <MessageSquare className="w-5 h-5 text-blue-400" />
+            <div className="p-2 bg-brand-primary/10 rounded-lg border border-brand-primary/20">
+              <MessageSquare className="w-5 h-5 text-brand-primary" />
             </div>
-            <h2 className="text-xl font-bold text-white tracking-tight">System Instructions</h2>
+            <h2 className="text-xl font-bold text-main tracking-tight">System Instructions</h2>
           </div>
-          <div className="h-px bg-zinc-900" />
+          <div className="h-px bg-border-main" />
           <div className="space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-zinc-400 ml-1">Behavior & Persona</label>
+              <label className="text-sm font-semibold text-muted ml-1">Behavior & Persona</label>
               <textarea 
                 rows={6}
                 value={agent.instructions}
@@ -616,8 +616,8 @@ export default function AgentPage() {
                 className="input-field resize-none"
               />
               <div className="flex items-center justify-between px-1">
-                <p className="text-[10px] text-zinc-600 uppercase tracking-widest font-bold">Define the agent's tone, style, and general behavior.</p>
-                <span className="text-[10px] text-zinc-600 font-bold">{agent.instructions.length} characters</span>
+                <p className="text-[10px] text-muted uppercase tracking-widest font-bold">Define the agent's tone, style, and general behavior.</p>
+                <span className="text-[10px] text-muted font-bold">{agent.instructions.length} characters</span>
               </div>
             </div>
           </div>
@@ -626,15 +626,15 @@ export default function AgentPage() {
         {/* Knowledge Base */}
         <div className="glass-card p-8 space-y-6">
           <div className="flex items-center space-x-3">
-            <div className="p-2 bg-blue-500/10 rounded-lg border border-blue-500/20">
-              <BookOpen className="w-5 h-5 text-blue-400" />
+            <div className="p-2 bg-brand-primary/10 rounded-lg border border-brand-primary/20">
+              <BookOpen className="w-5 h-5 text-brand-primary" />
             </div>
-            <h2 className="text-xl font-bold text-white tracking-tight">Business Knowledge Base</h2>
+            <h2 className="text-xl font-bold text-main tracking-tight">Business Knowledge Base</h2>
           </div>
-          <div className="h-px bg-zinc-900" />
+          <div className="h-px bg-border-main" />
           <div className="space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-zinc-400 ml-1">Facts & Information</label>
+              <label className="text-sm font-semibold text-muted ml-1">Facts & Information</label>
               <textarea 
                 rows={8}
                 value={agent.knowledgeBase || ""}
@@ -643,22 +643,22 @@ export default function AgentPage() {
                 className="input-field resize-none"
               />
               <div className="flex items-center justify-between px-1">
-                <p className="text-[10px] text-zinc-600 uppercase tracking-widest font-bold">This is the source of truth for the agent's answers.</p>
-                <span className="text-[10px] text-zinc-600 font-bold">{(agent.knowledgeBase || "").length} characters</span>
+                <p className="text-[10px] text-muted uppercase tracking-widest font-bold">This is the source of truth for the agent's answers.</p>
+                <span className="text-[10px] text-muted font-bold">{(agent.knowledgeBase || "").length} characters</span>
               </div>
             </div>
           </div>
         </div>
 
         {/* Preview Section */}
-        <div className="p-8 bg-blue-500/5 border border-blue-500/10 rounded-3xl flex flex-col md:flex-row items-center justify-between gap-6">
+        <div className="p-8 bg-brand-primary/5 border border-brand-primary/10 rounded-3xl flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center space-x-4">
-            <div className="p-4 bg-blue-500 rounded-2xl shadow-lg shadow-blue-500/20">
-              <Play className="w-6 h-6 text-zinc-950" />
+            <div className="p-4 bg-brand-primary rounded-2xl shadow-lg shadow-brand-primary/20">
+              <Play className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-white">Test your configuration</h3>
-              <p className="text-zinc-500 text-sm">Open the voice interface to see your agent in action.</p>
+              <h3 className="text-lg font-bold text-main">Test your configuration</h3>
+              <p className="text-muted text-sm">Open the voice interface to see your agent in action.</p>
             </div>
           </div>
           <button 

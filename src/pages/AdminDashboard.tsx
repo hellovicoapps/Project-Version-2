@@ -226,21 +226,21 @@ export default function AdminDashboard() {
     <div className="space-y-8 max-w-7xl mx-auto">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center space-x-2 text-blue-400 mb-2">
+          <div className="flex items-center space-x-2 text-[var(--brand-primary)] mb-2">
             <ShieldCheck className="w-5 h-5" />
             <span className="text-xs font-bold uppercase tracking-widest">Admin Control Panel</span>
           </div>
-          <h1 className="text-4xl font-bold text-white tracking-tight">System Overview</h1>
-          <p className="text-zinc-500 mt-1">Manage all businesses and monitor system-wide usage.</p>
+          <h1 className="text-4xl font-bold text-[var(--text-main)] tracking-tight">System Overview</h1>
+          <p className="text-[var(--text-muted)] mt-1">Manage all businesses and monitor system-wide usage.</p>
         </div>
         <div className="flex items-center space-x-3">
           {isSyncing && (
-            <span className="text-xs font-medium text-blue-400 animate-pulse">{syncProgress}</span>
+            <span className="text-xs font-medium text-[var(--brand-primary)] animate-pulse">{syncProgress}</span>
           )}
           <button
             onClick={() => setShowConfirmSync(true)}
             disabled={isSyncing || loading}
-            className="px-4 py-2 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-white hover:border-zinc-700 transition-all text-sm font-medium flex items-center space-x-2 disabled:opacity-50"
+            className="px-4 py-2 rounded-xl bg-[var(--bg-card)] border border-[var(--border-main)] text-[var(--text-muted)] hover:text-[var(--text-main)] hover:border-[var(--text-muted)] transition-all text-sm font-medium flex items-center space-x-2 disabled:opacity-50"
           >
             <Zap className={`w-4 h-4 ${isSyncing ? "animate-spin" : ""}`} />
             <span>{isSyncing ? "Syncing..." : "Sync All Agents"}</span>
@@ -261,73 +261,73 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
         <div className="glass-card p-6">
           <div className="flex items-center justify-between mb-4">
-            <div className="p-3 bg-blue-500/10 rounded-xl border border-blue-500/20">
-              <Building2 className="w-6 h-6 text-blue-400" />
+            <div className="p-3 bg-[var(--brand-primary)]/10 rounded-xl border border-[var(--brand-primary)]/20">
+              <Building2 className="w-6 h-6 text-[var(--brand-primary)]" />
             </div>
           </div>
-          <p className="text-zinc-500 text-sm font-medium">Total Businesses</p>
-          <h3 className="text-3xl font-bold text-white mt-1">{totalBusinesses}</h3>
+          <p className="text-[var(--text-muted)] text-sm font-medium">Total Businesses</p>
+          <h3 className="text-3xl font-bold text-[var(--text-main)] mt-1">{totalBusinesses}</h3>
         </div>
         <div className="glass-card p-6">
           <div className="flex items-center justify-between mb-4">
-            <div className="p-3 bg-purple-500/10 rounded-xl border border-purple-500/20">
-              <Clock className="w-6 h-6 text-purple-400" />
+            <div className="p-3 bg-[var(--color-accent)]/10 rounded-xl border border-[var(--color-accent)]/20">
+              <Clock className="w-6 h-6 text-[var(--color-accent)]" />
             </div>
           </div>
-          <p className="text-zinc-500 text-sm font-medium">Total Minutes Used</p>
-          <h3 className="text-3xl font-bold text-white mt-1">{Math.round(totalMinutes)}</h3>
+          <p className="text-[var(--text-muted)] text-sm font-medium">Total Minutes Used</p>
+          <h3 className="text-3xl font-bold text-[var(--text-main)] mt-1">{Math.round(totalMinutes)}</h3>
         </div>
         <div className="glass-card p-6">
           <div className="flex items-center justify-between mb-4">
-            <div className="p-3 bg-emerald-500/10 rounded-xl border border-emerald-500/20">
-              <Users className="w-6 h-6 text-emerald-400" />
+            <div className="p-3 bg-[var(--color-success)]/10 rounded-xl border border-[var(--color-success)]/20">
+              <Users className="w-6 h-6 text-[var(--color-success)]" />
             </div>
           </div>
-          <p className="text-zinc-500 text-sm font-medium">Active Users</p>
-          <h3 className="text-3xl font-bold text-white mt-1">{totalBusinesses}</h3>
+          <p className="text-[var(--text-muted)] text-sm font-medium">Active Users</p>
+          <h3 className="text-3xl font-bold text-[var(--text-main)] mt-1">{totalBusinesses}</h3>
         </div>
       </div>
 
       <div className="glass-card overflow-hidden">
-        <div className="p-6 border-b border-zinc-900 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <h3 className="text-lg font-semibold text-white">Business Directory</h3>
+        <div className="p-6 border-b border-[var(--border-main)] flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <h3 className="text-lg font-semibold text-[var(--text-main)]">Business Directory</h3>
           <div className="relative w-full md:w-72">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" />
             <input 
               type="text"
               placeholder="Search businesses..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-zinc-900/50 border border-zinc-800 rounded-xl py-2 pl-10 pr-4 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
+              className="w-full bg-[var(--bg-main)] border border-[var(--border-main)] rounded-xl py-2 pl-10 pr-4 text-sm text-[var(--text-main)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/50 transition-all"
             />
           </div>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-zinc-900/30">
-                <th className="px-6 py-4 text-xs font-bold text-zinc-500 uppercase tracking-widest">Business</th>
-                <th className="px-6 py-4 text-xs font-bold text-zinc-500 uppercase tracking-widest">Plan</th>
-                <th className="px-6 py-4 text-xs font-bold text-zinc-500 uppercase tracking-widest">Usage</th>
-                <th className="px-6 py-4 text-xs font-bold text-zinc-500 uppercase tracking-widest">Status</th>
-                <th className="px-6 py-4 text-xs font-bold text-zinc-500 uppercase tracking-widest">Joined</th>
+              <tr className="bg-[var(--bg-card)]/30">
+                <th className="px-6 py-4 text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest">Business</th>
+                <th className="px-6 py-4 text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest">Plan</th>
+                <th className="px-6 py-4 text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest">Usage</th>
+                <th className="px-6 py-4 text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest">Status</th>
+                <th className="px-6 py-4 text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest">Joined</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-zinc-900">
+            <tbody className="divide-y divide-[var(--border-main)]">
               {loading ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-12 text-center text-zinc-500">Loading businesses...</td>
+                  <td colSpan={5} className="px-6 py-12 text-center text-[var(--text-muted)]">Loading businesses...</td>
                 </tr>
               ) : filteredBusinesses.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-12 text-center text-zinc-500">No businesses found.</td>
+                  <td colSpan={5} className="px-6 py-12 text-center text-[var(--text-muted)]">No businesses found.</td>
                 </tr>
               ) : (
                 filteredBusinesses.map((b) => (
-                  <tr key={b.id} className="hover:bg-zinc-900/20 transition-colors group">
+                  <tr key={b.id} className="hover:bg-[var(--bg-card-hover)]/20 transition-colors group">
                     <td className="px-6 py-4">
                       <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 rounded-lg bg-zinc-800 flex items-center justify-center text-zinc-500">
+                        <div className="w-10 h-10 rounded-lg bg-[var(--bg-card)] flex items-center justify-center text-[var(--text-muted)]">
                           {b.logoUrl ? (
                             <img src={b.logoUrl} className="w-full h-full object-cover rounded-lg" referrerPolicy="no-referrer" />
                           ) : (
@@ -335,16 +335,16 @@ export default function AdminDashboard() {
                           )}
                         </div>
                         <div>
-                          <p className="text-sm font-bold text-white">{b.name}</p>
-                          <p className="text-xs text-zinc-500">{b.email}</p>
+                          <p className="text-sm font-bold text-[var(--text-main)]">{b.name}</p>
+                          <p className="text-xs text-[var(--text-muted)]">{b.email}</p>
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4">
                       <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                        b.plan === "SCALE" ? "bg-purple-500/10 text-purple-400 border border-purple-500/20" :
-                        b.plan === "GROWTH" ? "bg-blue-500/10 text-blue-400 border border-blue-500/20" :
-                        "bg-zinc-800 text-zinc-400 border border-zinc-700"
+                        b.plan === "SCALE" ? "bg-[var(--color-accent)]/10 text-[var(--color-accent)] border border-[var(--color-accent)]/20" :
+                        b.plan === "GROWTH" ? "bg-[var(--brand-primary)]/10 text-[var(--brand-primary)] border border-[var(--brand-primary)]/20" :
+                        "bg-[var(--bg-card)] text-[var(--text-muted)] border border-[var(--border-main)]"
                       }`}>
                         {b.plan}
                       </span>
@@ -352,13 +352,13 @@ export default function AdminDashboard() {
                     <td className="px-6 py-4">
                       <div className="space-y-1.5">
                         <div className="flex justify-between text-[10px] font-medium">
-                          <span className="text-zinc-500">{Math.round(b.usedMinutes || 0)} / {b.totalMinutes} min</span>
-                          <span className="text-zinc-400">{Math.round(((b.usedMinutes || 0) / (b.totalMinutes || 60)) * 100)}%</span>
+                          <span className="text-[var(--text-muted)]">{Math.round(b.usedMinutes || 0)} / {b.totalMinutes} min</span>
+                          <span className="text-[var(--text-muted)]">{Math.round(((b.usedMinutes || 0) / (b.totalMinutes || 60)) * 100)}%</span>
                         </div>
-                        <div className="w-32 h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                        <div className="w-32 h-1.5 bg-[var(--bg-card)] rounded-full overflow-hidden">
                           <div 
                             className={`h-full transition-all duration-500 ${
-                              (b.usedMinutes || 0) >= (b.totalMinutes || 60) ? "bg-rose-500" : "bg-blue-500"
+                              (b.usedMinutes || 0) >= (b.totalMinutes || 60) ? "bg-[var(--color-danger)]" : "bg-[var(--brand-primary)]"
                             }`}
                             style={{ width: `${Math.min(100, ((b.usedMinutes || 0) / (b.totalMinutes || 60)) * 100)}%` }}
                           />
@@ -367,18 +367,18 @@ export default function AdminDashboard() {
                     </td>
                     <td className="px-6 py-4">
                       {(b.usedMinutes || 0) >= (b.totalMinutes || 60) ? (
-                        <div className="flex items-center space-x-1.5 text-rose-400">
+                        <div className="flex items-center space-x-1.5 text-[var(--color-danger)]">
                           <AlertCircle className="w-4 h-4" />
                           <span className="text-xs font-medium">Limit Reached</span>
                         </div>
                       ) : (
-                        <div className="flex items-center space-x-1.5 text-emerald-400">
-                          <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                        <div className="flex items-center space-x-1.5 text-[var(--color-success)]">
+                          <div className="w-1.5 h-1.5 rounded-full bg-[var(--color-success)] animate-pulse" />
                           <span className="text-xs font-medium">Active</span>
                         </div>
                       )}
                     </td>
-                    <td className="px-6 py-4 text-sm text-zinc-500">
+                    <td className="px-6 py-4 text-sm text-[var(--text-muted)]">
                       {b.createdAt?.toDate ? new Date(b.createdAt.toDate()).toLocaleDateString() : "N/A"}
                     </td>
                   </tr>

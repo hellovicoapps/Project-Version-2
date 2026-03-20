@@ -26,15 +26,15 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
   if (!isOpen) return null;
 
   const colors = {
-    danger: 'bg-red-500 hover:bg-red-600 text-white',
-    warning: 'bg-amber-500 hover:bg-amber-600 text-white',
-    info: 'bg-blue-500 hover:bg-blue-600 text-white'
+    danger: 'bg-[var(--color-danger)] hover:opacity-90 text-white',
+    warning: 'bg-[var(--color-warning)] hover:opacity-90 text-white',
+    info: 'bg-[var(--color-info)] hover:opacity-90 text-white'
   };
 
   const iconColors = {
-    danger: 'text-red-400',
-    warning: 'text-amber-400',
-    info: 'text-blue-400'
+    danger: 'text-[var(--color-danger)]',
+    warning: 'text-[var(--color-warning)]',
+    info: 'text-[var(--color-info)]'
   };
 
   return (
@@ -44,20 +44,20 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          className="relative w-full max-w-md overflow-hidden bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl"
+          className="relative w-full max-w-md overflow-hidden bg-[var(--bg-card)] border border-[var(--border-main)] rounded-2xl shadow-2xl"
         >
           <div className="p-6">
             <div className="flex items-start gap-4">
-              <div className={`p-2 rounded-full bg-zinc-800 ${iconColors[type]}`}>
+              <div className={`p-2 rounded-full bg-[var(--text-muted)]/10 ${iconColors[type]}`}>
                 <AlertCircle className="w-6 h-6" />
               </div>
               <div className="flex-1">
-                <h3 className="text-xl font-semibold text-white mb-2">{title}</h3>
-                <p className="text-zinc-400 leading-relaxed">{message}</p>
+                <h3 className="text-xl font-semibold text-[var(--text-main)] mb-2">{title}</h3>
+                <p className="text-[var(--text-muted)] leading-relaxed">{message}</p>
               </div>
               <button 
                 onClick={onClose}
-                className="p-1 text-zinc-500 hover:text-white transition-colors"
+                className="p-1 text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -66,7 +66,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
             <div className="mt-8 flex items-center justify-end gap-3">
               <button
                 onClick={onClose}
-                className="px-4 py-2 text-sm font-medium text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-xl transition-all"
+                className="px-4 py-2 text-sm font-medium text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--text-muted)]/10 rounded-xl transition-all"
               >
                 {cancelText}
               </button>

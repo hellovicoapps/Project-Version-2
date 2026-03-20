@@ -8,10 +8,19 @@
   --font-display: "Anton", sans-serif;
   --font-tech: "Space Grotesk", sans-serif;
 
-  --color-brand-primary: #3b82f6; /* Blue 500 */
-  --color-brand-secondary: #2563eb; /* Blue 600 */
-  --color-brand-dark: #1e3a8a; /* Blue 900 */
-  --color-brand-light: #dbeafe; /* Blue 100 */
+  --color-brand-primary: var(--brand-primary);
+  --color-brand-secondary: var(--brand-secondary);
+  --color-bg-main: var(--bg-main);
+  --color-bg-card: var(--bg-card);
+  --color-bg-card-hover: var(--bg-card-hover);
+  --color-main: var(--text-main);
+  --color-muted: var(--text-muted);
+  --color-border-main: var(--border-main);
+  --color-danger: #ef4444;
+  --color-warning: #f59e0b;
+  --color-success: #22c55e;
+  --color-info: #3b82f6;
+  --color-accent: #8b5cf6;
 
   --radius-xl: 1rem;
   --radius-2xl: 1.5rem;
@@ -21,30 +30,56 @@
 }
 
 @layer base {
+  :root {
+    --bg-main: #ffffff;
+    --bg-card: #f8fafc;
+    --bg-card-hover: #f1f5f9;
+    --text-main: #0f172a;
+    --text-muted: #64748b;
+    --border-main: #e2e8f0;
+    --glass-bg: rgba(255, 255, 255, 0.8);
+    --glass-border: rgba(0, 0, 0, 0.05);
+    --brand-primary: #1d4ed8; /* Deeper blue for light theme */
+    --brand-secondary: #1e40af;
+  }
+
+  .dark {
+    --bg-main: #09090b;
+    --bg-card: #18181b;
+    --bg-card-hover: #27272a;
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    --border-main: #27272a;
+    --glass-bg: rgba(9, 9, 11, 0.8);
+    --glass-border: rgba(255, 255, 255, 0.05);
+    --brand-primary: #3b82f6; /* Lighter blue for dark theme */
+    --brand-secondary: #2563eb;
+  }
+
   body {
-    @apply bg-zinc-950 text-zinc-100 font-sans antialiased selection:bg-blue-500/30 selection:text-blue-200;
+    @apply bg-[var(--bg-main)] text-[var(--text-main)] font-sans antialiased selection:bg-brand-primary/30 selection:text-brand-primary transition-colors duration-300;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    @apply font-tech tracking-tight text-white;
+    @apply font-tech tracking-tight text-[var(--text-main)];
   }
 }
 
 @layer components {
   .glass-card {
-    @apply bg-zinc-900/50 backdrop-blur-xl border border-white/5 rounded-2xl shadow-xl;
+    @apply bg-[var(--glass-bg)] backdrop-blur-xl border border-[var(--glass-border)] rounded-2xl shadow-xl transition-all duration-300;
   }
 
   .btn-primary {
-    @apply px-6 py-2.5 bg-blue-500 hover:bg-blue-400 text-zinc-950 font-semibold rounded-xl transition-all transform hover:scale-105 active:scale-95 shadow-lg shadow-blue-500/20 disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply px-6 py-2.5 bg-[var(--brand-primary)] hover:bg-[var(--brand-secondary)] text-white font-semibold rounded-xl transition-all transform hover:scale-105 active:scale-95 shadow-lg shadow-brand-primary/20 disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
   .btn-secondary {
-    @apply px-6 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-white font-medium rounded-xl transition-all border border-zinc-700 hover:border-zinc-600 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply px-6 py-2.5 bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] text-[var(--text-main)] font-medium rounded-xl transition-all border border-[var(--border-main)] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
   .input-field {
-    @apply w-full px-4 py-2.5 bg-zinc-900 border border-zinc-800 rounded-xl text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all;
+    @apply w-full px-4 py-2.5 bg-[var(--bg-card)] border border-[var(--border-main)] rounded-xl text-[var(--text-main)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-brand-primary/50 focus:border-[var(--brand-primary)] transition-all;
   }
 }
 

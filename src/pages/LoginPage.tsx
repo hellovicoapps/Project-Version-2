@@ -39,18 +39,18 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6 bg-zinc-950 relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center p-6 bg-[var(--bg-main)] relative overflow-hidden transition-colors duration-300">
       {/* Back to Home */}
       <Link 
         to={ROUTES.HOME}
-        className="absolute top-8 left-8 z-50 flex items-center space-x-2 text-zinc-500 hover:text-white transition-colors group"
+        className="absolute top-8 left-8 z-50 flex items-center space-x-2 text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors group"
       >
         <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
         <span className="text-sm font-medium tracking-tight">Back to Home</span>
       </Link>
 
       {/* Background Glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-blue-500/10 blur-[120px] rounded-full pointer-events-none" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-[var(--brand-primary)]/10 blur-[120px] rounded-full pointer-events-none" />
       
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
@@ -61,8 +61,8 @@ export default function LoginPage() {
           <div className="flex justify-center mb-6">
             <Logo iconSize={64} />
           </div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">Welcome Back</h1>
-          <p className="text-zinc-500 mt-2">Sign in to manage your AI receptionist.</p>
+          <h1 className="text-3xl font-bold text-[var(--text-main)] tracking-tight">Welcome Back</h1>
+          <p className="text-[var(--text-muted)] mt-2">Sign in to manage your AI receptionist.</p>
         </div>
 
         {error && (
@@ -78,9 +78,9 @@ export default function LoginPage() {
 
         <form onSubmit={handleLogin} className="space-y-6">
           <div className="space-y-2">
-            <label className="text-sm font-semibold text-zinc-400 ml-1">Email Address</label>
+            <label className="text-sm font-semibold text-[var(--text-muted)] ml-1">Email Address</label>
             <div className="relative group">
-              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-600 group-focus-within:text-blue-400 transition-colors" />
+              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--text-muted)] group-focus-within:text-[var(--brand-primary)] transition-colors" />
               <input 
                 type="email" 
                 required
@@ -94,11 +94,11 @@ export default function LoginPage() {
 
           <div className="space-y-2">
             <div className="flex items-center justify-between ml-1">
-              <label className="text-sm font-semibold text-zinc-400">Password</label>
-              <Link to="/forgot-password" title="Forgot Password?" className="text-xs text-blue-500 hover:text-blue-400 transition-colors font-medium">Forgot Password?</Link>
+              <label className="text-sm font-semibold text-[var(--text-muted)]">Password</label>
+              <Link to="/forgot-password" title="Forgot Password?" className="text-xs text-[var(--brand-primary)] hover:opacity-80 transition-colors font-medium">Forgot Password?</Link>
             </div>
             <div className="relative group">
-              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-600 group-focus-within:text-blue-400 transition-colors" />
+              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--text-muted)] group-focus-within:text-[var(--brand-primary)] transition-colors" />
               <input 
                 type={showPassword ? "text" : "password"} 
                 required
@@ -110,7 +110,7 @@ export default function LoginPage() {
               <button 
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-600 hover:text-zinc-400 transition-colors"
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors"
               >
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
@@ -127,8 +127,8 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <p className="text-center text-zinc-500 text-sm mt-10">
-          Don't have an account? <Link to={ROUTES.ONBOARDING} className="text-blue-500 hover:text-blue-400 font-semibold transition-colors">Get Started</Link>
+        <p className="text-center text-[var(--text-muted)] text-sm mt-10">
+          Don't have an account? <Link to={ROUTES.ONBOARDING} className="text-[var(--brand-primary)] hover:opacity-80 font-semibold transition-colors">Get Started</Link>
         </p>
       </motion.div>
     </div>

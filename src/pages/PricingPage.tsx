@@ -102,7 +102,7 @@ export default function PricingPage() {
       {isPublic && (
         <Link 
           to={ROUTES.HOME}
-          className="fixed top-8 left-8 z-50 flex items-center space-x-2 text-zinc-500 hover:text-white transition-colors group bg-zinc-950/50 backdrop-blur-sm p-2 rounded-lg border border-zinc-800"
+          className="fixed top-8 left-8 z-50 flex items-center space-x-2 text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors group bg-[var(--bg-main)]/50 backdrop-blur-sm p-2 rounded-lg border border-[var(--border-main)]"
         >
           <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
           <span className="text-sm font-medium tracking-tight">Back to Home</span>
@@ -110,8 +110,8 @@ export default function PricingPage() {
       )}
       
       <div className="text-center mb-16">
-        <h1 className="text-4xl font-bold text-white mb-4">Simple, Credit-Based Pricing</h1>
-        <p className="text-zinc-400 text-lg max-w-2xl mx-auto">
+        <h1 className="text-4xl font-bold text-[var(--text-main)] mb-4">Simple, Credit-Based Pricing</h1>
+        <p className="text-[var(--text-muted)] text-lg max-w-2xl mx-auto">
           Choose the plan that fits your business needs. All plans include our core AI features.
         </p>
       </div>
@@ -125,42 +125,42 @@ export default function PricingPage() {
             transition={{ delay: index * 0.1 }}
             className={`relative flex flex-col p-8 rounded-3xl border ${
               plan.popular 
-                ? "bg-zinc-900 border-blue-500/50 shadow-2xl shadow-blue-500/10" 
-                : "bg-zinc-900/50 border-zinc-800"
+                ? "bg-[var(--bg-card)] border-[var(--brand-primary)]/50 shadow-2xl shadow-[var(--brand-primary)]/10" 
+                : "bg-[var(--bg-card)]/50 border-[var(--border-main)]"
             }`}
           >
             {plan.popular && (
-              <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 bg-blue-500 text-white text-xs font-bold rounded-full uppercase tracking-wider">
+              <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 bg-[var(--brand-primary)] text-white text-xs font-bold rounded-full uppercase tracking-wider">
                 Most Popular
               </div>
             )}
 
             <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-6 ${
-              plan.color === 'blue' ? 'bg-blue-500/10 text-blue-400' :
-              plan.color === 'indigo' ? 'bg-indigo-500/10 text-indigo-400' :
-              plan.color === 'purple' ? 'bg-purple-500/10 text-purple-400' :
-              'bg-zinc-800 text-zinc-400'
+              plan.color === 'blue' ? 'bg-[var(--brand-primary)]/10 text-[var(--brand-primary)]' :
+              plan.color === 'indigo' ? 'bg-[var(--brand-primary)]/10 text-[var(--brand-primary)]' :
+              plan.color === 'purple' ? 'bg-[var(--color-accent)]/10 text-[var(--color-accent)]' :
+              'bg-[var(--bg-main)] text-[var(--text-muted)]'
             }`}>
               <plan.icon className="w-6 h-6" />
             </div>
 
-            <h3 className="text-xl font-bold text-white mb-2">{plan.name}</h3>
+            <h3 className="text-xl font-bold text-[var(--text-main)] mb-2">{plan.name}</h3>
             <div className="flex items-baseline space-x-1 mb-6">
-              <span className="text-4xl font-bold text-white">${plan.price}</span>
-              <span className="text-zinc-500">/month</span>
+              <span className="text-4xl font-bold text-[var(--text-main)]">${plan.price}</span>
+              <span className="text-[var(--text-muted)]">/month</span>
             </div>
 
             <div className="space-y-4 mb-8 flex-1">
-              <div className="p-4 bg-zinc-950/50 rounded-2xl border border-zinc-800/50 text-center">
-                <p className="text-2xl font-bold text-white">{plan.minutes.toLocaleString()}</p>
-                <p className="text-xs text-zinc-500 uppercase tracking-wider">Voice Minutes</p>
-                <p className="text-[10px] text-zinc-600 mt-1">{plan.calls} calls/month</p>
+              <div className="p-4 bg-[var(--bg-main)]/50 rounded-2xl border border-[var(--border-main)]/50 text-center">
+                <p className="text-2xl font-bold text-[var(--text-main)]">{plan.minutes.toLocaleString()}</p>
+                <p className="text-xs text-[var(--text-muted)] uppercase tracking-wider">Voice Minutes</p>
+                <p className="text-[10px] text-[var(--text-muted)]/60 mt-1">{plan.calls} calls/month</p>
               </div>
 
               <ul className="space-y-3">
                 {plan.features.map((feature) => (
-                  <li key={feature} className="flex items-start space-x-3 text-sm text-zinc-400">
-                    <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                  <li key={feature} className="flex items-start space-x-3 text-sm text-[var(--text-muted)]">
+                    <Check className="w-4 h-4 text-[var(--color-success)] shrink-0 mt-0.5" />
                     <span>{feature}</span>
                   </li>
                 ))}
@@ -172,10 +172,10 @@ export default function PricingPage() {
               onClick={() => handleUpgrade(plan.id, plan.minutes)}
               className={`w-full py-4 rounded-2xl font-bold transition-all ${
                 currentPlan === plan.id
-                  ? "bg-zinc-800 text-zinc-500 cursor-default"
+                  ? "bg-[var(--bg-main)] text-[var(--text-muted)] cursor-default"
                   : plan.popular
-                  ? "bg-blue-500 text-white hover:bg-blue-600 shadow-lg shadow-blue-500/20"
-                  : "bg-white text-zinc-950 hover:bg-zinc-200"
+                  ? "bg-[var(--brand-primary)] text-white hover:bg-[var(--brand-secondary)] shadow-lg shadow-[var(--brand-primary)]/20"
+                  : "bg-[var(--text-main)] text-[var(--bg-main)] hover:bg-[var(--text-main)]/90"
               }`}
             >
               {currentPlan === plan.id ? "Current Plan" : "Upgrade Now"}
@@ -184,10 +184,10 @@ export default function PricingPage() {
         ))}
       </div>
 
-      <div className="mt-16 p-8 bg-zinc-900/50 border border-zinc-800 rounded-3xl text-center">
-        <h3 className="text-xl font-bold text-white mb-2">Need a custom plan?</h3>
-        <p className="text-zinc-400 mb-6">We offer enterprise solutions for businesses with high call volumes.</p>
-        <button className="px-8 py-3 bg-zinc-800 hover:bg-zinc-700 text-white font-bold rounded-xl transition-colors">
+      <div className="mt-16 p-8 bg-[var(--bg-card)]/50 border border-[var(--border-main)] rounded-3xl text-center">
+        <h3 className="text-xl font-bold text-[var(--text-main)] mb-2">Need a custom plan?</h3>
+        <p className="text-[var(--text-muted)] mb-6">We offer enterprise solutions for businesses with high call volumes.</p>
+        <button className="px-8 py-3 bg-[var(--bg-main)] hover:bg-[var(--bg-card)] text-[var(--text-main)] font-bold rounded-xl transition-colors border border-[var(--border-main)]">
           Contact Sales
         </button>
       </div>

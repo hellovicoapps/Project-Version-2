@@ -426,26 +426,26 @@ export default function PublicCallPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center p-6">
-        <Loader2 className="w-12 h-12 text-blue-500 animate-spin mb-4" />
-        <p className="text-zinc-500 font-medium">Loading AI Agent...</p>
+      <div className="min-h-screen bg-[var(--bg-main)] flex flex-col items-center justify-center p-6">
+        <Loader2 className="w-12 h-12 text-[var(--brand-primary)] animate-spin mb-4" />
+        <p className="text-[var(--text-muted)] font-medium">Loading AI Agent...</p>
       </div>
     );
   }
 
   if (!agent || businessId === "undefined") {
     return (
-      <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center p-6 text-center">
-        <div className="w-20 h-20 bg-rose-500/10 rounded-full flex items-center justify-center mb-6">
-          <PhoneOff className="w-10 h-10 text-rose-500" />
+      <div className="min-h-screen bg-[var(--bg-main)] flex flex-col items-center justify-center p-6 text-center">
+        <div className="w-20 h-20 bg-[var(--color-danger)]/10 rounded-full flex items-center justify-center mb-6">
+          <PhoneOff className="w-10 h-10 text-[var(--color-danger)]" />
         </div>
-        <h1 className="text-2xl font-bold text-white mb-2">Agent Not Found</h1>
-        <p className="text-zinc-500 max-w-md">
+        <h1 className="text-2xl font-bold text-[var(--text-main)] mb-2">Agent Not Found</h1>
+        <p className="text-[var(--text-muted)] max-w-md">
           {businessId === "undefined" 
             ? "The link is incomplete. Please ask the business owner for a valid shareable link."
             : "This business hasn't set up their AI agent yet or the link is invalid."}
         </p>
-        <Link to="/" className="mt-8 text-blue-400 hover:text-blue-300 font-semibold flex items-center space-x-2">
+        <Link to="/" className="mt-8 text-[var(--brand-primary)] hover:opacity-80 font-semibold flex items-center space-x-2">
           <span>Go to Vico</span>
         </Link>
       </div>
@@ -453,7 +453,7 @@ export default function PublicCallPage() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 flex flex-col relative">
+    <div className="min-h-screen bg-[var(--bg-main)] flex flex-col relative">
       {/* Background Image */}
       {backgroundUrl && (
         <div className="absolute inset-0 z-0 overflow-hidden">
@@ -463,15 +463,15 @@ export default function PublicCallPage() {
             className="w-full h-full object-cover opacity-40 blur-[2px]"
             referrerPolicy="no-referrer"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-zinc-950/40 via-zinc-950/20 to-zinc-950" />
+          <div className="absolute inset-0 bg-gradient-to-b from-[var(--bg-main)]/40 via-[var(--bg-main)]/20 to-[var(--bg-main)]" />
         </div>
       )}
       
       {/* Public Header */}
-      <header className="p-6 border-b border-zinc-900 flex items-center justify-between bg-zinc-950/50 backdrop-blur-xl sticky top-0 z-50">
+      <header className="p-6 border-b border-[var(--border-main)] flex items-center justify-between bg-[var(--bg-main)]/50 backdrop-blur-xl sticky top-0 z-50">
         <div className="flex items-center space-x-3">
           {logoUrl ? (
-            <div className="w-10 h-10 rounded-lg overflow-hidden shadow-lg shadow-blue-500/10">
+            <div className="w-10 h-10 rounded-lg overflow-hidden shadow-lg shadow-[var(--brand-primary)]/10">
               <img 
                 src={logoUrl} 
                 alt="Logo" 
@@ -483,11 +483,11 @@ export default function PublicCallPage() {
             <Logo iconSize={32} />
           )}
           <div>
-            <h1 className="text-lg font-bold text-white tracking-tight">{businessName}</h1>
+            <h1 className="text-lg font-bold text-[var(--text-main)] tracking-tight">{businessName}</h1>
           </div>
         </div>
         <div className={`flex items-center space-x-2 px-3 py-1.5 rounded-full border transition-all ${
-          isCalling ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" : "bg-zinc-900 border-zinc-800 text-zinc-500"
+          isCalling ? "bg-[var(--color-success)]/10 border-[var(--color-success)]/20 text-[var(--color-success)]" : "bg-[var(--bg-card)] border-[var(--border-main)] text-[var(--text-muted)]"
         }`}>
           <Activity className={`w-3 h-3 ${isCalling ? "animate-pulse" : ""}`} />
           <span className="text-[10px] font-bold uppercase tracking-wider">{status}</span>
@@ -504,7 +504,7 @@ export default function PublicCallPage() {
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.8 }}
-                  className="absolute inset-0 bg-gradient-to-b from-blue-500/5 to-transparent pointer-events-none"
+                  className="absolute inset-0 bg-gradient-to-b from-[var(--brand-primary)]/5 to-transparent pointer-events-none"
                 />
               )}
             </AnimatePresence>
@@ -517,12 +517,12 @@ export default function PublicCallPage() {
                       initial={{ scale: 0.8, opacity: 0 }}
                       animate={{ scale: [1, 1.2, 1], opacity: [0.2, 0.4, 0.2] }}
                       transition={{ duration: 2, repeat: Infinity }}
-                      className="absolute inset-0 bg-blue-500 rounded-full blur-3xl"
+                      className="absolute inset-0 bg-[var(--brand-primary)] rounded-full blur-3xl"
                     />
                   )}
                 </AnimatePresence>
                 <div className={`w-24 h-24 md:w-32 md:h-32 rounded-full border-4 flex items-center justify-center transition-all duration-500 ${
-                  isCalling ? "bg-zinc-900 border-blue-500 shadow-2xl shadow-blue-500/20" : "bg-zinc-900 border-zinc-800"
+                  isCalling ? "bg-[var(--bg-card)] border-[var(--brand-primary)] shadow-2xl shadow-[var(--brand-primary)]/20" : "bg-[var(--bg-card)] border-[var(--border-main)]"
                 }`}>
                   <Logo 
                     iconSize={60} 
@@ -533,8 +533,8 @@ export default function PublicCallPage() {
 
               <div className="space-y-6 w-full max-w-sm">
                 <div className="space-y-2">
-                  <h2 className="text-2xl md:text-3xl font-bold text-white tracking-tight">{agent?.name || "AI Assistant"}</h2>
-                  <div className="flex items-center justify-center space-x-2 text-zinc-500 font-mono text-sm">
+                  <h2 className="text-2xl md:text-3xl font-bold text-[var(--text-main)] tracking-tight">{agent?.name || "AI Assistant"}</h2>
+                  <div className="flex items-center justify-center space-x-2 text-[var(--text-muted)] font-mono text-sm">
                     <Clock className="w-4 h-4" />
                     <span>{formatDuration(duration)}</span>
                   </div>
@@ -561,7 +561,7 @@ export default function PublicCallPage() {
                           ease: "easeInOut"
                         }}
                         className={`w-1 rounded-full transition-colors ${
-                          isCalling ? "bg-gradient-to-t from-blue-600 to-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.4)]" : "bg-zinc-800"
+                          isCalling ? "bg-gradient-to-t from-[var(--brand-primary)] to-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.4)]" : "bg-[var(--border-main)]"
                         }`}
                       />
                     );
@@ -574,7 +574,7 @@ export default function PublicCallPage() {
                   <button 
                     onClick={() => setIsMuted(!isMuted)}
                     className={`p-4 rounded-2xl border transition-all ${
-                      isMuted ? "bg-rose-500/10 border-rose-500/20 text-rose-400" : "bg-zinc-800 border-zinc-700 text-zinc-400 hover:text-white"
+                      isMuted ? "bg-[var(--color-danger)]/10 border-[var(--color-danger)]/20 text-[var(--color-danger)]" : "bg-[var(--bg-card)] border-[var(--border-main)] text-[var(--text-muted)] hover:text-[var(--text-main)]"
                     }`}
                   >
                     {isMuted ? <MicOff className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
@@ -584,8 +584,8 @@ export default function PublicCallPage() {
                     onClick={handleCall}
                     className={`w-20 h-20 rounded-full flex items-center justify-center shadow-2xl transition-all transform active:scale-95 ${
                       isCalling 
-                        ? "bg-rose-500 hover:bg-rose-600 text-white shadow-rose-500/20 rotate-[135deg]" 
-                        : "bg-blue-500 hover:bg-blue-600 text-zinc-950 shadow-blue-500/20"
+                        ? "bg-[var(--color-danger)] hover:opacity-90 text-white shadow-[var(--color-danger)]/20 rotate-[135deg]" 
+                        : "bg-[var(--brand-primary)] hover:opacity-90 text-[var(--bg-main)] shadow-[var(--brand-primary)]/20"
                     }`}
                   >
                     {status === "Connecting..." ? <Loader2 className="w-8 h-8 animate-spin" /> : <Phone className="w-8 h-8" />}
@@ -601,7 +601,7 @@ export default function PublicCallPage() {
                       setIsSpeakerOn(!isSpeakerOn);
                     }}
                     className={`p-4 rounded-2xl border transition-all ${
-                      !isSpeakerOn ? "bg-rose-500/10 border-rose-500/20 text-rose-400" : "bg-zinc-800 border-zinc-700 text-zinc-400 hover:text-white"
+                      !isSpeakerOn ? "bg-[var(--color-danger)]/10 border-[var(--color-danger)]/20 text-[var(--color-danger)]" : "bg-[var(--bg-card)] border-[var(--border-main)] text-[var(--text-muted)] hover:text-[var(--text-main)]"
                     }`}
                   >
                     {isSpeakerOn ? <Volume2 className="w-6 h-6" /> : <VolumeX className="w-6 h-6" />}
@@ -612,9 +612,9 @@ export default function PublicCallPage() {
                   <motion.div 
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="flex items-center space-x-3 bg-zinc-900/50 backdrop-blur-md border border-zinc-800 px-4 py-2 rounded-2xl"
+                    className="flex items-center space-x-3 bg-[var(--bg-card)]/50 backdrop-blur-md border border-[var(--border-main)] px-4 py-2 rounded-2xl"
                   >
-                    <Volume2 className="w-4 h-4 text-zinc-500" />
+                    <Volume2 className="w-4 h-4 text-[var(--text-muted)]" />
                     <input 
                       type="range" 
                       min="0" 
@@ -622,7 +622,7 @@ export default function PublicCallPage() {
                       step="0.01" 
                       value={volume}
                       onChange={(e) => setVolume(parseFloat(e.target.value))}
-                      className="w-32 h-1 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                      className="w-32 h-1 bg-[var(--border-main)] rounded-lg appearance-none cursor-pointer accent-[var(--brand-primary)]"
                     />
                   </motion.div>
                 )}
@@ -635,22 +635,22 @@ export default function PublicCallPage() {
 
         {/* Transcript */}
         <div className="w-full lg:w-96 glass-card flex flex-col h-[500px] lg:h-[600px] lg:sticky lg:top-24 overflow-hidden">
-          <div className="p-6 border-b border-zinc-900 flex items-center justify-between">
+          <div className="p-6 border-b border-[var(--border-main)] flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <MessageSquare className="w-5 h-5 text-blue-400" />
-              <h3 className="font-semibold text-white">Live Transcript</h3>
+              <MessageSquare className="w-5 h-5 text-[var(--brand-primary)]" />
+              <h3 className="font-semibold text-[var(--text-main)]">Live Transcript</h3>
             </div>
             <div className="flex items-center space-x-3">
               {isAiThinking && (
                 <div className="flex items-center space-x-1">
-                  <div className="w-1 h-1 bg-blue-500 rounded-full animate-bounce" />
-                  <div className="w-1 h-1 bg-blue-500 rounded-full animate-bounce [animation-delay:0.2s]" />
-                  <div className="w-1 h-1 bg-blue-500 rounded-full animate-bounce [animation-delay:0.4s]" />
+                  <div className="w-1 h-1 bg-[var(--brand-primary)] rounded-full animate-bounce" />
+                  <div className="w-1 h-1 bg-[var(--brand-primary)] rounded-full animate-bounce [animation-delay:0.2s]" />
+                  <div className="w-1 h-1 bg-[var(--brand-primary)] rounded-full animate-bounce [animation-delay:0.4s]" />
                 </div>
               )}
               <button 
                 onClick={() => setTranscript([])}
-                className="text-[10px] font-bold text-zinc-500 hover:text-white transition-colors uppercase tracking-widest"
+                className="text-[10px] font-bold text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors uppercase tracking-widest"
               >
                 Clear
               </button>
@@ -673,8 +673,8 @@ export default function PublicCallPage() {
                   >
                     <div className={`max-w-[90%] p-4 rounded-2xl text-sm leading-relaxed shadow-sm ${
                       msg.role === "ai" 
-                        ? "bg-zinc-800/80 text-zinc-200 rounded-tl-none border border-zinc-700/50" 
-                        : "bg-blue-500 text-zinc-950 font-medium rounded-tr-none shadow-blue-500/10"
+                        ? "bg-[var(--bg-card)]/80 text-[var(--text-main)] rounded-tl-none border border-[var(--border-main)]/50" 
+                        : "bg-[var(--brand-primary)] text-white font-medium rounded-tr-none shadow-[var(--brand-primary)]/10"
                     }`}>
                       {msg.text}
                     </div>
@@ -684,7 +684,7 @@ export default function PublicCallPage() {
               </>
             )}
           </div>
-          <div className="p-4 bg-zinc-900/50 border-t border-zinc-900">
+          <div className="p-4 bg-[var(--bg-card)]/50 border-t border-[var(--border-main)]">
             <form 
               onSubmit={(e) => {
                 e.preventDefault();
@@ -698,12 +698,12 @@ export default function PublicCallPage() {
                 onChange={(e) => setInputText(e.target.value)}
                 disabled={!isCalling}
                 placeholder={isCalling ? "Type a message..." : "Start a call to chat..."}
-                className="w-full pl-4 pr-12 py-3 bg-zinc-950 border border-zinc-800 rounded-xl text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all disabled:opacity-50"
+                className="w-full pl-4 pr-12 py-3 bg-[var(--bg-main)] border border-[var(--border-main)] rounded-xl text-sm text-[var(--text-main)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/50 transition-all disabled:opacity-50"
               />
               <button 
                 type="submit"
                 disabled={!isCalling || !inputText.trim()}
-                className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-blue-500 text-zinc-950 rounded-lg hover:bg-blue-400 transition-colors disabled:opacity-50"
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-[var(--brand-primary)] text-white rounded-lg hover:opacity-90 transition-colors disabled:opacity-50"
               >
                 <Send className="w-4 h-4" />
               </button>
@@ -712,9 +712,9 @@ export default function PublicCallPage() {
         </div>
       </main>
 
-      <footer className="p-8 text-center border-t border-zinc-900 relative z-10">
-        <p className="text-zinc-500 text-xs">
-          Powered by <a href="/" className="hover:text-blue-400 transition-colors font-medium">Vico</a>
+      <footer className="p-8 text-center border-t border-[var(--border-main)] relative z-10">
+        <p className="text-[var(--text-muted)] text-xs">
+          Powered by <a href="/" className="hover:text-[var(--brand-primary)] transition-colors font-medium">Vico</a>
         </p>
       </footer>
     </div>
