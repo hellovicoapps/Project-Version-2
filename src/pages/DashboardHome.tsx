@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import { useEffect, useState, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { 
   Phone, 
   Users, 
@@ -11,7 +11,9 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   Zap,
-  MessageSquare
+  MessageSquare,
+  ChevronDown,
+  Filter
 } from "lucide-react";
 import { 
   BarChart, 
@@ -26,6 +28,15 @@ import {
   AreaChart,
   Area
 } from "recharts";
+import { 
+  subDays, 
+  startOfDay, 
+  endOfDay, 
+  isWithinInterval, 
+  format, 
+  eachDayOfInterval,
+  isSameDay
+} from "date-fns";
 
 const data = [
   { name: "Mon", calls: 0, bookings: 0 },
@@ -91,6 +102,15 @@ export default function DashboardHome() {
     remainingMinutes: 0,
     newContacts: 0,
   });
+  const [trends, setTrends] = useState({
+    totalCalls: 0,
+    activeBookings: 0,
+    totalInquiries: 0,
+    successRate: 0,
+  });
+  const [dateRange, setDateRange] = useState<"today" | "7days" | "30days" | "all">("7days");
+  const [showRangeSelector, setShowRangeSelector] = useState(false);
+  const [allCalls, setAllCalls] = useState<any[]>([]);
   const [recentActivity, setRecentActivity] = useState<any[]>([]);
   const [chartData, setChartData] = useState<any[]>([]);
   const [business, setBusiness] = useState<Business | null>(null);
@@ -158,52 +178,12 @@ export default function DashboardHome() {
     // Listen for total calls count and derive metrics
     const totalCallsQuery = query(collection(db, `businesses/${businessId}/calls`));
     const unsubscribeTotalCalls = onSnapshot(totalCallsQuery, (snapshot) => {
-      const total = snapshot.size;
-      let bookings = 0;
-      let inquiries = 0;
-      let successful = 0;
-
-      snapshot.docs.forEach(d => {
-        const status = d.data().status;
-        if (status === CallStatus.BOOKED) {
-          bookings++;
-          successful++;
-        } else if (status === CallStatus.INQUIRY) {
-          inquiries++;
-          successful++;
-        } else if (status === CallStatus.COMPLAINT || status === CallStatus.FOLLOW_UP) {
-          successful++;
-        }
-      });
-      
-      const rate = total > 0 ? Math.round((successful / total) * 100) : 0;
-
-      // Aggregate chart data
-      const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-      const counts: { [key: string]: number } = { "Sun": 0, "Mon": 0, "Tue": 0, "Wed": 0, "Thu": 0, "Fri": 0, "Sat": 0 };
-      
-      snapshot.docs.forEach(doc => {
-        const createdAt = doc.data().createdAt;
-        if (createdAt?.toDate) {
-          const day = days[createdAt.toDate().getDay()];
-          counts[day]++;
-        }
-      });
-
-      const newChartData = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map(day => ({
-        name: day,
-        calls: counts[day]
+      const calls = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        createdAt: doc.data().createdAt?.toDate ? doc.data().createdAt.toDate() : new Date()
       }));
-      
-      setChartData(newChartData);
-      
-      setStats(prev => ({ 
-        ...prev, 
-        totalCalls: total,
-        activeBookings: bookings,
-        totalInquiries: inquiries,
-        successRate: rate
-      }));
+      setAllCalls(calls);
     }, (error) => {
       handleFirestoreError(error, OperationType.GET, `businesses/${businessId}/calls`);
     });
@@ -215,6 +195,124 @@ export default function DashboardHome() {
       unsubscribeContacts();
     };
   }, [businessId]);
+
+  // Calculate stats and trends whenever allCalls or dateRange changes
+  useEffect(() => {
+    if (allCalls.length === 0) return;
+
+    const now = new Date();
+    let currentStart: Date;
+    let previousStart: Date;
+    let previousEnd: Date;
+
+    switch (dateRange) {
+      case "today":
+        currentStart = startOfDay(now);
+        previousStart = startOfDay(subDays(now, 1));
+        previousEnd = endOfDay(subDays(now, 1));
+        break;
+      case "7days":
+        currentStart = subDays(now, 7);
+        previousStart = subDays(now, 14);
+        previousEnd = subDays(now, 7);
+        break;
+      case "30days":
+        currentStart = subDays(now, 30);
+        previousStart = subDays(now, 60);
+        previousEnd = subDays(now, 30);
+        break;
+      case "all":
+      default:
+        currentStart = new Date(0); // Beginning of time
+        previousStart = new Date(0);
+        previousEnd = new Date(0);
+        break;
+    }
+
+    const calculateMetrics = (calls: any[]) => {
+      const total = calls.length;
+      let bookings = 0;
+      let inquiries = 0;
+      let successful = 0;
+
+      calls.forEach(c => {
+        if (c.status === CallStatus.BOOKED) {
+          bookings++;
+          successful++;
+        } else if (c.status === CallStatus.INQUIRY) {
+          inquiries++;
+          successful++;
+        } else if (c.status === CallStatus.COMPLAINT || c.status === CallStatus.FOLLOW_UP) {
+          successful++;
+        }
+      });
+
+      const rate = total > 0 ? Math.round((successful / total) * 100) : 0;
+      return { total, bookings, inquiries, rate };
+    };
+
+    const currentCalls = allCalls.filter(c => c.createdAt >= currentStart);
+    const previousCalls = dateRange === "all" ? [] : allCalls.filter(c => c.createdAt >= previousStart && c.createdAt < previousEnd);
+
+    const currentMetrics = calculateMetrics(currentCalls);
+    const previousMetrics = calculateMetrics(previousCalls);
+
+    const calculateTrend = (curr: number, prev: number) => {
+      if (prev === 0) return curr > 0 ? 100 : 0;
+      return Math.round(((curr - prev) / prev) * 100);
+    };
+
+    setStats(prev => ({
+      ...prev,
+      totalCalls: currentMetrics.total,
+      activeBookings: currentMetrics.bookings,
+      totalInquiries: currentMetrics.inquiries,
+      successRate: currentMetrics.rate
+    }));
+
+    setTrends({
+      totalCalls: calculateTrend(currentMetrics.total, previousMetrics.total),
+      activeBookings: calculateTrend(currentMetrics.bookings, previousMetrics.bookings),
+      totalInquiries: calculateTrend(currentMetrics.inquiries, previousMetrics.inquiries),
+      successRate: calculateTrend(currentMetrics.rate, previousMetrics.rate),
+    });
+
+    // Update Chart Data based on range
+    if (dateRange === "today") {
+      // Show hourly for today
+      const hours = Array.from({ length: 24 }, (_, i) => ({ name: `${i}:00`, calls: 0 }));
+      currentCalls.forEach(c => {
+        const hour = c.createdAt.getHours();
+        hours[hour].calls++;
+      });
+      setChartData(hours);
+    } else if (dateRange === "all") {
+      // Show last 7 days for "all" as a default view
+      const last7Days = eachDayOfInterval({ start: subDays(now, 6), end: now });
+      const chart = last7Days.map(day => {
+        const count = allCalls.filter(c => isSameDay(c.createdAt, day)).length;
+        return { name: format(day, "EEE"), calls: count };
+      });
+      setChartData(chart);
+    } else {
+      // Show days for 7 or 30 days
+      const daysCount = dateRange === "7days" ? 7 : 30;
+      const interval = eachDayOfInterval({ start: subDays(now, daysCount - 1), end: now });
+      const chart = interval.map(day => {
+        const count = allCalls.filter(c => isSameDay(c.createdAt, day)).length;
+        return { name: format(day, daysCount === 7 ? "EEE" : "MMM d"), calls: count };
+      });
+      setChartData(chart);
+    }
+
+  }, [allCalls, dateRange]);
+
+  const rangeLabels = {
+    today: "Today",
+    "7days": "Last 7 Days",
+    "30days": "Last 30 Days",
+    all: "All Time"
+  };
 
   return (
     <div className="space-y-8 max-w-7xl mx-auto">
@@ -257,13 +355,43 @@ export default function DashboardHome() {
           <p className="text-[var(--text-muted)] mt-1">Here's what's happening with your business today.</p>
         </div>
         <div className="flex items-center space-x-3">
-          <button 
-            onClick={() => showToast("Filtering by date range is not implemented in this demo.", "info")}
-            className="btn-secondary flex items-center space-x-2"
-          >
-            <Calendar className="w-4 h-4" />
-            <span>Last 7 Days</span>
-          </button>
+          <div className="relative">
+            <button 
+              onClick={() => setShowRangeSelector(!showRangeSelector)}
+              className="btn-secondary flex items-center space-x-2 min-w-[140px] justify-between"
+            >
+              <div className="flex items-center space-x-2">
+                <Calendar className="w-4 h-4" />
+                <span>{rangeLabels[dateRange]}</span>
+              </div>
+              <ChevronDown className={`w-4 h-4 transition-transform ${showRangeSelector ? "rotate-180" : ""}`} />
+            </button>
+
+            <AnimatePresence>
+              {showRangeSelector && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 10 }}
+                  className="absolute right-0 mt-2 w-48 glass-card border border-[var(--border-main)] rounded-xl shadow-xl z-50 overflow-hidden"
+                >
+                  {(Object.keys(rangeLabels) as Array<keyof typeof rangeLabels>).map((range) => (
+                    <button
+                      key={range}
+                      onClick={() => {
+                        setDateRange(range);
+                        setShowRangeSelector(false);
+                      }}
+                      className={`w-full px-4 py-3 text-left text-sm hover:bg-[var(--brand-primary)]/10 transition-colors flex items-center justify-between ${dateRange === range ? "text-[var(--brand-primary)] font-bold bg-[var(--brand-primary)]/5" : "text-[var(--text-main)]"}`}
+                    >
+                      {rangeLabels[range]}
+                      {dateRange === range && <div className="w-1.5 h-1.5 bg-[var(--brand-primary)] rounded-full" />}
+                    </button>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
           <button 
             onClick={() => navigate(ROUTES.VOICE_INTERFACE)}
             className="btn-primary flex items-center space-x-2"
@@ -275,10 +403,34 @@ export default function DashboardHome() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard title="Total Calls" value={stats.totalCalls || "0"} icon={Phone} trend="up" trendValue="0" />
-        <StatCard title="Bookings" value={stats.activeBookings || "0"} icon={Calendar} trend="up" trendValue="0" />
-        <StatCard title="Inquiries" value={stats.totalInquiries || "0"} icon={MessageSquare} trend="up" trendValue="0" />
-        <StatCard title="Success Rate" value={`${stats.successRate}%`} icon={CheckCircle} trend="up" trendValue="0" />
+        <StatCard 
+          title="Total Calls" 
+          value={stats.totalCalls || "0"} 
+          icon={Phone} 
+          trend={trends.totalCalls >= 0 ? "up" : "down"} 
+          trendValue={Math.abs(trends.totalCalls)} 
+        />
+        <StatCard 
+          title="Bookings" 
+          value={stats.activeBookings || "0"} 
+          icon={Calendar} 
+          trend={trends.activeBookings >= 0 ? "up" : "down"} 
+          trendValue={Math.abs(trends.activeBookings)} 
+        />
+        <StatCard 
+          title="Inquiries" 
+          value={stats.totalInquiries || "0"} 
+          icon={MessageSquare} 
+          trend={trends.totalInquiries >= 0 ? "up" : "down"} 
+          trendValue={Math.abs(trends.totalInquiries)} 
+        />
+        <StatCard 
+          title="Success Rate" 
+          value={`${stats.successRate}%`} 
+          icon={CheckCircle} 
+          trend={trends.successRate >= 0 ? "up" : "down"} 
+          trendValue={Math.abs(trends.successRate)} 
+        />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

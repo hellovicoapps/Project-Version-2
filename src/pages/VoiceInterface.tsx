@@ -537,7 +537,7 @@ export default function VoiceInterface() {
     <div className="max-w-6xl mx-auto min-h-[calc(100vh-8rem)] lg:h-[calc(100vh-8rem)] flex flex-col">
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
         <div>
-          <h1 className="text-3xl md:text-4xl font-bold text-white">Voice Lab</h1>
+          <h1 className="text-3xl md:text-4xl font-bold text-[var(--text-main)]">Voice Lab</h1>
           <p className="text-[var(--text-muted)] mt-1">Testing agent: <span className="text-[var(--brand-primary)] font-semibold">{agent.name}</span></p>
         </div>
         <div className="flex items-center space-x-3">
@@ -593,7 +593,7 @@ export default function VoiceInterface() {
               </div>
 
               <div className="space-y-2">
-                <h2 className="text-3xl font-bold text-white tracking-tight">{agent.name}</h2>
+                <h2 className="text-3xl font-bold text-[var(--text-main)] tracking-tight">{agent.name}</h2>
                 <div className="flex items-center justify-center space-x-2 text-[var(--text-muted)] font-mono">
                   <Clock className="w-4 h-4" />
                   <span>{formatDuration(duration)}</span>
@@ -688,7 +688,7 @@ export default function VoiceInterface() {
           <div className="p-6 border-b border-[var(--border-main)] flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <MessageSquare className="w-5 h-5 text-[var(--brand-primary)]" />
-              <h3 className="font-semibold text-white">Live Transcript</h3>
+              <h3 className="font-semibold text-[var(--text-main)]">Live Transcript</h3>
             </div>
             <div className="flex items-center space-x-3">
               {isAiThinking && (

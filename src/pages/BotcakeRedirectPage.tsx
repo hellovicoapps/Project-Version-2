@@ -77,11 +77,11 @@ export default function BotcakeRedirectPage() {
           <div className="w-16 h-16 bg-[var(--color-danger)]/10 rounded-full flex items-center justify-center mx-auto">
             <AlertCircle className="w-8 h-8 text-[var(--color-danger)]" />
           </div>
-          <h1 className="text-2xl font-bold text-white">Redirect Error</h1>
+          <h1 className="text-2xl font-bold text-[var(--text-main)]">Redirect Error</h1>
           <p className="text-[var(--text-muted)]">{error}</p>
           <button 
             onClick={() => navigate("/")}
-            className="w-full py-3 bg-[var(--bg-card-hover)] hover:bg-[var(--bg-card-hover)]/80 text-white font-bold rounded-xl transition-all"
+            className="w-full py-3 bg-[var(--bg-card-hover)] hover:bg-[var(--bg-card-hover)]/80 text-[var(--text-main)] font-bold rounded-xl transition-all"
           >
             Back to Home
           </button>
@@ -99,7 +99,7 @@ export default function BotcakeRedirectPage() {
         </div>
       </div>
       <div className="text-center space-y-2">
-        <h2 className="text-xl font-bold text-white">Connecting to Agent...</h2>
+        <h2 className="text-xl font-bold text-[var(--text-main)]">Connecting to Agent...</h2>
         <p className="text-[var(--text-muted)] animate-pulse">Fetching your profile from Botcake</p>
       </div>
     </div>

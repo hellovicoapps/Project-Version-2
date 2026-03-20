@@ -196,20 +196,20 @@ export default function CalendarPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-white">Calendar</h1>
-          <p className="text-zinc-500 mt-1">Manage your AI-booked appointments</p>
+          <h1 className="text-3xl font-bold text-[var(--text-main)]">Calendar</h1>
+          <p className="text-[var(--text-muted)] mt-1">Manage your AI-booked appointments</p>
         </div>
         
         <div className="flex items-center space-x-3">
-          <div className="flex bg-zinc-900 rounded-xl p-1 border border-zinc-800">
+          <div className="flex bg-[var(--bg-card)] rounded-xl p-1 border border-[var(--border-main)]">
             {(['day', 'week', 'month'] as const).map((v) => (
               <button
                 key={v}
                 onClick={() => setView(v)}
                 className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${
                   view === v 
-                    ? "bg-blue-500 text-zinc-950 shadow-lg shadow-blue-500/20" 
-                    : "text-zinc-400 hover:text-white"
+                    ? "bg-[var(--brand-primary)] text-white shadow-lg shadow-brand-primary/20" 
+                    : "text-[var(--text-muted)] hover:text-[var(--text-main)]"
                 }`}
               >
                 {v.charAt(0).toUpperCase() + v.slice(1)}
@@ -219,7 +219,7 @@ export default function CalendarPage() {
           
           <button 
             onClick={() => setIsAddModalOpen(true)}
-            className="p-2.5 bg-blue-500 text-zinc-950 rounded-xl hover:bg-blue-400 transition-all shadow-lg shadow-blue-500/20"
+            className="p-2.5 bg-[var(--brand-primary)] text-white rounded-xl hover:opacity-90 transition-all shadow-lg shadow-brand-primary/20"
           >
             <Plus className="w-5 h-5" />
           </button>
@@ -227,27 +227,27 @@ export default function CalendarPage() {
       </div>
 
       {/* Calendar Controls */}
-      <div className="flex items-center justify-between bg-zinc-900/50 p-4 rounded-2xl border border-zinc-800">
+      <div className="flex items-center justify-between bg-[var(--bg-card)]/50 p-4 rounded-2xl border border-[var(--border-main)]">
         <div className="flex items-center space-x-4">
-          <h2 className="text-xl font-bold text-white min-w-[200px]">
+          <h2 className="text-xl font-bold text-[var(--text-main)] min-w-[200px]">
             {format(currentDate, view === 'day' ? "MMMM d, yyyy" : "MMMM yyyy")}
           </h2>
           <div className="flex items-center space-x-1">
             <button 
               onClick={prevPeriod}
-              className="p-2 hover:bg-zinc-800 rounded-lg text-zinc-400 hover:text-white transition-all"
+              className="p-2 hover:bg-[var(--bg-card-hover)] rounded-lg text-[var(--text-muted)] hover:text-[var(--text-main)] transition-all"
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
             <button 
               onClick={() => setCurrentDate(new Date())}
-              className="px-3 py-1 text-xs font-bold text-zinc-400 hover:text-white transition-all"
+              className="px-3 py-1 text-xs font-bold text-[var(--text-muted)] hover:text-[var(--text-main)] transition-all"
             >
               Today
             </button>
             <button 
               onClick={nextPeriod}
-              className="p-2 hover:bg-zinc-800 rounded-lg text-zinc-400 hover:text-white transition-all"
+              className="p-2 hover:bg-[var(--bg-card-hover)] rounded-lg text-[var(--text-muted)] hover:text-[var(--text-main)] transition-all"
             >
               <ChevronRight className="w-5 h-5" />
             </button>
@@ -256,18 +256,18 @@ export default function CalendarPage() {
 
         <div className="flex items-center space-x-2">
           <div className="relative">
-            <Search className="w-4 h-4 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2" />
+            <Search className="w-4 h-4 text-[var(--text-muted)] absolute left-3 top-1/2 -translate-y-1/2" />
             <input 
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search bookings..."
-              className="bg-zinc-950 border border-zinc-800 rounded-xl py-2 pl-10 pr-4 text-sm focus:outline-none focus:border-blue-500/50 transition-all w-64"
+              className="bg-[var(--bg-main)] border border-[var(--border-main)] rounded-xl py-2 pl-10 pr-4 text-sm focus:outline-none focus:border-[var(--brand-primary)]/50 transition-all w-64 text-[var(--text-main)]"
             />
           </div>
           <button 
             onClick={() => setSearchQuery("")}
-            className="p-2 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-400 hover:text-white transition-all"
+            className="p-2 bg-[var(--bg-main)] border border-[var(--border-main)] rounded-xl text-[var(--text-muted)] hover:text-[var(--text-main)] transition-all"
           >
             <Filter className="w-5 h-5" />
           </button>
@@ -278,10 +278,10 @@ export default function CalendarPage() {
       <div className="flex-1 glass-card overflow-hidden flex flex-col min-h-[600px]">
         {view === 'month' ? (
           <div className="flex-1 flex flex-col">
-            <div className="grid grid-cols-7 border-b border-zinc-800 bg-zinc-900/30">
+            <div className="grid grid-cols-7 border-b border-[var(--border-main)] bg-[var(--bg-card)]/30">
               {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(d => (
-                <div key={d} className="p-4 text-center border-r border-zinc-800 last:border-r-0">
-                  <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">{d}</span>
+                <div key={d} className="p-4 text-center border-r border-[var(--border-main)] last:border-r-0">
+                  <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest">{d}</span>
                 </div>
               ))}
             </div>
@@ -289,13 +289,13 @@ export default function CalendarPage() {
               {monthDays.map((day, i) => (
                 <div 
                   key={i} 
-                  className={`p-2 border-r border-b border-zinc-800 last:border-r-0 min-h-[120px] ${
-                    !isSameMonth(day, currentDate) ? "bg-zinc-950/50" : ""
-                  } ${isToday(day) ? "bg-blue-500/5" : ""}`}
+                  className={`p-2 border-r border-b border-[var(--border-main)] last:border-r-0 min-h-[120px] ${
+                    !isSameMonth(day, currentDate) ? "bg-[var(--bg-main)]/50" : ""
+                  } ${isToday(day) ? "bg-[var(--brand-primary)]/5" : ""}`}
                 >
                   <div className="flex justify-between items-start mb-2">
                     <span className={`text-xs font-bold ${
-                      isToday(day) ? "bg-blue-500 text-zinc-950 w-6 h-6 flex items-center justify-center rounded-full" : "text-zinc-500"
+                      isToday(day) ? "bg-[var(--brand-primary)] text-white w-6 h-6 flex items-center justify-center rounded-full" : "text-[var(--text-muted)]"
                     }`}>
                       {format(day, "d")}
                     </span>
@@ -305,12 +305,12 @@ export default function CalendarPage() {
                       .filter(b => isSameDay(b.parsedDate, day))
                       .slice(0, 3)
                       .map(b => (
-                        <div key={b.id} className="text-[10px] p-1 bg-blue-500/10 border border-blue-500/20 rounded text-blue-400 truncate">
+                        <div key={b.id} className="text-[10px] p-1 bg-[var(--brand-primary)]/10 border border-[var(--brand-primary)]/20 rounded text-[var(--brand-primary)] truncate">
                           {format(b.parsedDate, "h:mm")} {b.callerName}
                         </div>
                       ))}
                     {filteredBookings.filter(b => isSameDay(b.parsedDate, day)).length > 3 && (
-                      <div className="text-[10px] text-zinc-500 pl-1">
+                      <div className="text-[10px] text-[var(--text-muted)] pl-1">
                         + {filteredBookings.filter(b => isSameDay(b.parsedDate, day)).length - 3} more
                       </div>
                     )}
@@ -322,20 +322,20 @@ export default function CalendarPage() {
         ) : (
           <>
             {/* Days Header */}
-            <div className={`grid ${view === 'day' ? 'grid-cols-[80px_1fr]' : 'grid-cols-8'} border-b border-zinc-800 bg-zinc-900/30`}>
-              <div className="p-4 border-r border-zinc-800"></div>
+            <div className={`grid ${view === 'day' ? 'grid-cols-[80px_1fr]' : 'grid-cols-8'} border-b border-[var(--border-main)] bg-[var(--bg-card)]/30`}>
+              <div className="p-4 border-r border-[var(--border-main)]"></div>
               {weekDays.map((day, i) => (
                 <div 
                   key={i} 
-                  className={`p-4 text-center border-r border-zinc-800 last:border-r-0 ${
-                    isToday(day) ? "bg-blue-500/5" : ""
+                  className={`p-4 text-center border-r border-[var(--border-main)] last:border-r-0 ${
+                    isToday(day) ? "bg-[var(--brand-primary)]/5" : ""
                   }`}
                 >
-                  <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1">
+                  <p className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest mb-1">
                     {format(day, "EEE")}
                   </p>
                   <p className={`text-lg font-bold ${
-                    isToday(day) ? "text-blue-400" : "text-white"
+                    isToday(day) ? "text-[var(--brand-primary)]" : "text-[var(--text-main)]"
                   }`}>
                     {format(day, "d")}
                   </p>
@@ -347,10 +347,10 @@ export default function CalendarPage() {
             <div className="flex-1 overflow-y-auto custom-scrollbar relative">
               <div className={`grid ${view === 'day' ? 'grid-cols-[80px_1fr]' : 'grid-cols-8'} min-h-full`}>
                 {/* Time Column */}
-                <div className="border-r border-zinc-800 bg-zinc-900/10">
+                <div className="border-r border-[var(--border-main)] bg-[var(--bg-card)]/10">
                   {hours.map((hour, i) => (
-                    <div key={i} className="h-20 p-2 text-right border-b border-zinc-800/50">
-                      <span className="text-[10px] font-bold text-zinc-600 uppercase">
+                    <div key={i} className="h-20 p-2 text-right border-b border-[var(--border-main)]/50">
+                      <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase">
                         {format(hour, "ha")}
                       </span>
                     </div>
@@ -396,9 +396,9 @@ export default function CalendarPage() {
                   });
 
                   return (
-                    <div key={dayIdx} className="relative border-r border-zinc-800 last:border-r-0">
+                    <div key={dayIdx} className="relative border-r border-[var(--border-main)] last:border-r-0">
                       {hours.map((_, i) => (
-                        <div key={i} className="h-20 border-b border-zinc-800/50"></div>
+                        <div key={i} className="h-20 border-b border-[var(--border-main)]/50"></div>
                       ))}
 
                       {/* Bookings */}
@@ -415,7 +415,7 @@ export default function CalendarPage() {
                             key={booking.id}
                             initial={{ opacity: 0, scale: 0.9 }}
                             animate={{ opacity: 1, scale: 1 }}
-                            className="absolute p-1 rounded-lg bg-blue-500/10 border border-blue-500/20 shadow-lg backdrop-blur-sm z-10 cursor-pointer hover:bg-blue-500/20 transition-all group overflow-hidden"
+                            className="absolute p-1 rounded-lg bg-[var(--brand-primary)]/10 border border-[var(--brand-primary)]/20 shadow-lg backdrop-blur-sm z-10 cursor-pointer hover:bg-[var(--brand-primary)]/20 transition-all group overflow-hidden"
                             style={{ 
                               top: `${top}px`, 
                               height: '76px',
@@ -426,16 +426,16 @@ export default function CalendarPage() {
                             <div className="flex flex-col h-full justify-between">
                               <div>
                                 <div className="flex items-center justify-between">
-                                  <span className="text-[10px] font-bold text-blue-400 uppercase tracking-wider">
+                                  <span className="text-[10px] font-bold text-[var(--brand-primary)] uppercase tracking-wider">
                                     {format(booking.parsedDate, "h:mm a")}
                                   </span>
-                                  <MoreVertical className="w-3 h-3 text-zinc-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                  <MoreVertical className="w-3 h-3 text-[var(--text-muted)] opacity-0 group-hover:opacity-100 transition-opacity" />
                                 </div>
-                                <p className="text-xs font-bold text-white truncate mt-0.5">
+                                <p className="text-xs font-bold text-[var(--text-main)] truncate mt-0.5">
                                   {booking.callerName || "Guest User"}
                                 </p>
                               </div>
-                              <div className="flex items-center space-x-2 text-[10px] text-zinc-400">
+                              <div className="flex items-center space-x-2 text-[10px] text-[var(--text-muted)]">
                                 <CalendarIcon className="w-3 h-3 flex-shrink-0" />
                                 <span className="truncate">{booking.bookingPurpose || "Appointment"}</span>
                               </div>
@@ -467,46 +467,46 @@ export default function CalendarPage() {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-3xl p-8 shadow-2xl"
+              className="relative w-full max-w-md bg-[var(--bg-card)] border border-[var(--border-main)] rounded-3xl p-8 shadow-2xl"
             >
-              <h3 className="text-2xl font-bold text-white mb-6">Add Appointment</h3>
+              <h3 className="text-2xl font-bold text-[var(--text-main)] mb-6">Add Appointment</h3>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2">Customer Name</label>
+                  <label className="block text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest mb-2">Customer Name</label>
                   <input 
                     type="text" 
                     value={newBooking.callerName}
                     onChange={(e) => setNewBooking(prev => ({ ...prev, callerName: e.target.value }))}
-                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 transition-all" 
+                    className="w-full bg-[var(--bg-main)] border border-[var(--border-main)] rounded-xl px-4 py-3 focus:outline-none focus:border-[var(--brand-primary)] transition-all text-[var(--text-main)]" 
                     placeholder="John Doe" 
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2">Date</label>
+                    <label className="block text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest mb-2">Date</label>
                     <input 
                       type="date" 
                       value={newBooking.date}
                       onChange={(e) => setNewBooking(prev => ({ ...prev, date: e.target.value }))}
-                      className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 transition-all" 
+                      className="w-full bg-[var(--bg-main)] border border-[var(--border-main)] rounded-xl px-4 py-3 focus:outline-none focus:border-[var(--brand-primary)] transition-all text-[var(--text-main)]" 
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2">Time</label>
+                    <label className="block text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest mb-2">Time</label>
                     <input 
                       type="time" 
                       value={newBooking.time}
                       onChange={(e) => setNewBooking(prev => ({ ...prev, time: e.target.value }))}
-                      className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 transition-all" 
+                      className="w-full bg-[var(--bg-main)] border border-[var(--border-main)] rounded-xl px-4 py-3 focus:outline-none focus:border-[var(--brand-primary)] transition-all text-[var(--text-main)]" 
                     />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2">Purpose</label>
+                  <label className="block text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest mb-2">Purpose</label>
                   <textarea 
                     value={newBooking.bookingPurpose}
                     onChange={(e) => setNewBooking(prev => ({ ...prev, bookingPurpose: e.target.value }))}
-                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 transition-all h-24" 
+                    className="w-full bg-[var(--bg-main)] border border-[var(--border-main)] rounded-xl px-4 py-3 focus:outline-none focus:border-[var(--brand-primary)] transition-all h-24 text-[var(--text-main)]" 
                     placeholder="Consultation..."
                   ></textarea>
                 </div>
@@ -515,17 +515,17 @@ export default function CalendarPage() {
                 <button 
                   onClick={() => setIsAddModalOpen(false)}
                   disabled={isSaving}
-                  className="flex-1 px-6 py-3 bg-zinc-800 text-white font-bold rounded-xl hover:bg-zinc-700 transition-all disabled:opacity-50"
+                  className="flex-1 px-6 py-3 bg-[var(--bg-card-hover)] text-[var(--text-main)] font-bold rounded-xl hover:opacity-80 transition-all disabled:opacity-50"
                 >
                   Cancel
                 </button>
                 <button 
                   onClick={handleSaveAppointment}
                   disabled={isSaving}
-                  className="flex-1 px-6 py-3 bg-blue-500 text-zinc-950 font-bold rounded-xl hover:bg-blue-400 transition-all shadow-lg shadow-blue-500/20 disabled:opacity-50 flex items-center justify-center"
+                  className="flex-1 px-6 py-3 bg-[var(--brand-primary)] text-white font-bold rounded-xl hover:opacity-90 transition-all shadow-lg shadow-brand-primary/20 disabled:opacity-50 flex items-center justify-center"
                 >
                   {isSaving ? (
-                    <div className="w-5 h-5 border-2 border-zinc-950 border-t-transparent rounded-full animate-spin"></div>
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                   ) : (
                     "Save"
                   )}
