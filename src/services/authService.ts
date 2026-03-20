@@ -76,6 +76,7 @@ export class AuthService {
         id: firebaseUser.uid,
         email: firebaseUser.email || "",
         name: firebaseUser.displayName || businessData?.name || "User",
+        businessName: businessData?.name || "Vico Business",
         role,
       };
 
@@ -92,7 +93,11 @@ export class AuthService {
       if (error.code === "auth/network-request-failed") {
         throw new Error("Network error: Firebase could not be reached. This is likely because the 'Identity Toolkit API' is not enabled in your Google Cloud Project. Please enable it at https://console.developers.google.com/apis/api/identitytoolkit.googleapis.com/overview?project=" + firebaseConfig.projectId + " and wait a few minutes.");
       }
-      throw error;
+      
+      // Throw a new error to avoid circular structure issues with FirebaseError objects
+      const newError = new Error(error.message || "Login failed");
+      (newError as any).code = error.code;
+      throw newError;
     }
   }
 
@@ -142,6 +147,7 @@ export class AuthService {
         id: firebaseUser.uid,
         email: firebaseUser.email!,
         name: name || "User",
+        businessName: businessName || name || "My Business",
         role: firebaseUser.email === "hello.vicoapps@gmail.com" ? "admin" : "user",
       };
 
@@ -158,7 +164,11 @@ export class AuthService {
       if (error.code === "auth/network-request-failed") {
         throw new Error("Network error: Firebase could not be reached. This is likely because the 'Identity Toolkit API' is not enabled in your Google Cloud Project. Please enable it at https://console.developers.google.com/apis/api/identitytoolkit.googleapis.com/overview?project=" + firebaseConfig.projectId + " and wait a few minutes.");
       }
-      throw error;
+      
+      // Throw a new error to avoid circular structure issues with FirebaseError objects
+      const newError = new Error(error.message || "Registration failed");
+      (newError as any).code = error.code;
+      throw newError;
     }
   }
 
@@ -207,6 +217,7 @@ export class AuthService {
             id: firebaseUser.uid,
             email: firebaseUser.email!,
             name: firebaseUser.displayName || businessData?.name || "User",
+            businessName: businessData?.name || "Vico Business",
             role: (firebaseUser.email === "hello.vicoapps@gmail.com" || userData?.role === "admin") ? "admin" : "user",
           },
           token,

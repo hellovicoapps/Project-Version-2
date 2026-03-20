@@ -4,16 +4,22 @@ import { getElevenLabsService } from "../services/elevenlabsService";
 
 interface UseElevenLabsAgentProps {
   agentId: string;
-  onTranscript?: (text: string, role: "user" | "ai") => void;
+  onTranscript?: (text: string, role: "user" | "ai", isFinal: boolean) => void;
   onStatusChange?: (status: string) => void;
   onError?: (error: any) => void;
+  onDataExtracted?: (data: any) => void;
+  clientReferenceId?: string;
+  dynamicVariables?: Record<string, any>;
 }
 
 export const useElevenLabsAgent = ({
   agentId,
   onTranscript,
   onStatusChange,
-  onError
+  onError,
+  onDataExtracted,
+  clientReferenceId,
+  dynamicVariables: defaultDynamicVariables
 }: UseElevenLabsAgentProps) => {
   const [isConnecting, setIsConnecting] = useState(false);
   const [audioLevel, setAudioLevel] = useState(0);
@@ -34,7 +40,14 @@ export const useElevenLabsAgent = ({
     onMessage: (message) => {
       console.log("ElevenLabs Message:", message);
       if (message.source === "user" || message.source === "ai") {
-        onTranscript?.(message.message, message.source);
+        // The SDK might provide isFinal, let's pass it if available
+        const isFinal = (message as any).isFinal !== undefined ? (message as any).isFinal : true;
+        onTranscript?.(message.message, message.source, isFinal);
+      }
+      
+      // Handle data extraction if supported by the message format
+      if ((message as any).type === "data_extraction" || (message as any).data) {
+        onDataExtracted?.((message as any).data || message);
       }
     },
     onError: (error) => {
@@ -65,7 +78,7 @@ export const useElevenLabsAgent = ({
       
       await conversation.startSession({
         signedUrl,
-        dynamicVariables
+        dynamicVariables: { ...defaultDynamicVariables, ...dynamicVariables }
       });
     } catch (error) {
       console.error("Failed to start ElevenLabs conversation:", error);

@@ -20,6 +20,7 @@ export interface User {
   id: string;
   email: string;
   name?: string;
+  businessName?: string;
   role: "admin" | "user";
 }
 

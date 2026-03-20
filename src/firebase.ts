@@ -97,9 +97,24 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
     },
     operationType,
     path
+  };
+
+  // Use a safer way to stringify to avoid circular structure errors
+  let serializedInfo: string;
+  try {
+    serializedInfo = JSON.stringify(errInfo);
+  } catch (stringifyError) {
+    console.error('Failed to stringify error info:', stringifyError);
+    serializedInfo = JSON.stringify({
+      error: errInfo.error,
+      operationType: errInfo.operationType,
+      path: errInfo.path,
+      authInfo: { userId: errInfo.authInfo.userId } // Minimal info
+    });
   }
-  console.error('Firestore Error: ', JSON.stringify(errInfo));
-  throw new Error(JSON.stringify(errInfo));
+
+  console.error('Firestore Error:', serializedInfo);
+  throw new Error(serializedInfo);
 }
 
 export default app;

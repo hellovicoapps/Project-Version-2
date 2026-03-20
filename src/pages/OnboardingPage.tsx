@@ -29,8 +29,9 @@ import {
 import { ROUTES, TIMEZONES } from "../constants";
 import { AuthService } from "../services/authService";
 import { Logo } from "../components/Logo";
-import { db, handleFirestoreError, OperationType } from "../firebase";
+import { db, storage, handleFirestoreError, OperationType } from "../firebase";
 import { doc, setDoc, updateDoc, collection, addDoc, getDoc } from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useToast } from "../components/Toast";
 import { SubscriptionPlan } from "../types";
 
@@ -57,6 +58,8 @@ interface OnboardingData {
   businessHours: BusinessHours[];
   step: number;
   elevenLabsAgentId?: string;
+  logoUrl?: string;
+  backgroundUrl?: string;
 }
 
 const AGENT_TEMPLATES = [
@@ -112,29 +115,29 @@ const DEFAULT_HOURS: BusinessHours[] = [
 // --- Components ---
 
 const StepIndicator = ({ currentStep }: { currentStep: number }) => {
-  const steps = ["Account", "Agent Type", "Voice", "Knowledge", "Test"];
+  const steps = ["Account", "Type", "Voice", "Knowledge", "Branding", "Test"];
   return (
-    <div className="flex items-center justify-between w-full max-w-2xl mx-auto mb-6">
+    <div className="flex items-center justify-between w-full max-w-3xl mx-auto mb-6">
       {steps.map((label, idx) => (
         <React.Fragment key={label}>
           <div className="flex flex-col items-center space-y-2 relative">
             <div 
-              className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-500 ${
+              className={`w-6 h-6 rounded-full flex items-center justify-center text-[8px] font-bold transition-all duration-500 ${
                 idx + 1 <= currentStep 
                   ? "bg-blue-500 text-zinc-950 shadow-lg shadow-blue-500/20" 
                   : "bg-zinc-900 text-zinc-600 border border-zinc-800"
               }`}
             >
-              {idx + 1 < currentStep ? <Check className="w-5 h-5" /> : idx + 1}
+              {idx + 1 < currentStep ? <Check className="w-3 h-3" /> : idx + 1}
             </div>
-            <span className={`text-[10px] font-bold uppercase tracking-widest absolute -bottom-6 whitespace-nowrap ${
+            <span className={`text-[7px] font-bold uppercase tracking-widest absolute -bottom-5 whitespace-nowrap ${
               idx + 1 <= currentStep ? "text-blue-400" : "text-zinc-600"
             }`}>
               {label}
             </span>
           </div>
           {idx < steps.length - 1 && (
-            <div className="flex-1 h-[2px] mx-4 bg-zinc-900 relative overflow-hidden">
+            <div className="flex-1 h-[1px] mx-2 bg-zinc-900 relative overflow-hidden">
               <motion.div 
                 initial={{ width: 0 }}
                 animate={{ width: idx + 1 < currentStep ? "100%" : "0%" }}
@@ -164,7 +167,9 @@ export default function OnboardingPage() {
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
       businessHours: DEFAULT_HOURS,
       step: 1,
-      elevenLabsAgentId: ""
+      elevenLabsAgentId: "",
+      logoUrl: "",
+      backgroundUrl: ""
     };
     if (saved) {
       const parsed = JSON.parse(saved);
@@ -272,7 +277,9 @@ export default function OnboardingPage() {
               email: bData.email || prev.email,
               timezone: bData.timezone || prev.timezone,
               businessHours: bData.businessHours || prev.businessHours,
-              step: bData.onboardingStep || prev.step
+              step: bData.onboardingStep || prev.step,
+              logoUrl: bData.logoUrl || prev.logoUrl,
+              backgroundUrl: bData.backgroundUrl || prev.backgroundUrl
             }));
 
             // Check for agent
@@ -301,7 +308,9 @@ export default function OnboardingPage() {
         name: data.businessName,
         timezone: data.timezone,
         businessHours: data.businessHours,
-        onboardingStep: step
+        onboardingStep: step,
+        logoUrl: data.logoUrl || "",
+        backgroundUrl: data.backgroundUrl || ""
       });
 
       // Also update/create agent
@@ -344,7 +353,8 @@ export default function OnboardingPage() {
       } catch (e: any) {
         console.error("Registration error:", e);
         if (e.code === "auth/email-already-in-use") {
-          showToast("This email is already in use. Please sign in instead, or delete the user from your Firebase Authentication console to start fresh.", "error");
+          showToast("This email is already in use. Please sign in instead.", "error");
+          // Optionally redirect or show a login button
         } else {
           showToast(e.message || "Failed to create account", "error");
         }
@@ -352,7 +362,7 @@ export default function OnboardingPage() {
         setLoading(false);
       }
     } else if (data.step === 4) {
-      // Before moving to test, ensure agent is created/updated
+      // Before moving to branding, ensure agent is created/updated
       setLoading(true);
       try {
         await saveToBackend(5);
@@ -394,11 +404,11 @@ export default function OnboardingPage() {
         
         updateData({ step: 5 });
       } catch (e: any) {
-        showToast("Failed to prepare test agent", "error");
+        showToast("Failed to prepare agent", "error");
       } finally {
         setLoading(false);
       }
-    } else if (data.step < 5) {
+    } else if (data.step < 6) {
       const nextStep = data.step + 1;
       updateData({ step: nextStep });
       saveToBackend(nextStep);
@@ -473,6 +483,36 @@ export default function OnboardingPage() {
     }
   };
 
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'logo' | 'background') => {
+    const file = e.target.files?.[0];
+    if (!file || !businessId) return;
+
+    // Check file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      showToast("File size too large. Max 2MB.", "error");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const storageRef = ref(storage, `businesses/${businessId}/${type}_${Date.now()}`);
+      await uploadBytes(storageRef, file);
+      const url = await getDownloadURL(storageRef);
+      
+      if (type === 'logo') {
+        updateData({ logoUrl: url });
+      } else {
+        updateData({ backgroundUrl: url });
+      }
+      showToast(`${type.charAt(0).toUpperCase() + type.slice(1)} uploaded!`, "success");
+    } catch (err) {
+      console.error(`Failed to upload ${type}:`, err);
+      showToast(`Failed to upload ${type}`, "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="h-screen bg-zinc-950 flex flex-col items-center justify-start overflow-hidden relative">
       <audio 
@@ -519,7 +559,12 @@ export default function OnboardingPage() {
               >
                 <div className="text-center space-y-2">
                   <h2 className="text-3xl font-bold text-white tracking-tight">Create your account</h2>
-                  <p className="text-zinc-500">Start your 14-day free trial. No credit card required.</p>
+                  <p className="text-zinc-500">
+                    Start your 14-day free trial. Already have an account?{" "}
+                    <Link to={ROUTES.LOGIN} className="text-blue-400 hover:text-blue-300 font-medium">
+                      Sign in
+                    </Link>
+                  </p>
                 </div>
 
                 <div className="grid grid-cols-1 gap-6 max-w-md mx-auto">
@@ -857,10 +902,133 @@ export default function OnboardingPage() {
               </motion.div>
             )}
 
-            {/* STEP 5: TEST AGENT */}
+            {/* STEP 5: BRANDING */}
             {data.step === 5 && (
               <motion.div
                 key="step5"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                className="space-y-8"
+              >
+                <div className="text-center space-y-2">
+                  <h2 className="text-3xl font-bold text-white tracking-tight">Branding & Appearance</h2>
+                  <p className="text-zinc-500">Customize the look of your calling page. This will be shown to your customers.</p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                  <div className="space-y-6">
+                    <div className="space-y-4">
+                      <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest flex items-center space-x-2">
+                        <Building2 className="w-3 h-3" />
+                        <span>Business Logo</span>
+                      </label>
+                      <div className="flex items-center space-x-6">
+                        <div className="w-24 h-24 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center overflow-hidden relative group">
+                          {data.logoUrl ? (
+                            <img src={data.logoUrl} alt="Logo" className="w-full h-full object-cover" />
+                          ) : (
+                            <Bot className="w-8 h-8 text-zinc-700" />
+                          )}
+                          <label className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                            <span className="text-[10px] font-bold text-white uppercase tracking-widest">Change</span>
+                            <input type="file" accept="image/*" onChange={(e) => handleFileUpload(e, 'logo')} className="hidden" />
+                          </label>
+                        </div>
+                        <div className="flex-1 space-y-1">
+                          <p className="text-sm font-bold text-white">Upload Logo</p>
+                          <p className="text-xs text-zinc-500">Recommended: Square PNG or JPG, max 2MB.</p>
+                          {!data.logoUrl && (
+                            <label className="inline-block mt-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white text-[10px] font-bold uppercase tracking-widest rounded-lg cursor-pointer transition-colors">
+                              Select File
+                              <input type="file" accept="image/*" onChange={(e) => handleFileUpload(e, 'logo')} className="hidden" />
+                            </label>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest flex items-center space-x-2">
+                        <Globe className="w-3 h-3" />
+                        <span>Background Image</span>
+                      </label>
+                      <div className="space-y-4">
+                        <div className="w-full aspect-video rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center overflow-hidden relative group">
+                          {data.backgroundUrl ? (
+                            <img src={data.backgroundUrl} alt="Background" className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="text-center space-y-2">
+                              <Sparkles className="w-8 h-8 text-zinc-700 mx-auto" />
+                              <p className="text-[10px] text-zinc-600 uppercase tracking-widest">No background selected</p>
+                            </div>
+                          )}
+                          <label className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                            <span className="text-[10px] font-bold text-white uppercase tracking-widest">Change Background</span>
+                            <input type="file" accept="image/*" onChange={(e) => handleFileUpload(e, 'background')} className="hidden" />
+                          </label>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <p className="text-xs text-zinc-500">Recommended: 1920x1080, max 2MB.</p>
+                          <label className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white text-[10px] font-bold uppercase tracking-widest rounded-lg cursor-pointer transition-colors">
+                            Upload New
+                            <input type="file" accept="image/*" onChange={(e) => handleFileUpload(e, 'background')} className="hidden" />
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-6">
+                    <div className="p-6 bg-blue-500/5 rounded-3xl border border-blue-500/10 space-y-4">
+                      <h4 className="text-sm font-bold text-white flex items-center space-x-2">
+                        <Sparkles className="w-4 h-4 text-blue-400" />
+                        <span>Live Preview</span>
+                      </h4>
+                      <div className="aspect-[9/16] max-w-[200px] mx-auto rounded-[2rem] border-4 border-zinc-800 bg-zinc-950 overflow-hidden relative shadow-2xl">
+                        {/* Mock Calling Page */}
+                        <div className="absolute inset-0">
+                          {data.backgroundUrl ? (
+                            <img src={data.backgroundUrl} alt="" className="w-full h-full object-cover opacity-40" />
+                          ) : (
+                            <div className="w-full h-full bg-gradient-to-b from-blue-500/10 to-zinc-950" />
+                          )}
+                        </div>
+                        <div className="relative h-full flex flex-col items-center justify-center p-4 space-y-4">
+                          <div className="w-16 h-16 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center overflow-hidden shadow-xl">
+                            {data.logoUrl ? (
+                              <img src={data.logoUrl} alt="" className="w-full h-full object-cover" />
+                            ) : (
+                              <Bot className="w-8 h-8 text-blue-500" />
+                            )}
+                          </div>
+                          <div className="text-center">
+                            <p className="text-[10px] font-bold text-white truncate w-32">{data.businessName || "Your Business"}</p>
+                            <p className="text-[8px] text-blue-400 uppercase tracking-widest mt-1">Calling...</p>
+                          </div>
+                          <div className="flex space-x-2">
+                            <div className="w-8 h-8 rounded-full bg-rose-500 flex items-center justify-center">
+                              <Phone className="w-3 h-3 text-white rotate-[135deg]" />
+                            </div>
+                            <div className="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center">
+                              <Mic className="w-3 h-3 text-white" />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <p className="text-[10px] text-zinc-500 text-center italic">
+                        This is how your customers will see your calling page.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {/* STEP 6: TEST AGENT */}
+            {data.step === 6 && (
+              <motion.div
+                key="step6"
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
@@ -871,11 +1039,27 @@ export default function OnboardingPage() {
                   <p className="text-zinc-500">Have a real voice conversation with {data.agentName || "your agent"} to see how it handles your business info.</p>
                 </div>
 
-                <div className="max-w-3xl mx-auto bg-zinc-900/50 rounded-3xl border border-zinc-800 overflow-hidden flex flex-col h-[350px]">
-                  <div className="p-4 border-b border-zinc-800 flex items-center justify-between bg-zinc-900">
+                <div className="max-w-3xl mx-auto bg-zinc-950 rounded-3xl border border-zinc-800 overflow-hidden flex flex-col h-[600px] relative shadow-2xl">
+                  {/* Background Image with Gradient Overlay */}
+                  <div className="absolute inset-0 pointer-events-none">
+                    {data.backgroundUrl ? (
+                      <>
+                        <img src={data.backgroundUrl} alt="" className="w-full h-full object-cover opacity-30" />
+                        <div className="absolute inset-0 bg-gradient-to-b from-zinc-950/20 via-zinc-950/80 to-zinc-950" />
+                      </>
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-b from-blue-500/5 to-zinc-950" />
+                    )}
+                  </div>
+
+                  <div className="p-4 border-b border-zinc-800/50 flex items-center justify-between bg-zinc-900/40 backdrop-blur-md relative z-10">
                     <div className="flex items-center space-x-3">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${isConnected ? "bg-blue-500 shadow-lg shadow-blue-500/20" : "bg-zinc-800"}`}>
-                        <Bot className={`w-5 h-5 ${isConnected ? "text-zinc-950" : "text-zinc-500"}`} />
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all overflow-hidden ${isConnected ? "bg-blue-500 shadow-lg shadow-blue-500/20" : "bg-zinc-800"}`}>
+                        {data.logoUrl ? (
+                          <img src={data.logoUrl} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <Bot className={`w-5 h-5 ${isConnected ? "text-zinc-950" : "text-zinc-500"}`} />
+                        )}
                       </div>
                       <div>
                         <p className="text-sm font-bold text-white">{data.agentName || "Vico"}</p>
@@ -890,7 +1074,7 @@ export default function OnboardingPage() {
                     </div>
                   </div>
 
-                  <div className="flex-1 p-6 overflow-y-auto space-y-4 custom-scrollbar bg-zinc-950/30">
+                  <div className="flex-1 p-6 overflow-y-auto space-y-4 custom-scrollbar bg-zinc-950/40 backdrop-blur-sm relative z-10">
                     {transcript.length === 0 ? (
                       <div className="h-full flex flex-col items-center justify-center text-center space-y-4 opacity-30">
                         <MessageSquare className="w-12 h-12 text-zinc-600" />
@@ -911,7 +1095,7 @@ export default function OnboardingPage() {
                     )}
                   </div>
 
-                  <div className="p-6 bg-zinc-900 border-t border-zinc-800 flex flex-col items-center space-y-4">
+                  <div className="p-6 bg-zinc-900/60 backdrop-blur-md border-t border-zinc-800/50 flex flex-col items-center space-y-4 relative z-10">
                     {!data.elevenLabsAgentId && !isConnecting && (
                       <div className="p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl text-center">
                         <p className="text-xs text-rose-400">
@@ -982,7 +1166,7 @@ export default function OnboardingPage() {
                 <div className="w-5 h-5 border-2 border-zinc-950 border-t-transparent rounded-full animate-spin" />
               ) : (
                 <>
-                  <span>{data.step === 5 ? "Proceed to Dashboard" : "Next Step"}</span>
+                  <span>{data.step === 6 ? "Proceed to Dashboard" : "Next Step"}</span>
                   <ArrowRight className="w-4 h-4" />
                 </>
               )}
