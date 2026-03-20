@@ -80,7 +80,7 @@ app.post("/api/auth/update-password", async (req, res) => {
 // API Routes
 app.get("/api/config", (req, res) => {
   // We only send non-sensitive configuration to the frontend.
-  // Sensitive keys like ELEVENLABS_API_KEY, INWORLD_SECRET, and PAYPAL_CLIENT_SECRET
+  // Sensitive keys like ELEVENLABS_API_KEY and PAYPAL_CLIENT_SECRET
   // are handled strictly on the server.
   // Gemini API key is injected via Vite's 'define' in vite.config.ts for frontend use.
   
@@ -136,70 +136,6 @@ app.get("/api/botcake/user", async (req, res) => {
     console.error("Botcake API Error:", error);
     res.status(500).json({ message: "Internal server error" });
   }
-});
-
-app.post("/api/inworld/tts", async (req, res) => {
-  const { text, voiceId } = req.body;
-  const key = process.env.INWORLD_KEY;
-  const secret = process.env.INWORLD_SECRET;
-
-  if (!key || !secret) {
-    return res.status(500).json({ error: "Inworld credentials not configured on server" });
-  }
-
-  const auth = Buffer.from(`${key}:${secret}`).toString('base64');
-
-  try {
-    const response = await fetch("https://api.inworld.ai/tts/v1/voice", {
-      method: "POST",
-      headers: {
-        "Authorization": `Basic ${auth}`,
-        "Content-Type": "application/json",
-        "Accept": "application/json",
-      },
-      body: JSON.stringify({
-        text,
-        voiceId: voiceId || "Clive",
-        modelId: "inworld-tts-1",
-        audioConfig: {
-          audioEncoding: "AUDIO_ENCODING_MP3",
-          sampleRateHertz: 22050
-        }
-      }),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      return res.status(response.status).send(errorText);
-    }
-
-    const data = await response.json();
-    res.json(data);
-  } catch (error: any) {
-    console.error("Server Inworld TTS Error:", error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-app.get("/api/inworld-voices", async (req, res) => {
-  const key = process.env.INWORLD_KEY;
-  const secret = process.env.INWORLD_SECRET;
-  if (!key || !secret) return res.status(500).json({ error: "Missing credentials" });
-  
-  const auth = Buffer.from(`${key}:${secret}`).toString('base64');
-  
-  try {
-    const r = await fetch("https://api.inworld.ai/tts/v1/voices", {
-      headers: { 'Authorization': `Basic ${auth}` }
-    });
-    res.status(r.status).send(await r.text());
-  } catch (e: any) {
-    res.status(500).json({ error: e.message });
-  }
-});
-
-app.get("/api/test-inworld", async (req, res) => {
-  res.json({ success: true, message: "Inworld proxy is ready" });
 });
 
 // Gemini Proxy
