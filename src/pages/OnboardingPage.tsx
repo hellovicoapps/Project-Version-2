@@ -567,10 +567,10 @@ export default function OnboardingPage() {
                   </p>
                 </div>
 
-                <div className="grid grid-cols-1 gap-8 max-w-md mx-auto w-full">
-                  <div className="space-y-3">
-                    <label className="text-sm font-bold text-[var(--text-muted)] uppercase tracking-widest flex items-center space-x-2">
-                      <Building2 className="w-4 h-4 text-[var(--brand-primary)]" />
+                <div className="grid grid-cols-1 gap-5 max-w-md mx-auto w-full">
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest flex items-center space-x-2 ml-1">
+                      <Building2 className="w-3.5 h-3.5 text-[var(--brand-primary)]" />
                       <span>Business Name</span>
                     </label>
                     <input 
@@ -578,12 +578,12 @@ export default function OnboardingPage() {
                       value={data.businessName}
                       onChange={(e) => updateData({ businessName: e.target.value })}
                       placeholder="e.g. Acme Corp"
-                      className="w-full px-5 py-4 bg-[var(--bg-card)] border border-[var(--border-main)] rounded-2xl text-[var(--text-main)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-brand-primary/50 focus:border-[var(--brand-primary)] transition-all shadow-sm text-lg"
+                      className="w-full px-4 py-3.5 bg-[var(--bg-main)] border border-[var(--border-main)] rounded-xl text-[var(--text-main)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/20 focus:border-[var(--brand-primary)] transition-all shadow-sm"
                     />
                   </div>
-                  <div className="space-y-3">
-                    <label className="text-sm font-bold text-[var(--text-muted)] uppercase tracking-widest flex items-center space-x-2">
-                      <Mail className="w-4 h-4 text-[var(--brand-primary)]" />
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest flex items-center space-x-2 ml-1">
+                      <Mail className="w-3.5 h-3.5 text-[var(--brand-primary)]" />
                       <span>Email Address</span>
                     </label>
                     <input 
@@ -591,12 +591,12 @@ export default function OnboardingPage() {
                       value={data.email}
                       onChange={(e) => updateData({ email: e.target.value })}
                       placeholder="you@company.com"
-                      className="w-full px-5 py-4 bg-[var(--bg-card)] border border-[var(--border-main)] rounded-2xl text-[var(--text-main)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-brand-primary/50 focus:border-[var(--brand-primary)] transition-all shadow-sm text-lg"
+                      className="w-full px-4 py-3.5 bg-[var(--bg-main)] border border-[var(--border-main)] rounded-xl text-[var(--text-main)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/20 focus:border-[var(--brand-primary)] transition-all shadow-sm"
                     />
                   </div>
-                  <div className="space-y-3">
-                    <label className="text-sm font-bold text-[var(--text-muted)] uppercase tracking-widest flex items-center space-x-2">
-                      <Lock className="w-4 h-4 text-[var(--brand-primary)]" />
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest flex items-center space-x-2 ml-1">
+                      <Lock className="w-3.5 h-3.5 text-[var(--brand-primary)]" />
                       <span>Password</span>
                     </label>
                     <input 
@@ -604,7 +604,7 @@ export default function OnboardingPage() {
                       value={data.password || ""}
                       onChange={(e) => updateData({ password: e.target.value })}
                       placeholder="••••••••"
-                      className="w-full px-5 py-4 bg-[var(--bg-card)] border border-[var(--border-main)] rounded-2xl text-[var(--text-main)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-brand-primary/50 focus:border-[var(--brand-primary)] transition-all shadow-sm text-lg"
+                      className="w-full px-4 py-3.5 bg-[var(--bg-main)] border border-[var(--border-main)] rounded-xl text-[var(--text-main)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/20 focus:border-[var(--brand-primary)] transition-all shadow-sm"
                     />
                   </div>
                 </div>
@@ -1145,12 +1145,14 @@ export default function OnboardingPage() {
           </div>
 
           {/* Navigation Buttons */}
-          <div className="p-6 border-t border-[var(--border-main)] flex items-center justify-between shrink-0 bg-[var(--bg-card)]/20">
+          <div className="p-6 border-t border-[var(--border-main)] flex items-center justify-between shrink-0 bg-[var(--bg-card)]/40 backdrop-blur-sm">
             <button 
               onClick={handleBack}
               disabled={data.step === 1 || loading}
-              className={`flex items-center space-x-2 text-sm font-bold transition-all ${
-                data.step === 1 || loading ? "opacity-0 pointer-events-none" : "text-[var(--text-muted)] hover:text-[var(--text-main)]"
+              className={`flex items-center space-x-2 px-4 py-3.5 rounded-xl font-medium transition-all ${
+                data.step === 1 || loading 
+                  ? "opacity-0 pointer-events-none" 
+                  : "text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-main)]"
               }`}
             >
               <ArrowLeft className="w-4 h-4" />
@@ -1160,14 +1162,14 @@ export default function OnboardingPage() {
             <button 
               onClick={handleNext}
               disabled={loading}
-              className="btn-primary flex items-center space-x-3 px-8 py-4 text-lg rounded-2xl shadow-xl shadow-[var(--brand-primary)]/20 hover:shadow-[var(--brand-primary)]/40 hover:-translate-y-1 transition-all duration-300"
+              className="flex items-center justify-center space-x-2 bg-[var(--brand-primary)] hover:bg-[var(--brand-secondary)] text-white px-8 py-3.5 rounded-xl font-semibold shadow-lg shadow-[var(--brand-primary)]/20 hover:shadow-[var(--brand-primary)]/40 hover:-translate-y-0.5 transition-all duration-200"
             >
               {loading ? (
-                <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               ) : (
                 <>
-                  <span className="font-bold tracking-wide">{data.step === 6 ? "Proceed to Dashboard" : "Next Step"}</span>
-                  <ArrowRight className="w-5 h-5" />
+                  <span>{data.step === 6 ? "Proceed to Dashboard" : "Next Step"}</span>
+                  <ArrowRight className="w-4 h-4" />
                 </>
               )}
             </button>
