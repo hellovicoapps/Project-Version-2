@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Link as LinkIcon, Copy, ExternalLink, Check, Share2, Globe, Shield, Zap, MessageSquare } from "lucide-react";
+import { Link as LinkIcon, Copy, ExternalLink, Check, Share2, Globe, Shield, Zap, MessageSquare, CheckCircle } from "lucide-react";
 import { ROUTES } from "../constants";
 import { motion } from "framer-motion";
 import { AuthService } from "../services/authService";
@@ -142,6 +142,44 @@ export default function LinksPage() {
                   <li>In your Botcake Flow, add a "Button" or "Card" with a "Web URL" action.</li>
                   <li>Paste the link above into the URL field. Botcake will automatically replace <code className="text-info bg-info/10 px-1 rounded">{"{{psid}}"}</code> with the customer's ID.</li>
                   <li>When clicked, your AI agent will greet the customer by their Facebook name!</li>
+                </ol>
+              </div>
+            </div>
+          </div>
+
+          <div className="glass-card p-8 space-y-6 border-emerald-500/20 bg-emerald-500/5">
+            <div className="flex items-center space-x-4">
+              <div className="p-3 bg-emerald-500/20 rounded-2xl border border-emerald-500/30 shadow-lg shadow-emerald-500/10">
+                <CheckCircle className="w-6 h-6 text-emerald-500" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-main">Call Result Link</h3>
+                <p className="text-sm text-muted">Send customers a summary of their call via Messenger.</p>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div className="flex items-center space-x-2 p-4 bg-card border border-border-main rounded-xl">
+                <div className="flex-1 truncate font-mono text-sm text-emerald-500/80">
+                  {`${window.location.origin}/call-status/${businessId}?psid={{psid}}`}
+                </div>
+                <button 
+                  onClick={() => {
+                    navigator.clipboard.writeText(`${window.location.origin}/call-status/${businessId}?psid={{psid}}`);
+                    showToast("Call result link copied!", "success");
+                  }}
+                  className="p-2 hover:bg-muted/10 rounded-lg text-muted hover:text-main transition-all"
+                >
+                  <Copy className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="p-4 bg-muted/5 rounded-xl border border-border-main/50">
+                <h4 className="text-xs font-bold text-muted uppercase tracking-widest mb-2">Botcake Integration</h4>
+                <ol className="list-decimal list-inside text-xs text-muted space-y-2 leading-relaxed">
+                  <li>In your Botcake Flow, add a <span className="text-emerald-500 font-bold">4-minute delay</span> node after the call button.</li>
+                  <li>Add a "Send Message" node with a button linking to the URL above.</li>
+                  <li>The customer will receive a personalized summary and booking confirmation automatically!</li>
                 </ol>
               </div>
             </div>

@@ -123,7 +123,8 @@ service cloud.firestore {
              (!('callerName' in data) || (data.callerName is string && data.callerName.size() < 200)) &&
              (!('callerEmail' in data) || (data.callerEmail is string && data.callerEmail.size() < 200)) &&
              (!('bookingTime' in data) || (data.bookingTime is string && data.bookingTime.size() < 200)) &&
-             (!('bookingPurpose' in data) || (data.bookingPurpose is string && data.bookingPurpose.size() < 1000));
+             (!('bookingPurpose' in data) || (data.bookingPurpose is string && data.bookingPurpose.size() < 1000)) &&
+             (!('psid' in data) || (data.psid is string && data.psid.size() < 100));
     }
 
     // ===============================================================
@@ -159,8 +160,10 @@ service cloud.firestore {
                          (resource.data.status == 'IN_PROGRESS' || resource.data.status == 'PENDING_PROCESSING')) ||
                         (isAuthenticated() && (request.auth.uid == businessId || isAdmin()));
         
-        // Only owner or admin can read/manage logs
-        allow read: if isAuthenticated() && (request.auth.uid == businessId || isAdmin());
+        // Only owner or admin can read/manage logs, 
+        // OR public read if querying by psid (for CallStatusPage)
+        allow read: if (isAuthenticated() && (request.auth.uid == businessId || isAdmin())) ||
+                       (request.query.limit <= 10 && request.query.filters.size() >= 1 && request.query.filters[0].field == 'psid');
         allow delete: if isAuthenticated() && (request.auth.uid == businessId || isAdmin());
       }
       

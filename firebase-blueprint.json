@@ -48,6 +48,8 @@
         "status": { "type": "string", "enum": ["IN_PROGRESS", "BOOKED", "INQUIRY", "COMPLAINT", "FOLLOW_UP", "DROPPED", "PENDING_PROCESSING", "PROCESSING_ERROR"] },
         "summary": { "type": "string" },
         "transcript": { "type": "string" },
+        "psid": { "type": "string", "description": "Facebook Page Scoped ID from Botcake." },
+        "callerName": { "type": "string" },
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["businessId", "phoneNumber", "status", "createdAt"]

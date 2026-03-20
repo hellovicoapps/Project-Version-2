@@ -534,11 +534,11 @@ export default function VoiceInterface() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto min-h-[calc(100vh-8rem)] lg:h-[calc(100vh-8rem)] flex flex-col">
-      <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
+    <div className="max-w-7xl mx-auto min-h-[calc(100vh-8rem)] flex flex-col">
+      <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
         <div>
-          <h1 className="text-3xl md:text-4xl font-bold text-[var(--text-main)]">Voice Lab</h1>
-          <p className="text-[var(--text-muted)] mt-1">Testing agent: <span className="text-[var(--brand-primary)] font-semibold">{agent.name}</span></p>
+          <h1 className="text-4xl md:text-5xl font-bold text-[var(--text-main)] tracking-tight">Voice Lab</h1>
+          <p className="text-[var(--text-muted)] mt-1 text-lg">Testing agent: <span className="text-[var(--brand-primary)] font-semibold">{agent.name}</span></p>
         </div>
         <div className="flex items-center space-x-3">
           <div className={`flex items-center space-x-2 px-3 py-1.5 rounded-full border transition-all ${
@@ -553,10 +553,10 @@ export default function VoiceInterface() {
         </div>
       </div>
 
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-6 min-h-0">
+      <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-8 min-h-0">
         {/* Call Controls & Visualizer */}
-        <div className="lg:col-span-2 flex flex-col space-y-6 min-h-[500px] lg:min-h-0">
-          <div className="flex-1 glass-card relative overflow-hidden flex flex-col items-center justify-center p-6 md:p-12">
+        <div className="lg:col-span-7 flex flex-col space-y-6 min-h-[500px] lg:min-h-0">
+          <div className="flex-1 glass-card relative overflow-hidden flex flex-col items-center justify-center p-8 md:p-16">
             <AnimatePresence>
               {isCalling && (
                 <motion.div 
@@ -580,11 +580,11 @@ export default function VoiceInterface() {
                     />
                   )}
                 </AnimatePresence>
-                <div className={`w-32 h-32 rounded-full border-4 flex items-center justify-center transition-all duration-500 ${
+                <div className={`w-40 h-40 rounded-full border-4 flex items-center justify-center transition-all duration-500 ${
                   isCalling ? "bg-[var(--bg-card)] border-[var(--brand-primary)] shadow-2xl shadow-[var(--brand-primary)]/20" : "bg-[var(--bg-card)] border-[var(--border-main)]"
                 }`}>
                   <Logo 
-                    iconSize={60} 
+                    iconSize={80} 
                     className={`transition-all duration-500 ${
                       isAiSpeaking ? "scale-125 animate-pulse" : isCalling ? "scale-110" : "opacity-30 grayscale"
                     }`} 
@@ -613,7 +613,7 @@ export default function VoiceInterface() {
 
                   <button 
                     onClick={handleCall}
-                    className={`w-20 h-20 rounded-full flex items-center justify-center shadow-2xl transition-all transform active:scale-95 ${
+                    className={`w-24 h-24 rounded-full flex items-center justify-center shadow-2xl transition-all transform active:scale-95 ${
                       isCalling 
                         ? "bg-[var(--color-danger)] hover:bg-[var(--color-danger)]/80 text-white shadow-[var(--color-danger)]/20 rotate-[135deg]" 
                         : "bg-[var(--brand-primary)] hover:bg-[var(--brand-secondary)] text-[var(--bg-main)] shadow-[var(--brand-primary)]/20"
@@ -623,7 +623,7 @@ export default function VoiceInterface() {
                       scale: isAiSpeaking ? 1 + audioLevel * 0.2 : 1
                     }}
                   >
-                    {status === "Connecting..." ? <Loader2 className="w-8 h-8 animate-spin" /> : <Phone className="w-8 h-8" />}
+                    {status === "Connecting..." ? <Loader2 className="w-10 h-10 animate-spin" /> : <Phone className="w-10 h-10" />}
                   </button>
 
                   <button 
@@ -684,8 +684,8 @@ export default function VoiceInterface() {
         </div>
 
         {/* Real-time Transcript */}
-        <div className="glass-card flex flex-col overflow-hidden h-[600px]">
-          <div className="p-6 border-b border-[var(--border-main)] flex items-center justify-between">
+        <div className="lg:col-span-5 glass-card flex flex-col overflow-hidden min-h-[600px] lg:h-full">
+          <div className="p-6 border-b border-[var(--border-main)] flex items-center justify-between bg-[var(--bg-card)]/30">
             <div className="flex items-center space-x-2">
               <MessageSquare className="w-5 h-5 text-[var(--brand-primary)]" />
               <h3 className="font-semibold text-[var(--text-main)]">Live Transcript</h3>
@@ -721,7 +721,7 @@ export default function VoiceInterface() {
                     animate={{ opacity: 1, y: 0 }}
                     className={`flex flex-col w-full ${msg.role === "ai" ? "items-start" : "items-end"}`}
                   >
-                    <div className={`max-w-[90%] p-4 rounded-2xl text-sm leading-relaxed shadow-sm ${
+                    <div className={`max-w-[85%] p-4 rounded-2xl text-sm leading-relaxed shadow-sm ${
                       msg.role === "ai" 
                         ? "bg-[var(--bg-card-hover)]/80 text-[var(--text-main)] rounded-tl-none border border-[var(--border-main)]/50" 
                         : "bg-[var(--brand-primary)] text-[var(--bg-main)] font-medium rounded-tr-none shadow-[var(--brand-primary)]/10"

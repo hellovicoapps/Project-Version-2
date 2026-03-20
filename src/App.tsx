@@ -23,6 +23,7 @@ import CookiePolicy from "./pages/CookiePolicy";
 import LinksPage from "./pages/LinksPage";
 import PublicCallPage from "./pages/PublicCallPage";
 import BotcakeRedirectPage from "./pages/BotcakeRedirectPage";
+import CallStatusPage from "./pages/CallStatusPage";
 import AdminDashboard from "./pages/AdminDashboard";
 import CalendarPage from "./pages/CalendarPage";
 
@@ -73,7 +74,7 @@ function AppContent() {
     return <>{children}</>;
   };
 
-  const isPublicCallPage = location.pathname.startsWith("/call/");
+  const isPublicCallPage = location.pathname.startsWith("/call/") || location.pathname.startsWith("/call-status/");
 
   return (
     <ToastProvider>
@@ -98,6 +99,7 @@ function AppContent() {
                 <Route path={ROUTES.COOKIES} element={<CookiePolicy />} />
                 <Route path={ROUTES.PUBLIC_CALL} element={<PublicCallPage />} />
                 <Route path={ROUTES.BOTCAKE_REDIRECT} element={<BotcakeRedirectPage />} />
+                <Route path={ROUTES.CALL_STATUS} element={<CallStatusPage />} />
 
                 {/* Protected Routes */}
                 <Route

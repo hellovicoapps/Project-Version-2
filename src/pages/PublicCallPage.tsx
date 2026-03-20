@@ -74,6 +74,8 @@ const LANGUAGE_NAMES: Record<string, string> = {
 export default function PublicCallPage() {
   const { businessId } = useParams<{ businessId: string }>();
   const [searchParams] = useSearchParams();
+  const psid = searchParams.get("psid");
+  const userName = searchParams.get("userName");
   const { showToast } = useToast();
   const [isCalling, setIsCalling] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
@@ -304,18 +306,47 @@ export default function PublicCallPage() {
         status: "PENDING_PROCESSING",
         transcript: transcriptText,
         phoneNumber: "Web Caller",
+        psid: psid || null,
+        callerName: userName || null,
         elevenLabsConversationId: finalConversationId || null,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       };
 
+      let callDocRef;
       if (finalConversationId) {
-        await setDoc(doc(db, callsPath, finalConversationId), callData, { merge: true });
+        callDocRef = doc(db, callsPath, finalConversationId);
+        await setDoc(callDocRef, callData, { merge: true });
       } else {
-        await addDoc(collection(db, callsPath), callData);
+        callDocRef = await addDoc(collection(db, callsPath), callData);
       }
       
+      const callId = callDocRef.id;
       setStatus("Call saved");
+
+      // 4. Process transcript with Gemini for summary and status
+      try {
+        const gemini = await getGeminiService();
+        if (gemini) {
+          const result = await gemini.processTranscript(transcriptText);
+          if (result) {
+            await updateDoc(doc(db, `businesses/${businessId}/calls`, callId), {
+              summary: result.summary || null,
+              status: result.status || "INQUIRY",
+              bookingDetails: result.bookingDetails || null,
+              bookingTime: result.bookingDetails?.dateTime || null,
+              updatedAt: serverTimestamp(),
+            });
+          }
+        }
+      } catch (err) {
+        console.error("Error processing transcript with Gemini:", err);
+        // Fallback to INQUIRY if processing fails
+        await updateDoc(doc(db, `businesses/${businessId}/calls`, callId), {
+          status: "INQUIRY",
+          updatedAt: serverTimestamp(),
+        });
+      }
     } catch (error) {
       console.error("PublicCallPage: Operation failed:", error);
       setStatus("Error saving call");
