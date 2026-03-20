@@ -1,13 +1,14 @@
-import { Check, Zap, Shield, Rocket, Crown, ArrowLeft } from "lucide-react";
-import { motion } from "framer-motion";
+import { Check, Zap, Shield, Rocket, Crown, ArrowLeft, X } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { SubscriptionPlan } from "../types";
 import { doc, updateDoc, onSnapshot } from "firebase/firestore";
 import { db, handleFirestoreError, OperationType } from "../firebase";
 import { useState, useEffect } from "react";
 import { AuthService } from "../services/authService";
 import { useToast } from "../components/Toast";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { ROUTES } from "../constants";
+import { PayPalButton } from "../components/PayPalButton";
 
 const PLANS = [
   {
@@ -56,7 +57,9 @@ const PLANS = [
 export default function PricingPage() {
   const [currentPlan, setCurrentPlan] = useState<SubscriptionPlan | null>(null);
   const [loading, setLoading] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<typeof PLANS[0] | null>(null);
   const { showToast } = useToast();
+  const navigate = useNavigate();
   const authState = AuthService.getAuthState();
   const businessId = authState.user?.id;
 
@@ -74,20 +77,23 @@ export default function PricingPage() {
     return () => unsubscribe();
   }, [businessId]);
 
-  const handleUpgrade = async (planId: SubscriptionPlan, minutes: number) => {
-    if (!businessId) return;
+  const handlePaymentSuccess = async (details: any) => {
+    if (!businessId || !selectedPlan) return;
 
     setLoading(true);
     try {
       await updateDoc(doc(db, "businesses", businessId), {
-        plan: planId,
-        totalMinutes: minutes,
-        // We don't reset usedMinutes here, but we could if it's a new billing cycle
+        plan: selectedPlan.id,
+        totalMinutes: selectedPlan.minutes,
+        lastPaymentId: details.id,
+        paymentStatus: "completed",
+        updatedAt: new Date().toISOString()
       });
-      showToast(`Successfully upgraded to ${planId} plan!`, "success");
+      showToast(`Successfully upgraded to ${selectedPlan.name} plan!`, "success");
+      setSelectedPlan(null);
     } catch (error) {
       console.error("Upgrade error:", error);
-      showToast("Failed to upgrade. Please try again.", "error");
+      showToast("Payment successful but failed to update account. Please contact support.", "error");
     } finally {
       setLoading(false);
     }
@@ -168,8 +174,14 @@ export default function PricingPage() {
             </div>
 
             <button
-              disabled={currentPlan === plan.id || loading}
-              onClick={() => handleUpgrade(plan.id, plan.minutes)}
+              disabled={currentPlan === plan.id || loading || plan.id === SubscriptionPlan.FREE}
+              onClick={() => {
+                if (!auth.isAuthenticated) {
+                  navigate(ROUTES.LOGIN);
+                  return;
+                }
+                setSelectedPlan(plan);
+              }}
               className={`w-full py-4 rounded-2xl font-bold transition-all ${
                 currentPlan === plan.id
                   ? "bg-[var(--bg-main)] text-[var(--text-muted)] cursor-default"
@@ -178,11 +190,61 @@ export default function PricingPage() {
                   : "bg-[var(--text-main)] text-[var(--bg-main)] hover:bg-[var(--text-main)]/90"
               }`}
             >
-              {currentPlan === plan.id ? "Current Plan" : "Upgrade Now"}
+              {currentPlan === plan.id ? "Current Plan" : plan.id === SubscriptionPlan.FREE ? "Free Plan" : "Upgrade Now"}
             </button>
           </motion.div>
         ))}
       </div>
+
+      {/* PayPal Modal */}
+      <AnimatePresence>
+        {selectedPlan && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-[var(--bg-card)] border border-[var(--border-main)] rounded-3xl p-8 max-w-md w-full shadow-2xl"
+            >
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-2xl font-bold text-[var(--text-main)]">Complete Purchase</h3>
+                <button 
+                  onClick={() => setSelectedPlan(null)}
+                  className="p-2 hover:bg-[var(--bg-main)] rounded-full transition-colors"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              <div className="mb-8 p-6 bg-[var(--bg-main)] rounded-2xl border border-[var(--border-main)]">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-[var(--text-muted)]">Plan</span>
+                  <span className="font-bold text-[var(--text-main)]">{selectedPlan.name}</span>
+                </div>
+                <div className="flex justify-between items-center mb-4">
+                  <span className="text-[var(--text-muted)]">Minutes</span>
+                  <span className="font-bold text-[var(--text-main)]">{selectedPlan.minutes.toLocaleString()}</span>
+                </div>
+                <div className="h-px bg-[var(--border-main)] mb-4" />
+                <div className="flex justify-between items-center">
+                  <span className="text-lg font-bold text-[var(--text-main)]">Total</span>
+                  <span className="text-2xl font-bold text-[var(--brand-primary)]">${selectedPlan.price}</span>
+                </div>
+              </div>
+
+              <PayPalButton 
+                amount={selectedPlan.price}
+                onSuccess={handlePaymentSuccess}
+                onError={(err) => showToast("Payment failed. Please try again.", "error")}
+              />
+
+              <p className="mt-6 text-center text-xs text-[var(--text-muted)]">
+                Secure payment processed by PayPal. By completing your purchase, you agree to our Terms of Service.
+              </p>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       <div className="mt-16 p-8 bg-[var(--bg-card)]/50 border border-[var(--border-main)] rounded-3xl text-center">
         <h3 className="text-xl font-bold text-[var(--text-main)] mb-2">Need a custom plan?</h3>

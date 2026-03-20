@@ -35,12 +35,17 @@ import { ErrorBoundary } from "./components/ErrorBoundary";
 import { BookingProcessor } from "./components/BookingProcessor";
 
 import { ThemeProvider, useTheme } from "./context/ThemeContext";
+import { PayPalScriptProvider } from "@paypal/react-paypal-js";
+
+const PAYPAL_CLIENT_ID = process.env.PAYPAL_CLIENT_ID || "";
 
 export default function App() {
   return (
-    <ThemeProvider>
-      <AppContent />
-    </ThemeProvider>
+    <PayPalScriptProvider options={{ clientId: PAYPAL_CLIENT_ID }}>
+      <ThemeProvider>
+        <AppContent />
+      </ThemeProvider>
+    </PayPalScriptProvider>
   );
 }
 
