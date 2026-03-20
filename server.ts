@@ -8,6 +8,7 @@ import { fileURLToPath } from "url";
 import admin from "firebase-admin";
 import { getFirestore } from "firebase-admin/firestore";
 import fs from "fs";
+import { GoogleGenAI, Type } from "@google/genai";
 
 const firebaseConfig = JSON.parse(fs.readFileSync("./firebase-applet-config.json", "utf-8"));
 
@@ -78,45 +79,15 @@ app.post("/api/auth/update-password", async (req, res) => {
 
 // API Routes
 app.get("/api/config", (req, res) => {
-  const getValidKey = (key: string | undefined, name: string) => {
-    if (!key) return undefined;
-    const isPlaceholder = key.includes("TODO_") || 
-                         key === "MY_GEMINI_API_KEY" || 
-                         key === "undefined" || 
-                         key === "null" ||
-                         key.trim() === "";
-    
-    if (isPlaceholder) {
-      console.log(`Server: Key ${name} is a placeholder or empty`);
-      return undefined;
-    }
-    return key;
-  };
-
-  const geminiKey = getValidKey(process.env.GEMINI_API_KEY, "GEMINI_API_KEY") || 
-                    getValidKey(process.env.GOOGLE_API_KEY, "GOOGLE_API_KEY") || 
-                    getValidKey(process.env.VITE_GEMINI_API_KEY, "VITE_GEMINI_API_KEY");
+  // We only send non-sensitive configuration to the frontend.
+  // Sensitive keys like ELEVENLABS_API_KEY, INWORLD_SECRET, and PAYPAL_CLIENT_SECRET
+  // are handled strictly on the server.
+  // Gemini API key is injected via Vite's 'define' in vite.config.ts for frontend use.
   
-  const apiKey = getValidKey(process.env.API_KEY, "API_KEY") || 
-                 getValidKey(process.env.VITE_API_KEY, "VITE_API_KEY");
-
-  const inworldKey = getValidKey(process.env.INWORLD_KEY, "INWORLD_KEY");
-  const inworldSecret = getValidKey(process.env.INWORLD_SECRET, "INWORLD_SECRET");
-  const elevenlabsKey = getValidKey(process.env.ELEVENLABS_API_KEY, "ELEVENLABS_API_KEY");
-
-  console.log("Server: /api/config called");
-  console.log("Server: API keys found in env:", Object.keys(process.env).filter(k => k.includes("API") || k.includes("GEMINI") || k.includes("GOOGLE") || k.includes("INWORLD") || k.includes("ELEVENLABS")));
-  console.log("Server: GEMINI_API_KEY present:", !!geminiKey);
-  console.log("Server: INWORLD_KEY present:", !!inworldKey);
-  console.log("Server: ELEVENLABS_API_KEY present:", !!elevenlabsKey);
-
   res.json({
-    GEMINI_API_KEY: geminiKey || null,
-    API_KEY: apiKey || null,
-    VITE_GEMINI_API_KEY: getValidKey(process.env.VITE_GEMINI_API_KEY, "VITE_GEMINI_API_KEY") || null,
-    INWORLD_KEY: inworldKey || null,
-    INWORLD_SECRET: inworldSecret || null,
-    ELEVENLABS_API_KEY: elevenlabsKey || null,
+    PAYPAL_CLIENT_ID: process.env.PAYPAL_CLIENT_ID || null,
+    PAYPAL_MODE: process.env.PAYPAL_MODE || "sandbox",
+    APP_URL: process.env.APP_URL || null,
   });
 });
 
@@ -167,6 +138,49 @@ app.get("/api/botcake/user", async (req, res) => {
   }
 });
 
+app.post("/api/inworld/tts", async (req, res) => {
+  const { text, voiceId } = req.body;
+  const key = process.env.INWORLD_KEY;
+  const secret = process.env.INWORLD_SECRET;
+
+  if (!key || !secret) {
+    return res.status(500).json({ error: "Inworld credentials not configured on server" });
+  }
+
+  const auth = Buffer.from(`${key}:${secret}`).toString('base64');
+
+  try {
+    const response = await fetch("https://api.inworld.ai/tts/v1/voice", {
+      method: "POST",
+      headers: {
+        "Authorization": `Basic ${auth}`,
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+      },
+      body: JSON.stringify({
+        text,
+        voiceId: voiceId || "Clive",
+        modelId: "inworld-tts-1",
+        audioConfig: {
+          audioEncoding: "AUDIO_ENCODING_MP3",
+          sampleRateHertz: 22050
+        }
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      return res.status(response.status).send(errorText);
+    }
+
+    const data = await response.json();
+    res.json(data);
+  } catch (error: any) {
+    console.error("Server Inworld TTS Error:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.get("/api/inworld-voices", async (req, res) => {
   const key = process.env.INWORLD_KEY;
   const secret = process.env.INWORLD_SECRET;
@@ -185,45 +199,57 @@ app.get("/api/inworld-voices", async (req, res) => {
 });
 
 app.get("/api/test-inworld", async (req, res) => {
-  const key = process.env.INWORLD_KEY;
-  const secret = process.env.INWORLD_SECRET;
-  if (!key || !secret) return res.status(500).json({ error: "Missing credentials" });
-  
-  const auth1 = Buffer.from(`${key}:${secret}`).toString('base64');
-  
-  const results: any = {};
-  const url = "https://api.inworld.ai/tts/v1/voice";
-  
-  const encodings = ["LINEAR16", "MP3", "AUDIO_ENCODING_MP3", "OGG_OPUS"];
-  
-  for (const enc of encodings) {
-    const payload = {
-      text: "Hello, world!",
-      voiceId: "Clive",
-      modelId: "inworld-tts-1",
-      audioConfig: {
-        audioEncoding: enc,
-        sampleRateHertz: 22050
-      }
-    };
+  res.json({ success: true, message: "Inworld proxy is ready" });
+});
 
-    try {
-      const r1 = await fetch(url, { 
-        method: 'POST',
-        headers: { 
-          'Authorization': `Basic ${auth1}`,
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(payload)
-      });
-      results[enc] = { status: r1.status, data: r1.ok ? "Success" : await r1.text() };
-    } catch (e: any) {
-      results[enc] = { error: e.message };
-    }
+// Gemini Proxy
+app.post("/api/gemini/generate", async (req, res) => {
+  const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || process.env.API_KEY;
+  if (!apiKey) return res.status(500).json({ error: "Gemini API Key not configured on server" });
+
+  const { contents, config } = req.body;
+  const ai = new GoogleGenAI({ apiKey });
+
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents,
+      config
+    });
+    res.json(response);
+  } catch (error: any) {
+    console.error("Server Gemini Generate Error:", error);
+    res.status(500).json({ error: error.message });
   }
-  
-  res.json(results);
+});
+
+app.post("/api/gemini/tts", async (req, res) => {
+  const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || process.env.API_KEY;
+  if (!apiKey) return res.status(500).json({ error: "Gemini API Key not configured on server" });
+
+  const { text, voiceName } = req.body;
+  const ai = new GoogleGenAI({ apiKey });
+
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash-preview-tts",
+      contents: [{ parts: [{ text }] }],
+      config: {
+        responseModalities: ["AUDIO"],
+        speechConfig: {
+          voiceConfig: {
+            prebuiltVoiceConfig: { voiceName: voiceName || "Kore" },
+          },
+        },
+      },
+    });
+
+    const audioData = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+    res.json({ audioData });
+  } catch (error: any) {
+    console.error("Server Gemini TTS Error:", error);
+    res.status(500).json({ error: error.message });
+  }
 });
 
 app.post("/api/elevenlabs/tts", async (req, res) => {

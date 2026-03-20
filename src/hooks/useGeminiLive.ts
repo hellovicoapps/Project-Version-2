@@ -280,7 +280,7 @@ export const useGeminiLive = ({
     try {
       const geminiService = await getGeminiService();
       if (!geminiService) {
-        throw new Error("Gemini API Key is missing. Please set GEMINI_API_KEY in the Secrets panel (Settings > Secrets).");
+        throw new Error("Gemini service is unavailable. Please ensure GEMINI_API_KEY is set in Settings > Secrets.");
       }
 
       if (voiceProvider === "ELEVENLABS") {

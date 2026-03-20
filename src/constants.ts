@@ -1,7 +1,5 @@
 export const API_BASE_URL = "/api";
-export const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-export const ELEVENLABS_API_KEY = import.meta.env.VITE_ELEVENLABS_API_KEY;
-export const PAYPAL_CLIENT_ID = import.meta.env.VITE_PAYPAL_CLIENT_ID;
+export const PAYPAL_CLIENT_ID = process.env.PAYPAL_CLIENT_ID;
 
 export const ROUTES = {
   HOME: "/",

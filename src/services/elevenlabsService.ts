@@ -256,16 +256,5 @@ export class ElevenLabsService {
 }
 
 export const getElevenLabsService = async () => {
-  try {
-    const r = await fetch(`/api/config?t=${Date.now()}`);
-    if (!r.ok) return null;
-    
-    const config = await r.json();
-    if (config.ELEVENLABS_API_KEY) {
-      return new ElevenLabsService({ apiKey: config.ELEVENLABS_API_KEY });
-    }
-  } catch (e) {
-    console.error("Failed to fetch ElevenLabs config:", e);
-  }
-  return null;
+  return new ElevenLabsService({ apiKey: "" });
 };

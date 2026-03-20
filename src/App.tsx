@@ -3,7 +3,6 @@ import React, { useEffect, useState } from "react";
 import { AuthState } from "./types";
 import { AuthService } from "./services/authService";
 import { ROUTES } from "./constants";
-import { fetchConfig } from "./services/geminiService";
 import { testConnection } from "./firebase";
 
 // Pages
@@ -56,7 +55,6 @@ function AppContent() {
   const { theme } = useTheme();
 
   useEffect(() => {
-    fetchConfig();
     testConnection();
     const unsubscribe = AuthService.subscribeToAuthChanges((state) => {
       setAuthState(state);
