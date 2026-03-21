@@ -20,7 +20,7 @@ export const Logo: React.FC<LogoProps> = ({
     <div className={`flex items-center group ${className}`}>
       <div className="relative flex items-center justify-center transition-transform duration-300 group-hover:scale-105" style={{ height: containerSize }}>
         <img 
-          src="/logo.png" 
+          src="/api/logo" 
           alt="Vico Logo" 
           className="h-full w-auto object-contain"
           referrerPolicy="no-referrer"

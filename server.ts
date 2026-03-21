@@ -756,6 +756,32 @@ app.post("/api/upload", (req, res) => {
   });
 });
 
+// Logo endpoint to serve the logo.png file
+// This endpoint is public and has CORS enabled to ensure the logo is always accessible.
+app.get("/api/logo", (req, res) => {
+  // Set headers for maximum accessibility and caching
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Cache-Control", "public, max-age=3600");
+  res.setHeader("Content-Type", "image/png");
+
+  const possiblePaths = [
+    path.join(__dirname, "logo.png"),
+    path.join(__dirname, "dist", "logo.png"),
+    path.join(process.cwd(), "public", "logo.png"),
+    path.join(process.cwd(), "dist", "logo.png"),
+    path.join(process.cwd(), "logo.png")
+  ];
+
+  for (const logoPath of possiblePaths) {
+    if (fs.existsSync(logoPath)) {
+      return res.sendFile(logoPath);
+    }
+  }
+
+  // If no file found, return a 404
+  res.status(404).send("Logo not found");
+});
+
 // Health check endpoint
 app.get("/api/health", (req, res) => {
   res.json({ 
