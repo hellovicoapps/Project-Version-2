@@ -774,7 +774,17 @@ if (process.env.NODE_ENV !== "production") {
   });
   app.use(vite.middlewares);
 } else {
-  app.use(express.static(__dirname));
+  // In production, serve static files from the dist directory
+  // __dirname is the dist directory where server.js and static assets reside
+  app.use(express.static(__dirname, {
+    index: false, // Don't serve index.html automatically, we handle it with the catch-all
+    setHeaders: (res, path) => {
+      if (path.endsWith(".png") || path.endsWith(".jpg") || path.endsWith(".jpeg") || path.endsWith(".svg")) {
+        res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+      }
+    }
+  }));
+
   app.get("*all", (req, res) => {
     res.sendFile(path.join(__dirname, "index.html"));
   });

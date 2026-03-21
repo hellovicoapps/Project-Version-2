@@ -39,11 +39,20 @@ import { PayPalScriptProvider } from "@paypal/react-paypal-js";
 const PAYPAL_CLIENT_ID = process.env.PAYPAL_CLIENT_ID || "";
 
 export default function App() {
+  const content = (
+    <ThemeProvider>
+      <AppContent />
+    </ThemeProvider>
+  );
+
+  if (!PAYPAL_CLIENT_ID) {
+    console.warn("PAYPAL_CLIENT_ID is not set. PayPal features will be disabled.");
+    return content;
+  }
+
   return (
     <PayPalScriptProvider options={{ clientId: PAYPAL_CLIENT_ID }}>
-      <ThemeProvider>
-        <AppContent />
-      </ThemeProvider>
+      {content}
     </PayPalScriptProvider>
   );
 }

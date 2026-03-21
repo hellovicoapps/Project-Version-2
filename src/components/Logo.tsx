@@ -23,6 +23,7 @@ export const Logo: React.FC<LogoProps> = ({
           src="/logo.png" 
           alt="Vico Logo" 
           className="h-full w-auto object-contain"
+          referrerPolicy="no-referrer"
         />
       </div>
       {showText && (
