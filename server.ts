@@ -9,6 +9,7 @@ import admin from "firebase-admin";
 import { getFirestore } from "firebase-admin/firestore";
 import fs from "fs";
 import { GoogleGenAI, Type } from "@google/genai";
+import nodemailer from "nodemailer";
 
 const firebaseConfig = JSON.parse(fs.readFileSync("./firebase-applet-config.json", "utf-8"));
 
@@ -678,6 +679,72 @@ app.post("/api/paypal/capture-order", async (req, res) => {
     res.json(data);
   } catch (error: any) {
     console.error("PayPal Capture Order Error:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Email Integration
+app.post("/api/email/send-booking-confirmation", async (req, res) => {
+  try {
+    const { to, name, dateTime, purpose, businessName } = req.body;
+    
+    if (!to) {
+      return res.status(400).json({ error: "Missing recipient email" });
+    }
+
+    let transporter;
+    if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
+      transporter = nodemailer.createTransport({
+        host: process.env.SMTP_HOST,
+        port: Number(process.env.SMTP_PORT) || 587,
+        secure: process.env.SMTP_SECURE === "true",
+        auth: {
+          user: process.env.SMTP_USER,
+          pass: process.env.SMTP_PASS,
+        },
+      });
+    } else {
+      // Fallback to Ethereal for testing
+      const testAccount = await nodemailer.createTestAccount();
+      transporter = nodemailer.createTransport({
+        host: "smtp.ethereal.email",
+        port: 587,
+        secure: false,
+        auth: {
+          user: testAccount.user,
+          pass: testAccount.pass,
+        },
+      });
+      console.log("Server: Using Ethereal Email for testing");
+    }
+
+    const info = await transporter.sendMail({
+      from: `"${businessName || 'Vico AI'}" <noreply@vico.ai>`,
+      to,
+      subject: `Booking Confirmation: ${purpose || 'Appointment'}`,
+      text: `Hi ${name || 'there'},\n\nYour booking for ${purpose || 'an appointment'} is confirmed for ${dateTime}.\n\nThank you,\n${businessName || 'Vico AI'}`,
+      html: `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+          <h2 style="color: #1d4ed8;">Booking Confirmation</h2>
+          <p>Hi ${name || 'there'},</p>
+          <p>Your booking is confirmed. Here are the details:</p>
+          <ul style="background: #f8fafc; padding: 15px 30px; border-radius: 8px;">
+            <li style="margin-bottom: 10px;"><strong>Purpose:</strong> ${purpose || 'Appointment'}</li>
+            <li style="margin-bottom: 10px;"><strong>Date & Time:</strong> ${dateTime}</li>
+          </ul>
+          <p>Thank you,<br><strong>${businessName || 'Vico AI'}</strong></p>
+        </div>
+      `,
+    });
+
+    console.log("Server: Email sent: %s", info.messageId);
+    if (!process.env.SMTP_HOST) {
+      console.log("Server: Email Preview URL: %s", nodemailer.getTestMessageUrl(info));
+    }
+
+    res.json({ success: true, messageId: info.messageId });
+  } catch (error: any) {
+    console.error("Server: Email sending error:", error);
     res.status(500).json({ error: error.message });
   }
 });

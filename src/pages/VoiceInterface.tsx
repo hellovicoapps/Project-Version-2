@@ -37,9 +37,10 @@ import { AuthService } from "../services/authService";
 import { useToast } from "../components/Toast";
 import { Logo } from "../components/Logo";
 import { useElevenLabsAgent } from "../hooks/useElevenLabsAgent";
-import { Business, CallStatus } from "../types";
+import { Business, CallStatus, SubscriptionPlan } from "../types";
 import { getGeminiService } from "../services/geminiService";
 import { getElevenLabsService } from "../services/elevenlabsService";
+import { PLAN_DETAILS } from "../constants";
 
 const GREETINGS: Record<string, string> = {
   en: "Hello! I'm {name}. How can I help you today?",
@@ -268,6 +269,32 @@ export default function VoiceInterface() {
         createdAt: serverTimestamp()
       });
       
+      // Send Booking Confirmation Email
+      if (callStatus === CallStatus.BOOKED && callerEmail) {
+        try {
+          console.log(`VoiceInterface: Sending confirmation email to ${callerEmail}`);
+          const emailResponse = await fetch("/api/email/send-booking-confirmation", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              to: callerEmail,
+              name: callerName || "Customer",
+              dateTime: bookingTime || "TBD",
+              purpose: bookingPurpose || "Appointment",
+              businessName: authState.user?.businessName || "Vico AI"
+            })
+          });
+          
+          if (!emailResponse.ok) {
+            console.error("VoiceInterface: Failed to send email", await emailResponse.text());
+          } else {
+            console.log("VoiceInterface: Confirmation email sent successfully");
+          }
+        } catch (emailError) {
+          console.error("VoiceInterface: Error sending confirmation email:", emailError);
+        }
+      }
+      
       setStatus("Call saved");
 
       // Deduct credits
@@ -450,10 +477,18 @@ export default function VoiceInterface() {
     const businessDoc = await getDoc(doc(db, "businesses", businessId!));
     if (businessDoc.exists()) {
       const data = businessDoc.data();
-      const limit = data.totalMinutes || 60;
+      const currentPlan = data.plan as SubscriptionPlan || SubscriptionPlan.FREE;
+      const planDetails = PLAN_DETAILS[currentPlan];
+      const limit = data.totalMinutes || planDetails?.minutes || 30;
       const used = data.usedMinutes || 0;
+      
       if (used >= limit) {
-        showToast("You have run out of AI minutes. Overage rates may apply.", "info");
+        if (currentPlan === SubscriptionPlan.FREE) {
+          showToast("You have run out of AI minutes on the Free tier. Please upgrade to continue.", "error");
+          return;
+        } else {
+          showToast("You have run out of included AI minutes. Overage rates will apply.", "info");
+        }
       }
     }
 

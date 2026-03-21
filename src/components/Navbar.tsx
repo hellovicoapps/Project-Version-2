@@ -43,14 +43,14 @@ export default function Navbar({ user }: { user: UserType | null }) {
   const overage = Math.max(0, used - total);
 
   return (
-    <header className="h-20 border-b border-[var(--border-main)] flex items-center justify-between px-8 sticky top-0 bg-[var(--glass-bg)] backdrop-blur-xl z-40 transition-colors duration-300">
+    <header className="h-20 border-b border-[var(--brand-secondary)] flex items-center justify-between px-8 sticky top-0 bg-[var(--brand-primary)] backdrop-blur-xl z-40 transition-colors duration-300">
       <div className="flex-1 max-w-xl">
         <div className="relative group">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)] group-focus-within:text-[var(--brand-primary)] transition-colors" />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/70 group-focus-within:text-white transition-colors z-10" />
           <input 
             type="text" 
             placeholder="Search calls, contacts, or settings..." 
-            className="w-full pl-12 pr-4 py-2.5 bg-[var(--bg-card)] border border-[var(--border-main)] rounded-xl text-sm text-[var(--text-main)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/50 focus:border-[var(--brand-primary)] transition-all"
+            className="w-full pl-12 pr-4 py-2.5 bg-white/10 border border-white/20 rounded-xl text-sm text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-white transition-all focus:bg-white focus:text-gray-900 focus:placeholder:text-gray-400"
           />
         </div>
       </div>
@@ -60,27 +60,27 @@ export default function Navbar({ user }: { user: UserType | null }) {
           <div className="relative">
             <button 
               onClick={() => setShowCreditsMenu(!showCreditsMenu)}
-              className="hidden lg:flex items-center space-x-4 px-4 py-2 bg-[var(--bg-card)] border border-[var(--border-main)] rounded-xl hover:border-[var(--brand-primary)]/30 transition-colors group"
+              className="hidden lg:flex items-center space-x-4 px-4 py-2 bg-white/10 border border-white/20 rounded-xl hover:border-white/40 transition-colors group"
             >
-              <div className="flex flex-col">
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider">Voice Credits</span>
-                  <span className={`text-[10px] font-bold ${overage > 0 ? "text-danger" : "text-[var(--text-main)]"}`}>
+              <div className="flex flex-col min-w-[160px]">
+                <div className="flex items-center justify-between mb-1.5 gap-3">
+                  <span className="text-[10px] font-bold text-white/70 uppercase tracking-wider whitespace-nowrap">Voice Credits</span>
+                  <span className={`text-[10px] font-bold whitespace-nowrap ${overage > 0 ? "text-red-300" : "text-white"}`}>
                     {overage > 0 ? `${overage.toFixed(1)}m overage` : `${remaining.toFixed(1)}m left`}
                   </span>
                 </div>
-                <div className="w-32 h-1.5 bg-[var(--border-main)] rounded-full overflow-hidden">
+                <div className="w-full h-1.5 bg-black/20 rounded-full overflow-hidden">
                   <motion.div 
                     initial={{ width: 0 }}
                     animate={{ width: `${Math.min(100, (used / total) * 100)}%` }}
                     className={`h-full rounded-full ${
-                      (used / total) > 0.9 ? 'bg-danger' : 
-                      (used / total) > 0.7 ? 'bg-warning' : 'bg-[var(--brand-primary)]'
+                      (used / total) > 0.9 ? 'bg-red-400' : 
+                      (used / total) > 0.7 ? 'bg-yellow-400' : 'bg-white'
                     }`}
                   />
                 </div>
               </div>
-              <ChevronDown className={`w-4 h-4 text-[var(--text-muted)] group-hover:text-[var(--text-main)] transition-transform ${showCreditsMenu ? "rotate-180" : ""}`} />
+              <ChevronDown className={`w-4 h-4 text-white/70 group-hover:text-white transition-transform ${showCreditsMenu ? "rotate-180" : ""}`} />
             </button>
 
             <AnimatePresence>
@@ -143,19 +143,19 @@ export default function Navbar({ user }: { user: UserType | null }) {
           </div>
         )}
 
-        <button className="relative p-2 text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors">
+        <button className="relative p-2 text-white/70 hover:text-white transition-colors">
           <Bell className="w-5 h-5" />
-          <span className="absolute top-2 right-2 w-2 h-2 bg-[var(--brand-primary)] rounded-full border-2 border-[var(--bg-main)]" />
+          <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-[var(--brand-primary)]" />
         </button>
 
-        <div className="h-8 w-px bg-[var(--border-main)]" />
+        <div className="h-8 w-px bg-white/20" />
 
         <div className="relative">
           <button 
             onClick={() => setShowMenu(!showMenu)}
             className="flex items-center space-x-3 group"
           >
-            <div className="w-10 h-10 bg-[var(--bg-card)] border border-[var(--border-main)] rounded-xl flex items-center justify-center text-[var(--text-main)] font-bold shadow-lg shadow-[var(--brand-primary)]/10 group-hover:scale-105 transition-transform overflow-hidden">
+            <div className="w-10 h-10 bg-white/10 border border-white/20 rounded-xl flex items-center justify-center text-white font-bold shadow-lg shadow-black/10 group-hover:scale-105 transition-transform overflow-hidden">
               {business?.logoUrl ? (
                 <img 
                   src={business.logoUrl} 
@@ -164,16 +164,16 @@ export default function Navbar({ user }: { user: UserType | null }) {
                   referrerPolicy="no-referrer"
                 />
               ) : (
-                <div className="w-full h-full bg-gradient-to-br from-[var(--brand-primary)] to-[var(--brand-secondary)] flex items-center justify-center text-white">
+                <div className="w-full h-full bg-gradient-to-br from-white/20 to-white/5 flex items-center justify-center text-white">
                   {user?.name?.[0] || user?.email?.[0] || "U"}
                 </div>
               )}
             </div>
             <div className="hidden md:block text-left">
-              <p className="text-sm font-semibold text-[var(--text-main)] leading-none">{user?.name || "User"}</p>
-              <p className="text-xs text-[var(--text-muted)] mt-1">{user?.role || "Admin"}</p>
+              <p className="text-sm font-semibold text-white leading-none">{user?.name || "User"}</p>
+              <p className="text-xs text-white/70 mt-1">{user?.role || "Admin"}</p>
             </div>
-            <ChevronDown className={`w-4 h-4 text-[var(--text-muted)] group-hover:text-[var(--text-main)] transition-transform ${showMenu ? "rotate-180" : ""}`} />
+            <ChevronDown className={`w-4 h-4 text-white/70 group-hover:text-white transition-transform ${showMenu ? "rotate-180" : ""}`} />
           </button>
 
           <AnimatePresence>

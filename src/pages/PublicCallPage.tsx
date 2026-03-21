@@ -18,6 +18,7 @@ import {
   Settings
 } from "lucide-react";
 import { Agent, CallStatus, Business, SubscriptionPlan } from "../types";
+import { PLAN_DETAILS } from "../constants";
 import { Logo } from "../components/Logo";
 import { useElevenLabsAgent } from "../hooks/useElevenLabsAgent";
 import { ROUTES } from "../constants";
@@ -32,7 +33,9 @@ import {
   setDoc,
   serverTimestamp,
   updateDoc,
-  increment
+  increment,
+  getDocs,
+  where
 } from "firebase/firestore";
 import { db, handleFirestoreError, OperationType } from "../firebase";
 import { useToast } from "../components/Toast";
@@ -201,9 +204,17 @@ export default function PublicCallPage() {
         setBackgroundUrl(data.backgroundUrl || "");
         
         // Check credits
-        const limit = data.totalMinutes || 60;
+        const currentPlan = data.plan as SubscriptionPlan || SubscriptionPlan.FREE;
+        const planDetails = PLAN_DETAILS[currentPlan];
+        const limit = data.totalMinutes || planDetails?.minutes || 30;
         const used = data.usedMinutes || 0;
-        setHasCredits(used < limit);
+        
+        // Only block if it's the free tier and they are out of minutes
+        if (currentPlan === SubscriptionPlan.FREE && used >= limit) {
+          setHasCredits(false);
+        } else {
+          setHasCredits(true);
+        }
       } else {
         console.warn("PublicCallPage: business doc does not exist for ID:", businessId);
       }
@@ -296,14 +307,14 @@ export default function PublicCallPage() {
         return `${role}: ${m.text}`;
       }).join("\n");
 
-      // Save to Firestore with status PENDING_PROCESSING
-      // This will trigger the BookingProcessor (which runs in App.tsx) to use Gemini
+      // Save to Firestore with status IN_PROGRESS
+      // We process it here instead of relying on BookingProcessor
       const callsPath = `businesses/${businessId}/calls`;
       const callData = {
         businessId,
         agentId: agentRef.current?.id || "unknown",
         duration: finalDuration,
-        status: "PENDING_PROCESSING",
+        status: "IN_PROGRESS",
         transcript: transcriptText,
         phoneNumber: "Web Caller",
         psid: psid || null,
@@ -337,6 +348,68 @@ export default function PublicCallPage() {
               bookingTime: result.bookingDetails?.dateTime || null,
               updatedAt: serverTimestamp(),
             });
+
+            // Send Booking Confirmation Email
+            if (result.status === "BOOKED" && result.bookingDetails?.email) {
+              try {
+                console.log(`PublicCallPage: Sending confirmation email to ${result.bookingDetails.email}`);
+                const emailResponse = await fetch("/api/email/send-booking-confirmation", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    to: result.bookingDetails.email,
+                    name: result.bookingDetails.name || userName || "Customer",
+                    dateTime: result.bookingDetails.dateTime || "TBD",
+                    purpose: result.bookingDetails.purpose || "Appointment",
+                    businessName: businessName || "Vico AI"
+                  })
+                });
+                
+                if (!emailResponse.ok) {
+                  console.error("PublicCallPage: Failed to send email", await emailResponse.text());
+                } else {
+                  console.log("PublicCallPage: Confirmation email sent successfully");
+                }
+              } catch (emailError) {
+                console.error("PublicCallPage: Error sending confirmation email:", emailError);
+              }
+            }
+            
+            // CRM Integration: Update or Create Contact
+            const phoneNumber = result.bookingDetails?.phone || "Web Caller";
+            if (phoneNumber && phoneNumber !== "Unknown") {
+              try {
+                const contactsRef = collection(db, `businesses/${businessId}/contacts`);
+                const contactQuery = query(contactsRef, where("phone", "==", phoneNumber));
+                const contactSnapshot = await getDocs(contactQuery);
+                
+                const contactStatus = result.status === "BOOKED" ? "BOOKED" : "INQUIRED";
+                const contactData = {
+                  name: result.bookingDetails?.name || userName || "Unknown",
+                  phone: phoneNumber,
+                  email: result.bookingDetails?.email || "",
+                  status: contactStatus,
+                  lastCallId: callId,
+                  lastCallSummary: result.summary,
+                  updatedAt: serverTimestamp(),
+                  createdAt: serverTimestamp(), // Will be merged if exists
+                };
+
+                if (!contactSnapshot.empty) {
+                  const contactDoc = contactSnapshot.docs[0];
+                  // Don't overwrite createdAt
+                  const { createdAt, ...updateContactData } = contactData;
+                  await updateDoc(contactDoc.ref, updateContactData);
+                  console.log(`PublicCallPage: Updated contact ${contactDoc.id}`);
+                } else {
+                  const newContactRef = doc(contactsRef);
+                  await setDoc(newContactRef, contactData);
+                  console.log(`PublicCallPage: Created new contact ${newContactRef.id}`);
+                }
+              } catch (contactError) {
+                console.error("PublicCallPage: Error creating/updating contact:", contactError);
+              }
+            }
           }
         }
       } catch (err) {
@@ -347,6 +420,14 @@ export default function PublicCallPage() {
           updatedAt: serverTimestamp(),
         });
       }
+
+      // Deduct AI minutes
+      const businessRef = doc(db, "businesses", businessId);
+      const minutesUsed = Math.max(0.1, finalDuration / 60);
+      await updateDoc(businessRef, {
+        usedMinutes: increment(minutesUsed)
+      });
+      
     } catch (error) {
       console.error("PublicCallPage: Operation failed:", error);
       setStatus("Error saving call");
@@ -383,6 +464,12 @@ export default function PublicCallPage() {
     if (!agent.elevenLabsAgentId) {
       console.error("PublicCallPage: Agent is missing elevenLabsAgentId");
       setStatus("Config Error");
+      return;
+    }
+
+    if (!hasCredits) {
+      setStatus("Out of credits");
+      showToast("This business has run out of AI minutes.", "error");
       return;
     }
 
@@ -487,19 +574,18 @@ export default function PublicCallPage() {
     <div className="min-h-screen bg-[var(--bg-main)] flex flex-col relative">
       {/* Background Image */}
       {backgroundUrl && (
-        <div className="absolute inset-0 z-0 overflow-hidden">
+        <div className="fixed inset-0 z-0 overflow-hidden">
           <img 
             src={backgroundUrl} 
             alt="Background" 
-            className="w-full h-full object-cover opacity-40 blur-[2px]"
+            className="w-full h-full object-cover"
             referrerPolicy="no-referrer"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-[var(--bg-main)]/40 via-[var(--bg-main)]/20 to-[var(--bg-main)]" />
         </div>
       )}
       
       {/* Public Header */}
-      <header className="p-6 border-b border-[var(--border-main)] flex items-center justify-between bg-[var(--bg-main)]/50 backdrop-blur-xl sticky top-0 z-50">
+      <header className="p-6 flex items-center justify-between sticky top-0 z-50">
         <div className="flex items-center space-x-3">
           {logoUrl ? (
             <div className="w-10 h-10 rounded-lg overflow-hidden shadow-lg shadow-[var(--brand-primary)]/10">
@@ -564,7 +650,7 @@ export default function PublicCallPage() {
 
               <div className="space-y-6 w-full max-w-sm">
                 <div className="space-y-2">
-                  <h2 className="text-2xl md:text-3xl font-bold text-[var(--text-main)] tracking-tight">{agent?.name || "AI Assistant"}</h2>
+                  <h2 className="text-2xl md:text-3xl font-bold text-[var(--text-main)] tracking-tight">{businessName || "AI Assistant"}</h2>
                   <div className="flex items-center justify-center space-x-2 text-[var(--text-muted)] font-mono text-sm">
                     <Clock className="w-4 h-4" />
                     <span>{formatDuration(duration)}</span>
@@ -743,7 +829,7 @@ export default function PublicCallPage() {
         </div>
       </main>
 
-      <footer className="p-8 text-center border-t border-[var(--border-main)] relative z-10">
+      <footer className="p-8 text-center relative z-10">
         <p className="text-[var(--text-muted)] text-xs">
           Powered by <a href="/" className="hover:text-[var(--brand-primary)] transition-colors font-medium">Vico</a>
         </p>

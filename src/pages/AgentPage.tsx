@@ -531,7 +531,7 @@ export default function AgentPage() {
             <h2 className="text-xl font-bold text-main tracking-tight">Voice Persona</h2>
           </div>
           <div className="h-px bg-border-main" />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[340px] overflow-y-auto pr-2 custom-scrollbar">
             {availableVoices.map((voice) => (
               <div
                 key={voice.id}

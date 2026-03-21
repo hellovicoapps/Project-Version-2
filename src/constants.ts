@@ -53,3 +53,26 @@ export const TIMEZONES = [
   "Australia/Sydney",
   "Pacific/Auckland",
 ];
+
+export const PLAN_DETAILS = {
+  FREE: {
+    price: 0,
+    minutes: 30,
+    overageRate: 0, // No overage allowed
+  },
+  STARTER: {
+    price: 199,
+    minutes: 300,
+    overageRate: 0.50,
+  },
+  GROWTH: {
+    price: 499,
+    minutes: 1000,
+    overageRate: 0.40,
+  },
+  SCALE: {
+    price: 899,
+    minutes: 2500,
+    overageRate: 0.30,
+  },
+};

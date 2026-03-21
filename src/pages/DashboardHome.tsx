@@ -65,6 +65,7 @@ import { AuthService } from "../services/authService";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "../constants";
 import { useToast } from "../components/Toast";
+import { PLAN_DETAILS } from "../constants";
 import { CallStatus, Business, SubscriptionPlan } from "../types";
 
 const StatCard = ({ title, value, icon: Icon, trend, trendValue }: any) => (
@@ -121,11 +122,13 @@ export default function DashboardHome() {
     setIsResetting(true);
     try {
       const businessRef = doc(db, "businesses", businessId);
+      const currentPlan = business?.plan as SubscriptionPlan || SubscriptionPlan.FREE;
+      const planMinutes = PLAN_DETAILS[currentPlan]?.minutes || 30;
       await updateDoc(businessRef, {
         usedMinutes: 0,
-        totalMinutes: 120 // Increase to 120 for testing
+        totalMinutes: planMinutes
       });
-      showToast("Credits reset successfully! You now have 120 minutes.", "success");
+      showToast(`Credits reset successfully! You now have ${planMinutes} minutes.`, "success");
     } catch (error) {
       console.error("Error resetting credits:", error);
       showToast("Failed to reset credits.", "error");
@@ -142,7 +145,9 @@ export default function DashboardHome() {
       if (snapshot.exists()) {
         const data = snapshot.data() as Business;
         setBusiness({ id: snapshot.id, ...data } as Business);
-        const remaining = Math.max(0, (data.totalMinutes || 60) - (data.usedMinutes || 0));
+        const currentPlan = data.plan as SubscriptionPlan || SubscriptionPlan.FREE;
+        const planMinutes = PLAN_DETAILS[currentPlan]?.minutes || 30;
+        const remaining = Math.max(0, (data.totalMinutes || planMinutes) - (data.usedMinutes || 0));
         setStats(prev => ({ ...prev, remainingMinutes: Number(remaining.toFixed(1)) }));
       }
     }, (error) => {
@@ -316,7 +321,7 @@ export default function DashboardHome() {
 
   return (
     <div className="space-y-8 max-w-7xl mx-auto">
-      {business && (business.usedMinutes || 0) >= (business.totalMinutes || 60) && (
+      {business && (business.usedMinutes || 0) >= (business.totalMinutes || PLAN_DETAILS[business.plan as SubscriptionPlan]?.minutes || 30) && (
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -328,7 +333,11 @@ export default function DashboardHome() {
             </div>
             <div>
               <p className="text-sm font-bold text-[var(--text-main)]">Voice Credits Exceeded</p>
-              <p className="text-xs text-[var(--color-danger)]/80">Your business has exceeded its monthly voice credit limit. Overage will be billed at the end of your billing cycle.</p>
+              <p className="text-xs text-[var(--color-danger)]/80">
+                {business.plan === SubscriptionPlan.FREE 
+                  ? "You have run out of free AI minutes. Please upgrade to continue using the service."
+                  : `You have exceeded your monthly limit. Overage is billed at $${PLAN_DETAILS[business.plan as SubscriptionPlan]?.overageRate.toFixed(2)}/min. Current overage cost: $${(((business.usedMinutes || 0) - (business.totalMinutes || PLAN_DETAILS[business.plan as SubscriptionPlan]?.minutes || 30)) * (PLAN_DETAILS[business.plan as SubscriptionPlan]?.overageRate || 0)).toFixed(2)}`}
+              </p>
             </div>
           </div>
           <button 

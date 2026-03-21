@@ -79,6 +79,32 @@ export const BookingProcessor = () => {
 
             await updateDoc(callDoc.ref, updateData);
             
+            // Send Booking Confirmation Email
+            if (result.status === CallStatus.BOOKED && callerEmail) {
+              try {
+                console.log(`BookingProcessor: Sending confirmation email to ${callerEmail}`);
+                const emailResponse = await fetch("/api/email/send-booking-confirmation", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    to: callerEmail,
+                    name: callerName || "Customer",
+                    dateTime: result.bookingDetails?.dateTime || "TBD",
+                    purpose: result.bookingDetails?.purpose || "Appointment",
+                    businessName: authState.user?.businessName || "Vico AI"
+                  })
+                });
+                
+                if (!emailResponse.ok) {
+                  console.error("BookingProcessor: Failed to send email", await emailResponse.text());
+                } else {
+                  console.log("BookingProcessor: Confirmation email sent successfully");
+                }
+              } catch (emailError) {
+                console.error("BookingProcessor: Error sending confirmation email:", emailError);
+              }
+            }
+            
             // CRM Integration: Update or Create Contact
             if (phoneNumber && phoneNumber !== "Unknown") {
               const contactsRef = collection(db, `businesses/${businessId}/contacts`);

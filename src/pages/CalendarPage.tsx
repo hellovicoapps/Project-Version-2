@@ -278,10 +278,10 @@ export default function CalendarPage() {
       <div className="flex-1 glass-card overflow-hidden flex flex-col min-h-[600px]">
         {view === 'month' ? (
           <div className="flex-1 flex flex-col">
-            <div className="grid grid-cols-7 border-b border-[var(--border-main)] bg-[var(--bg-card)]/30">
+            <div className="grid grid-cols-7 border-b border-[var(--brand-secondary)] bg-[var(--brand-primary)]">
               {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(d => (
-                <div key={d} className="p-4 text-center border-r border-[var(--border-main)] last:border-r-0">
-                  <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest">{d}</span>
+                <div key={d} className="p-4 text-center border-r border-[var(--brand-secondary)] last:border-r-0">
+                  <span className="text-[10px] font-bold text-white/80 uppercase tracking-widest">{d}</span>
                 </div>
               ))}
             </div>
@@ -322,20 +322,20 @@ export default function CalendarPage() {
         ) : (
           <>
             {/* Days Header */}
-            <div className={`grid ${view === 'day' ? 'grid-cols-[80px_1fr]' : 'grid-cols-8'} border-b border-[var(--border-main)] bg-[var(--bg-card)]/30`}>
-              <div className="p-4 border-r border-[var(--border-main)]"></div>
+            <div className={`grid ${view === 'day' ? 'grid-cols-[80px_1fr]' : 'grid-cols-8'} border-b border-[var(--brand-secondary)] bg-[var(--brand-primary)]`}>
+              <div className="p-4 border-r border-[var(--brand-secondary)]"></div>
               {weekDays.map((day, i) => (
                 <div 
                   key={i} 
-                  className={`p-4 text-center border-r border-[var(--border-main)] last:border-r-0 ${
-                    isToday(day) ? "bg-[var(--brand-primary)]/5" : ""
+                  className={`p-4 text-center border-r border-[var(--brand-secondary)] last:border-r-0 ${
+                    isToday(day) ? "bg-white/10" : ""
                   }`}
                 >
-                  <p className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest mb-1">
+                  <p className="text-[10px] font-bold text-white/80 uppercase tracking-widest mb-1">
                     {format(day, "EEE")}
                   </p>
                   <p className={`text-lg font-bold ${
-                    isToday(day) ? "text-[var(--brand-primary)]" : "text-[var(--text-main)]"
+                    isToday(day) ? "text-white" : "text-white/90"
                   }`}>
                     {format(day, "d")}
                   </p>

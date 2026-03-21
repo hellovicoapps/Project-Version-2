@@ -15,29 +15,29 @@ const PLANS = [
     id: SubscriptionPlan.FREE,
     name: "Free",
     price: "0",
-    minutes: 60,
-    calls: "~24",
-    features: ["60 voice minutes", "Basic AI agent", "Public call link", "Call transcripts"],
+    minutes: 30,
+    calls: "~6-10",
+    features: ["30 voice minutes", "Basic AI agent", "Public call link", "Call transcripts", "No overage allowed"],
     icon: Shield,
     color: "zinc"
   },
   {
     id: SubscriptionPlan.STARTER,
     name: "Starter",
-    price: "99",
-    minutes: 600,
-    calls: "~240",
-    features: ["600 voice minutes", "Advanced AI agent", "Custom instructions", "Priority support"],
+    price: "199",
+    minutes: 300,
+    calls: "~60-100",
+    features: ["300 voice minutes", "Advanced AI agent", "Custom instructions", "Priority support", "$0.50/min overage"],
     icon: Zap,
     color: "blue"
   },
   {
     id: SubscriptionPlan.GROWTH,
     name: "Growth",
-    price: "249",
-    minutes: 1800,
-    calls: "~720",
-    features: ["1,800 voice minutes", "Multiple agents", "Advanced analytics", "API access"],
+    price: "499",
+    minutes: 1000,
+    calls: "~200-350",
+    features: ["1,000 voice minutes", "Multiple agents", "Advanced analytics", "API access", "$0.40/min overage"],
     icon: Rocket,
     color: "indigo",
     popular: true
@@ -45,10 +45,10 @@ const PLANS = [
   {
     id: SubscriptionPlan.SCALE,
     name: "Scale",
-    price: "499",
-    minutes: 4000,
-    calls: "~1,600",
-    features: ["4,000 voice minutes", "Unlimited agents", "White-labeling", "Dedicated account manager"],
+    price: "899",
+    minutes: 2500,
+    calls: "~500-800",
+    features: ["2,500 voice minutes", "Unlimited agents", "White-labeling", "Dedicated account manager", "$0.30/min overage"],
     icon: Crown,
     color: "purple"
   }
@@ -247,10 +247,13 @@ export default function PricingPage() {
       </AnimatePresence>
 
       <div className="mt-16 p-8 bg-[var(--bg-card)]/50 border border-[var(--border-main)] rounded-3xl text-center">
-        <h3 className="text-xl font-bold text-[var(--text-main)] mb-2">Need a custom plan?</h3>
+        <h3 className="text-xl font-bold text-[var(--text-main)] mb-2">Enterprise</h3>
         <p className="text-[var(--text-muted)] mb-6">We offer enterprise solutions for businesses with high call volumes.</p>
-        <button className="px-8 py-3 bg-[var(--bg-main)] hover:bg-[var(--bg-card)] text-[var(--text-main)] font-bold rounded-xl transition-colors border border-[var(--border-main)]">
-          Contact Sales
+        <button 
+          onClick={() => window.location.href = "mailto:hello.vicoapps@gmail.com"}
+          className="px-8 py-3 bg-[var(--bg-main)] hover:bg-[var(--bg-card)] text-[var(--text-main)] font-bold rounded-xl transition-colors border border-[var(--border-main)]"
+        >
+          Contact Us
         </button>
       </div>
     </div>
