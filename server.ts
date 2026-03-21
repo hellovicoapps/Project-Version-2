@@ -759,27 +759,8 @@ app.post("/api/upload", (req, res) => {
 // Logo endpoint to serve the logo.png file
 // This endpoint is public and has CORS enabled to ensure the logo is always accessible.
 app.get("/api/logo", (req, res) => {
-  // Set headers for maximum accessibility and caching
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Cache-Control", "public, max-age=3600");
-  res.setHeader("Content-Type", "image/png");
-
-  const possiblePaths = [
-    path.join(__dirname, "logo.png"),
-    path.join(__dirname, "dist", "logo.png"),
-    path.join(process.cwd(), "public", "logo.png"),
-    path.join(process.cwd(), "dist", "logo.png"),
-    path.join(process.cwd(), "logo.png")
-  ];
-
-  for (const logoPath of possiblePaths) {
-    if (fs.existsSync(logoPath)) {
-      return res.sendFile(logoPath);
-    }
-  }
-
-  // If no file found, return a 404
-  res.status(404).send("Logo not found");
+  // Redirect to the public Firebase Storage URL where the logo is hosted
+  res.redirect(301, "https://firebasestorage.googleapis.com/v0/b/gen-lang-client-0425458275.firebasestorage.app/o/businesses%2F2yaZgckDZ3Yt1o9IM8sTKQGuGxG3%2Flogo.png?alt=media&token=f858bd0d-1376-41ea-a944-667bd854a164");
 });
 
 // Health check endpoint
