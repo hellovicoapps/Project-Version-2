@@ -749,6 +749,13 @@ app.post("/api/email/send-booking-confirmation", async (req, res) => {
   }
 });
 
+// Upload endpoint placeholder (frontend uses Firebase Storage directly)
+app.post("/api/upload", (req, res) => {
+  res.status(501).json({ 
+    error: "Server-side upload not implemented. The application is configured to use Firebase Storage for all file uploads." 
+  });
+});
+
 // Health check endpoint
 app.get("/api/health", (req, res) => {
   res.json({ 

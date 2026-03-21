@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { doc, onSnapshot } from "firebase/firestore";
 import { db, handleFirestoreError, OperationType } from "../firebase";
 import { useTheme } from "../context/ThemeContext";
+import { Logo } from "./Logo";
 
 export default function Navbar({ user }: { user: UserType | null }) {
   const navigate = useNavigate();
@@ -44,8 +45,11 @@ export default function Navbar({ user }: { user: UserType | null }) {
 
   return (
     <header className="h-20 border-b border-[var(--brand-secondary)] flex items-center justify-between px-8 sticky top-0 bg-[var(--brand-primary)] backdrop-blur-xl z-40 transition-colors duration-300">
-      <div className="flex-1 max-w-xl">
-        <div className="relative group">
+      <div className="flex items-center space-x-4 flex-1 max-w-xl">
+        <div className="lg:hidden">
+          <Logo iconSize={32} />
+        </div>
+        <div className="relative group flex-1">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/70 group-focus-within:text-white transition-colors z-10" />
           <input 
             type="text" 
