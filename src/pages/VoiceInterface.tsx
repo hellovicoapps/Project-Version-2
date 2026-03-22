@@ -730,7 +730,7 @@ export default function VoiceInterface() {
                     }`}>
                       {msg.text}
                     </div>
-                    <span className={`text-[10px] text-zinc-600 mt-2 uppercase tracking-widest font-bold flex items-center space-x-1 ${msg.role === "ai" ? "justify-start" : "justify-end"}`}>
+                    <span className={`text-[10px] text-[var(--text-muted)] mt-2 uppercase tracking-widest font-bold flex items-center space-x-1 ${msg.role === "ai" ? "justify-start" : "justify-end"}`}>
                       <span>{msg.role === "ai" ? agent.name : "You"}</span>
                       <span>•</span>
                       <span>{new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>

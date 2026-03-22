@@ -52,7 +52,7 @@ export const CALL_STATUS_COLORS = {
   INQUIRY: "text-yellow-500",
   COMPLAINT: "text-rose-500",
   FOLLOW_UP: "text-orange-500",
-  DROPPED: "text-zinc-500",
+  DROPPED: "text-[var(--text-muted)]",
 };
 
 export const TIMEZONES = [
