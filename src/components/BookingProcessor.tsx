@@ -28,7 +28,7 @@ export const BookingProcessor = () => {
 
     const q = query(
       collection(db, `businesses/${businessId}/calls`),
-      where("status", "in", ["PENDING_PROCESSING", "PROCESSING_ERROR"])
+      where("status", "==", "PENDING_PROCESSING")
     );
 
     const unsubscribe = onSnapshot(q, async (snapshot) => {
@@ -43,7 +43,7 @@ export const BookingProcessor = () => {
           const callDoc = change.doc;
           const callData = callDoc.data();
           
-          if (callData.status !== "PENDING_PROCESSING" && callData.status !== "PROCESSING_ERROR") continue;
+          if (callData.status !== "PENDING_PROCESSING") continue;
 
           console.log(`BookingProcessor: Processing call ${callDoc.id}...`);
 
