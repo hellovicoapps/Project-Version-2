@@ -1,4 +1,5 @@
 import React from 'react';
+import { LOGO_BASE64 } from '../logoBase64';
 
 interface LogoProps {
   className?: string;
@@ -20,7 +21,7 @@ export const Logo: React.FC<LogoProps> = ({
     <div className={`flex items-center group ${className}`}>
       <div className="relative flex items-center justify-center transition-transform duration-300 group-hover:scale-105" style={{ height: containerSize }}>
         <img 
-          src="/api/logo" 
+          src={LOGO_BASE64} 
           alt="Vico Logo" 
           className="h-full w-auto object-contain"
           referrerPolicy="no-referrer"

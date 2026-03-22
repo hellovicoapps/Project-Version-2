@@ -78,6 +78,7 @@ export const useElevenLabsAgent = ({
       
       await conversation.startSession({
         signedUrl,
+        clientReferenceId,
         dynamicVariables: { ...defaultDynamicVariables, ...dynamicVariables }
       });
     } catch (error) {

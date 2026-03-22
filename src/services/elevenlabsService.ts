@@ -42,10 +42,18 @@ export class ElevenLabsService {
   }
 
   async getVoices(): Promise<any[]> {
-    const response = await fetch("/api/elevenlabs/voices");
-    if (!response.ok) throw new Error("Failed to fetch voices");
-    const data = await response.json();
-    return data.voices || [];
+    try {
+      const response = await fetch("/api/elevenlabs/voices");
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `Failed to fetch voices (${response.status})`);
+      }
+      const data = await response.json();
+      return data.voices || [];
+    } catch (error: any) {
+      console.error("ElevenLabs getVoices Error:", error);
+      throw error;
+    }
   }
 
   async createAgent(name: string, instructions: string, voiceId: string): Promise<string> {

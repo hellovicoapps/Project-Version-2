@@ -1,5 +1,5 @@
 {
   "name": "Vico",
-  "description": "Enterprise-grade AI Voice Receptionist.",
+  "description": "Enterprise-grade AI Voice Receptionist with integrated news and insights.",
   "requestFramePermissions": ["microphone", "screen-wake-lock"]
 }

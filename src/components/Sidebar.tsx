@@ -16,7 +16,8 @@ import {
   HelpCircle,
   CreditCard,
   Link as LinkIcon,
-  ShieldCheck
+  ShieldCheck,
+  Newspaper
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { ROUTES } from "../constants";
@@ -104,6 +105,7 @@ export default function Sidebar() {
         <SidebarItem isMinimized={isMinimized} to={ROUTES.CALENDAR} icon={Calendar} label="Calendar" active={location.pathname === ROUTES.CALENDAR} />
         <SidebarItem isMinimized={isMinimized} to={ROUTES.AGENT} icon={User} label="Agent" active={location.pathname === ROUTES.AGENT} />
         <SidebarItem isMinimized={isMinimized} to={ROUTES.LINKS} icon={LinkIcon} label="Links" active={location.pathname === ROUTES.LINKS} />
+        <SidebarItem isMinimized={isMinimized} to={ROUTES.NEWS} icon={Newspaper} label="News" active={location.pathname === ROUTES.NEWS} />
         <SidebarItem isMinimized={isMinimized} to={ROUTES.VOICE_INTERFACE} icon={Phone} label="Test call" active={location.pathname === ROUTES.VOICE_INTERFACE} />
         
         {authState.user?.role === "admin" && (

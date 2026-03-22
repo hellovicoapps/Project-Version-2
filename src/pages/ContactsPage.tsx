@@ -173,11 +173,12 @@ export default function ContactsPage() {
     }
   };
 
-  const filteredContacts = contacts.filter(contact => 
-    contact.name?.toLowerCase().includes(search.toLowerCase()) ||
-    contact.email?.toLowerCase().includes(search.toLowerCase()) ||
-    contact.phone?.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredContacts = contacts.filter(contact => {
+    const nameMatch = contact.name ? contact.name.toLowerCase().includes(search.toLowerCase()) : false;
+    const emailMatch = contact.email ? contact.email.toLowerCase().includes(search.toLowerCase()) : false;
+    const phoneMatch = contact.phone ? contact.phone.toLowerCase().includes(search.toLowerCase()) : false;
+    return search === "" || nameMatch || emailMatch || phoneMatch;
+  });
 
   return (
     <div className="space-y-8 max-w-7xl mx-auto">

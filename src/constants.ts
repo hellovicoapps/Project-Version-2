@@ -1,5 +1,29 @@
+import { SubscriptionPlan } from "./types";
+
 export const API_BASE_URL = "/api";
-export const PAYPAL_CLIENT_ID = process.env.PAYPAL_CLIENT_ID;
+export const PRODUCTION_URL = "https://vicoapps.com";
+export const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+export const ELEVENLABS_API_KEY = import.meta.env.VITE_ELEVENLABS_API_KEY;
+export const PAYPAL_CLIENT_ID = import.meta.env.VITE_PAYPAL_CLIENT_ID;
+
+export const PLAN_DETAILS = {
+  [SubscriptionPlan.FREE]: {
+    minutes: 30,
+    overageRate: 0.5,
+  },
+  [SubscriptionPlan.STARTER]: {
+    minutes: 100,
+    overageRate: 0.4,
+  },
+  [SubscriptionPlan.GROWTH]: {
+    minutes: 500,
+    overageRate: 0.3,
+  },
+  [SubscriptionPlan.SCALE]: {
+    minutes: 2000,
+    overageRate: 0.2,
+  },
+};
 
 export const ROUTES = {
   HOME: "/",
@@ -20,7 +44,6 @@ export const ROUTES = {
   ADMIN_DASHBOARD: "/admin",
   PUBLIC_CALL: "/call/:businessId",
   BOTCAKE_REDIRECT: "/botcake/:businessId",
-  CALL_STATUS: "/call-status/:businessId",
 };
 
 export const CALL_STATUS_COLORS = {
@@ -53,26 +76,3 @@ export const TIMEZONES = [
   "Australia/Sydney",
   "Pacific/Auckland",
 ];
-
-export const PLAN_DETAILS = {
-  FREE: {
-    price: 0,
-    minutes: 30,
-    overageRate: 0, // No overage allowed
-  },
-  STARTER: {
-    price: 199,
-    minutes: 300,
-    overageRate: 0.50,
-  },
-  GROWTH: {
-    price: 499,
-    minutes: 1000,
-    overageRate: 0.40,
-  },
-  SCALE: {
-    price: 899,
-    minutes: 2500,
-    overageRate: 0.30,
-  },
-};

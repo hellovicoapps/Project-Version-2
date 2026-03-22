@@ -37,10 +37,10 @@ import { AuthService } from "../services/authService";
 import { useToast } from "../components/Toast";
 import { Logo } from "../components/Logo";
 import { useElevenLabsAgent } from "../hooks/useElevenLabsAgent";
-import { Business, CallStatus, SubscriptionPlan } from "../types";
+import { Business, CallStatus } from "../types";
 import { getGeminiService } from "../services/geminiService";
 import { getElevenLabsService } from "../services/elevenlabsService";
-import { PLAN_DETAILS } from "../constants";
+import { PRODUCTION_URL } from "../constants";
 
 const GREETINGS: Record<string, string> = {
   en: "Hello! I'm {name}. How can I help you today?",
@@ -269,32 +269,6 @@ export default function VoiceInterface() {
         createdAt: serverTimestamp()
       });
       
-      // Send Booking Confirmation Email
-      if (callStatus === CallStatus.BOOKED && callerEmail) {
-        try {
-          console.log(`VoiceInterface: Sending confirmation email to ${callerEmail}`);
-          const emailResponse = await fetch("/api/email/send-booking-confirmation", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              to: callerEmail,
-              name: callerName || "Customer",
-              dateTime: bookingTime || "TBD",
-              purpose: bookingPurpose || "Appointment",
-              businessName: authState.user?.businessName || "Vico AI"
-            })
-          });
-          
-          if (!emailResponse.ok) {
-            console.error("VoiceInterface: Failed to send email", await emailResponse.text());
-          } else {
-            console.log("VoiceInterface: Confirmation email sent successfully");
-          }
-        } catch (emailError) {
-          console.error("VoiceInterface: Error sending confirmation email:", emailError);
-        }
-      }
-      
       setStatus("Call saved");
 
       // Deduct credits
@@ -477,18 +451,10 @@ export default function VoiceInterface() {
     const businessDoc = await getDoc(doc(db, "businesses", businessId!));
     if (businessDoc.exists()) {
       const data = businessDoc.data();
-      const currentPlan = data.plan as SubscriptionPlan || SubscriptionPlan.FREE;
-      const planDetails = PLAN_DETAILS[currentPlan];
-      const limit = data.totalMinutes || planDetails?.minutes || 30;
+      const limit = data.totalMinutes || 60;
       const used = data.usedMinutes || 0;
-      
       if (used >= limit) {
-        if (currentPlan === SubscriptionPlan.FREE) {
-          showToast("You have run out of AI minutes on the Free tier. Please upgrade to continue.", "error");
-          return;
-        } else {
-          showToast("You have run out of included AI minutes. Overage rates will apply.", "info");
-        }
+        showToast("You have run out of AI minutes. Overage rates may apply.", "info");
       }
     }
 
@@ -499,10 +465,11 @@ export default function VoiceInterface() {
       setStatus("Error");
       setIsCalling(false);
       
-      if (error.message?.includes("API Key is missing")) {
+      const msg = error.message || "";
+      if (msg.includes("API key not configured") || msg.includes("Missing API Key")) {
         showToast("ElevenLabs API Key is missing. Please add it in Settings > Secrets.", "error");
       } else {
-        showToast("Failed to start voice session. Check console for details.", "error");
+        showToast(msg || "Failed to start voice session. Check console for details.", "error");
       }
     }
   };
@@ -569,36 +536,36 @@ export default function VoiceInterface() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto min-h-[calc(100vh-8rem)] flex flex-col">
-      <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+    <div className="max-w-6xl mx-auto min-h-[calc(100vh-8rem)] lg:h-[calc(100vh-8rem)] flex flex-col">
+      <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
         <div>
-          <h1 className="text-4xl md:text-5xl font-bold text-[var(--text-main)] tracking-tight">Voice Lab</h1>
-          <p className="text-[var(--text-muted)] mt-1 text-lg">Testing agent: <span className="text-[var(--brand-primary)] font-semibold">{agent.name}</span></p>
+          <h1 className="text-3xl md:text-4xl font-bold text-white">Voice Lab</h1>
+          <p className="text-zinc-500 mt-1">Testing agent: <span className="text-blue-400 font-semibold">{agent.name}</span></p>
         </div>
         <div className="flex items-center space-x-3">
           <div className={`flex items-center space-x-2 px-3 py-1.5 rounded-full border transition-all ${
-            isCalling ? "bg-[var(--brand-primary)]/10 border-[var(--brand-primary)]/20 text-[var(--brand-primary)]" : "bg-[var(--bg-card)] border-[var(--border-main)] text-[var(--text-muted)]"
+            isCalling ? "bg-blue-500/10 border-blue-500/20 text-blue-400" : "bg-zinc-900 border-zinc-800 text-zinc-500"
           }`}>
             <Activity className={`w-4 h-4 ${isCalling ? "animate-pulse" : ""}`} />
             <span className="text-xs font-bold uppercase tracking-wider">{status}</span>
           </div>
-          <button className="p-2.5 bg-[var(--bg-card)] border border-[var(--border-main)] rounded-xl text-[var(--text-muted)] hover:text-[var(--text-main)] transition-all">
+          <button className="p-2.5 bg-zinc-900 border border-zinc-800 rounded-xl text-zinc-400 hover:text-white transition-all">
             <Settings className="w-5 h-5" />
           </button>
         </div>
       </div>
 
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-8 min-h-0">
+      <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-6 min-h-0">
         {/* Call Controls & Visualizer */}
-        <div className="lg:col-span-7 flex flex-col space-y-6 min-h-[500px] lg:min-h-0">
-          <div className="flex-1 glass-card relative overflow-hidden flex flex-col items-center justify-center p-8 md:p-16">
+        <div className="lg:col-span-2 flex flex-col space-y-6 min-h-[500px] lg:min-h-0">
+          <div className="flex-1 glass-card relative overflow-hidden flex flex-col items-center justify-center p-6 md:p-12">
             <AnimatePresence>
               {isCalling && (
                 <motion.div 
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.8 }}
-                  className="absolute inset-0 bg-gradient-to-b from-[var(--brand-primary)]/5 to-transparent pointer-events-none"
+                  className="absolute inset-0 bg-gradient-to-b from-blue-500/5 to-transparent pointer-events-none"
                 />
               )}
             </AnimatePresence>
@@ -611,15 +578,15 @@ export default function VoiceInterface() {
                       initial={{ scale: 0.8, opacity: 0 }}
                       animate={{ scale: [1, 1.2, 1], opacity: [0.2, 0.4, 0.2] }}
                       transition={{ duration: 2, repeat: Infinity }}
-                      className="absolute inset-0 bg-[var(--brand-primary)] rounded-full blur-3xl"
+                      className="absolute inset-0 bg-blue-500 rounded-full blur-3xl"
                     />
                   )}
                 </AnimatePresence>
-                <div className={`w-40 h-40 rounded-full border-4 flex items-center justify-center transition-all duration-500 ${
-                  isCalling ? "bg-[var(--bg-card)] border-[var(--brand-primary)] shadow-2xl shadow-[var(--brand-primary)]/20" : "bg-[var(--bg-card)] border-[var(--border-main)]"
+                <div className={`w-32 h-32 rounded-full border-4 flex items-center justify-center transition-all duration-500 ${
+                  isCalling ? "bg-zinc-900 border-blue-500 shadow-2xl shadow-blue-500/20" : "bg-zinc-900 border-zinc-800"
                 }`}>
                   <Logo 
-                    iconSize={80} 
+                    iconSize={60} 
                     className={`transition-all duration-500 ${
                       isAiSpeaking ? "scale-125 animate-pulse" : isCalling ? "scale-110" : "opacity-30 grayscale"
                     }`} 
@@ -628,8 +595,8 @@ export default function VoiceInterface() {
               </div>
 
               <div className="space-y-2">
-                <h2 className="text-3xl font-bold text-[var(--text-main)] tracking-tight">{agent.name}</h2>
-                <div className="flex items-center justify-center space-x-2 text-[var(--text-muted)] font-mono">
+                <h2 className="text-3xl font-bold text-white tracking-tight">{agent.name}</h2>
+                <div className="flex items-center justify-center space-x-2 text-zinc-500 font-mono">
                   <Clock className="w-4 h-4" />
                   <span>{formatDuration(duration)}</span>
                 </div>
@@ -640,7 +607,7 @@ export default function VoiceInterface() {
                   <button 
                     onClick={() => setIsMuted(!isMuted)}
                     className={`p-4 rounded-2xl border transition-all ${
-                      isMuted ? "bg-[var(--color-danger)]/10 border-[var(--color-danger)]/20 text-[var(--color-danger)]" : "bg-[var(--bg-card-hover)] border-[var(--border-main)] text-[var(--text-muted)] hover:text-[var(--text-main)]"
+                      isMuted ? "bg-rose-500/10 border-rose-500/20 text-rose-400" : "bg-zinc-800 border-zinc-700 text-zinc-400 hover:text-white"
                     }`}
                   >
                     {isMuted ? <MicOff className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
@@ -648,17 +615,17 @@ export default function VoiceInterface() {
 
                   <button 
                     onClick={handleCall}
-                    className={`w-24 h-24 rounded-full flex items-center justify-center shadow-2xl transition-all transform active:scale-95 ${
+                    className={`w-20 h-20 rounded-full flex items-center justify-center shadow-2xl transition-all transform active:scale-95 ${
                       isCalling 
-                        ? "bg-[var(--color-danger)] hover:bg-[var(--color-danger)]/80 text-white shadow-[var(--color-danger)]/20 rotate-[135deg]" 
-                        : "bg-[var(--brand-primary)] hover:bg-[var(--brand-secondary)] text-[var(--bg-main)] shadow-[var(--brand-primary)]/20"
+                        ? "bg-rose-500 hover:bg-rose-600 text-white shadow-rose-500/20 rotate-[135deg]" 
+                        : "bg-blue-500 hover:bg-blue-600 text-zinc-950 shadow-blue-500/20"
                     }`}
                     style={{
                       boxShadow: isAiSpeaking ? `0 0 ${20 + audioLevel * 100}px rgba(59, 130, 246, ${0.2 + audioLevel})` : undefined,
                       scale: isAiSpeaking ? 1 + audioLevel * 0.2 : 1
                     }}
                   >
-                    {status === "Connecting..." ? <Loader2 className="w-10 h-10 animate-spin" /> : <Phone className="w-10 h-10" />}
+                    {status === "Connecting..." ? <Loader2 className="w-8 h-8 animate-spin" /> : <Phone className="w-8 h-8" />}
                   </button>
 
                   <button 
@@ -671,7 +638,7 @@ export default function VoiceInterface() {
                       setIsSpeakerOn(!isSpeakerOn);
                     }}
                     className={`p-4 rounded-2xl border transition-all ${
-                      !isSpeakerOn ? "bg-[var(--color-danger)]/10 border-[var(--color-danger)]/20 text-[var(--color-danger)]" : "bg-[var(--bg-card-hover)] border-[var(--border-main)] text-[var(--text-muted)] hover:text-[var(--text-main)]"
+                      !isSpeakerOn ? "bg-rose-500/10 border-rose-500/20 text-rose-400" : "bg-zinc-800 border-zinc-700 text-zinc-400 hover:text-white"
                     }`}
                   >
                     {isSpeakerOn ? <Volume2 className="w-6 h-6" /> : <VolumeX className="w-6 h-6" />}
@@ -682,9 +649,9 @@ export default function VoiceInterface() {
                   <motion.div 
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="flex items-center space-x-3 bg-[var(--bg-card)]/50 backdrop-blur-md border border-[var(--border-main)] px-4 py-2 rounded-2xl"
+                    className="flex items-center space-x-3 bg-zinc-900/50 backdrop-blur-md border border-zinc-800 px-4 py-2 rounded-2xl"
                   >
-                    <Volume2 className="w-4 h-4 text-[var(--text-muted)]" />
+                    <Volume2 className="w-4 h-4 text-zinc-500" />
                     <input 
                       type="range" 
                       min="0" 
@@ -692,7 +659,7 @@ export default function VoiceInterface() {
                       step="0.01" 
                       value={volume}
                       onChange={(e) => setVolume(parseFloat(e.target.value))}
-                      className="w-32 h-1 bg-[var(--bg-card-hover)] rounded-lg appearance-none cursor-pointer accent-[var(--brand-primary)]"
+                      className="w-32 h-1 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-blue-500"
                     />
                   </motion.div>
                 )}
@@ -709,7 +676,7 @@ export default function VoiceInterface() {
                       : [10, Math.random() * 20 + 10, 10] 
                   } : { height: 4 }}
                   transition={{ duration: 0.5, repeat: Infinity, delay: i * 0.02 }}
-                  className={`w-1 rounded-full ${isCalling ? (isAiSpeaking ? "bg-[var(--brand-primary)]" : "bg-[var(--brand-primary)]/40") : "bg-[var(--bg-card-hover)]"}`}
+                  className={`w-1 rounded-full ${isCalling ? (isAiSpeaking ? "bg-blue-500" : "bg-blue-500/40") : "bg-zinc-800"}`}
                 />
               ))}
             </div>
@@ -719,23 +686,23 @@ export default function VoiceInterface() {
         </div>
 
         {/* Real-time Transcript */}
-        <div className="lg:col-span-5 glass-card flex flex-col overflow-hidden min-h-[600px] lg:h-full">
-          <div className="p-6 border-b border-[var(--border-main)] flex items-center justify-between bg-[var(--bg-card)]/30">
+        <div className="glass-card flex flex-col overflow-hidden h-[600px]">
+          <div className="p-6 border-b border-zinc-900 flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <MessageSquare className="w-5 h-5 text-[var(--brand-primary)]" />
-              <h3 className="font-semibold text-[var(--text-main)]">Live Transcript</h3>
+              <MessageSquare className="w-5 h-5 text-blue-400" />
+              <h3 className="font-semibold text-white">Live Transcript</h3>
             </div>
             <div className="flex items-center space-x-3">
               {isAiThinking && (
                 <div className="flex items-center space-x-1">
-                  <div className="w-1 h-1 bg-[var(--brand-primary)] rounded-full animate-bounce" />
-                  <div className="w-1 h-1 bg-[var(--brand-primary)] rounded-full animate-bounce [animation-delay:0.2s]" />
-                  <div className="w-1 h-1 bg-[var(--brand-primary)] rounded-full animate-bounce [animation-delay:0.4s]" />
+                  <div className="w-1 h-1 bg-blue-500 rounded-full animate-bounce" />
+                  <div className="w-1 h-1 bg-blue-500 rounded-full animate-bounce [animation-delay:0.2s]" />
+                  <div className="w-1 h-1 bg-blue-500 rounded-full animate-bounce [animation-delay:0.4s]" />
                 </div>
               )}
               <button 
                 onClick={() => setTranscript([])}
-                className="text-[10px] font-bold text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors uppercase tracking-widest"
+                className="text-[10px] font-bold text-zinc-500 hover:text-white transition-colors uppercase tracking-widest"
               >
                 Clear
               </button>
@@ -756,14 +723,14 @@ export default function VoiceInterface() {
                     animate={{ opacity: 1, y: 0 }}
                     className={`flex flex-col w-full ${msg.role === "ai" ? "items-start" : "items-end"}`}
                   >
-                    <div className={`max-w-[85%] p-4 rounded-2xl text-sm leading-relaxed shadow-sm ${
+                    <div className={`max-w-[90%] p-4 rounded-2xl text-sm leading-relaxed shadow-sm ${
                       msg.role === "ai" 
-                        ? "bg-[var(--bg-card-hover)]/80 text-[var(--text-main)] rounded-tl-none border border-[var(--border-main)]/50" 
-                        : "bg-[var(--brand-primary)] text-[var(--bg-main)] font-medium rounded-tr-none shadow-[var(--brand-primary)]/10"
+                        ? "bg-zinc-800/80 text-zinc-200 rounded-tl-none border border-zinc-700/50" 
+                        : "bg-blue-500 text-zinc-950 font-medium rounded-tr-none shadow-blue-500/10"
                     }`}>
                       {msg.text}
                     </div>
-                    <span className={`text-[10px] text-[var(--text-muted)] mt-2 uppercase tracking-widest font-bold flex items-center space-x-1 ${msg.role === "ai" ? "justify-start" : "justify-end"}`}>
+                    <span className={`text-[10px] text-zinc-600 mt-2 uppercase tracking-widest font-bold flex items-center space-x-1 ${msg.role === "ai" ? "justify-start" : "justify-end"}`}>
                       <span>{msg.role === "ai" ? agent.name : "You"}</span>
                       <span>•</span>
                       <span>{new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
@@ -774,7 +741,7 @@ export default function VoiceInterface() {
               </>
             )}
           </div>
-          <div className="p-4 bg-[var(--bg-card)]/50 border-t border-[var(--border-main)]">
+          <div className="p-4 bg-zinc-900/50 border-t border-zinc-900">
             <form 
               onSubmit={(e) => {
                 e.preventDefault();
@@ -788,12 +755,12 @@ export default function VoiceInterface() {
                 onChange={(e) => setInputText(e.target.value)}
                 disabled={!isCalling || isAiThinking}
                 placeholder={isCalling ? "Type a message to AI..." : "Start a call to chat..."}
-                className="w-full pl-4 pr-12 py-3 bg-[var(--bg-main)] border border-[var(--border-main)] rounded-xl text-sm text-[var(--text-main)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/50 transition-all disabled:opacity-50"
+                className="w-full pl-4 pr-12 py-3 bg-zinc-950 border border-zinc-800 rounded-xl text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all disabled:opacity-50"
               />
               <button 
                 type="submit"
                 disabled={!isCalling || isAiThinking || !inputText.trim()}
-                className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-[var(--brand-primary)] text-[var(--bg-main)] rounded-lg hover:bg-[var(--brand-secondary)] transition-colors disabled:opacity-50"
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-blue-500 text-zinc-950 rounded-lg hover:bg-blue-400 transition-colors disabled:opacity-50"
               >
                 <Send className="w-4 h-4" />
               </button>
@@ -801,9 +768,9 @@ export default function VoiceInterface() {
           </div>
         </div>
       </div>
-      <footer className="p-8 text-center border-t border-[var(--border-main)] relative z-10">
-        <p className="text-[var(--text-muted)] text-xs">
-          Powered by <a href="/" className="text-[var(--brand-primary)] hover:text-[var(--brand-secondary)] transition-colors font-bold">Vico</a>
+      <footer className="p-8 text-center border-t border-zinc-900 relative z-10">
+        <p className="text-zinc-500 text-xs">
+          Powered by <a href={PRODUCTION_URL} className="text-blue-500 hover:text-blue-400 transition-colors font-bold">Vico</a>
         </p>
       </footer>
     </div>

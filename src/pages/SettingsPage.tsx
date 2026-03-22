@@ -73,6 +73,7 @@ export default function SettingsPage() {
   const [business, setBusiness] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
   const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -117,6 +118,31 @@ export default function SettingsPage() {
       handleFirestoreError(error, OperationType.WRITE, `businesses/${businessId}`);
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleSyncAgents = async () => {
+    if (!businessId) return;
+    setIsSyncing(true);
+    try {
+      const response = await fetch("/api/elevenlabs/sync-agents", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ businessId })
+      });
+      
+      if (!response.ok) {
+        throw new Error(await response.text());
+      }
+      
+      const data = await response.json();
+      const successCount = data.results.filter((r: any) => r.success).length;
+      showToast(`Successfully synced ${successCount} agents with ElevenLabs.`, "success");
+    } catch (error: any) {
+      console.error("Error syncing agents:", error);
+      showToast(`Failed to sync agents: ${error.message}`, "error");
+    } finally {
+      setIsSyncing(false);
     }
   };
 
@@ -445,6 +471,34 @@ export default function SettingsPage() {
             </p>
           </div>
         </SettingSection>
+
+        <div className="glass-card p-8 space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-xl font-bold text-[var(--text-main)] tracking-tight">System Maintenance</h3>
+              <p className="text-[var(--text-muted)] text-sm mt-1">Sync your agents with ElevenLabs to ensure webhooks and tools are correctly configured.</p>
+            </div>
+            <button 
+              onClick={handleSyncAgents}
+              disabled={isSyncing}
+              className="btn-secondary flex items-center space-x-2 py-2.5 px-6"
+            >
+              {isSyncing ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Zap className="w-4 h-4" />
+              )}
+              <span>{isSyncing ? "Syncing..." : "Sync Agents"}</span>
+            </button>
+          </div>
+          <div className="p-4 bg-[var(--brand-primary)]/5 border border-[var(--brand-primary)]/10 rounded-xl">
+            <p className="text-xs text-[var(--brand-primary)] leading-relaxed">
+              <span className="font-bold uppercase tracking-wider mr-2">When to use:</span>
+              Click this button if you've recently changed your production URL or if call details are not reflecting in your dashboard. 
+              This will update the webhook configuration for all your AI agents on ElevenLabs.
+            </p>
+          </div>
+        </div>
 
         <SettingSection 
           title="Security" 

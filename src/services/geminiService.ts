@@ -7,7 +7,9 @@ export class GeminiService {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          model: "gemini-3-flash-preview",
           contents: [{
+            role: "user",
             parts: [{
               text: `Analyze the following call transcript between an AI Agent and a User.
               
@@ -36,19 +38,20 @@ export class GeminiService {
           config: {
             responseMimeType: "application/json",
             responseSchema: {
-              type: "OBJECT",
+              type: Type.OBJECT,
               properties: {
-                summary: { type: "STRING", description: "A concise summary of the call." },
-                status: { type: "STRING", enum: ["BOOKED", "INQUIRY", "DROPPED"], description: "The determined status of the call." },
+                summary: { type: Type.STRING, description: "A concise summary of the call." },
+                status: { type: Type.STRING, enum: ["BOOKED", "INQUIRY", "DROPPED"], description: "The determined status of the call." },
                 bookingDetails: {
-                  type: "OBJECT",
+                  type: Type.OBJECT,
                   properties: {
-                    name: { type: "STRING", nullable: true },
-                    phone: { type: "STRING", nullable: true },
-                    email: { type: "STRING", nullable: true },
-                    dateTime: { type: "STRING", description: "ISO 8601 format if possible, otherwise a descriptive string.", nullable: true },
-                    purpose: { type: "STRING", nullable: true }
-                  }
+                    name: { type: Type.STRING },
+                    phone: { type: Type.STRING },
+                    email: { type: Type.STRING },
+                    dateTime: { type: Type.STRING, description: "ISO 8601 format if possible, otherwise a descriptive string." },
+                    purpose: { type: Type.STRING }
+                  },
+                  required: []
                 }
               },
               required: ["summary", "status"]
@@ -57,9 +60,20 @@ export class GeminiService {
         })
       });
 
-      if (!response.ok) throw new Error("Failed to process transcript via proxy");
+      if (!response.ok) {
+        let errorMessage = `Gemini Proxy Error (${response.status})`;
+        try {
+          const errorText = await response.text();
+          console.error("Gemini Proxy Raw Error:", errorText);
+          const errorData = JSON.parse(errorText);
+          errorMessage = errorData.error || errorMessage;
+        } catch (e) {
+          // Not JSON
+        }
+        throw new Error(errorMessage);
+      }
       const data = await response.json();
-      const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      const text = data.text;
       if (!text) throw new Error("No response from Gemini proxy");
       return JSON.parse(text);
     } catch (error) {
@@ -75,17 +89,26 @@ export class GeminiService {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          model: "gemini-3-flash-preview",
           contents,
           config: {
-            systemInstruction,
-            thinkingConfig: { thinkingLevel: "LOW" }
+            systemInstruction
           }
         })
       });
 
-      if (!response.ok) throw new Error("Failed to generate response via proxy");
+      if (!response.ok) {
+        let errorMessage = `Gemini Proxy Error (${response.status})`;
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+        } catch (e) {
+          // Not JSON
+        }
+        throw new Error(errorMessage);
+      }
       const data = await response.json();
-      return data.candidates?.[0]?.content?.parts?.[0]?.text || "No response generated";
+      return data.text || "No response generated";
     } catch (error) {
       console.error("Gemini Proxy Generation Error:", error);
       throw error;
@@ -100,7 +123,10 @@ export class GeminiService {
         body: JSON.stringify({ text, voiceName })
       });
 
-      if (!response.ok) throw new Error("Failed to generate speech via proxy");
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `Failed to generate speech via proxy (${response.status})`);
+      }
       const data = await response.json();
       return data.audioData;
     } catch (error) {

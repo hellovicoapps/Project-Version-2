@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getFirestore, doc, getDocFromServer, Firestore } from 'firebase/firestore';
+import { initializeFirestore, getFirestore, doc, getDocFromServer, Firestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import firebaseConfig from '../firebase-applet-config.json';
 
@@ -11,16 +11,21 @@ export const auth = getAuth(app);
 // Use the named database if provided, otherwise use the default one
 let dbInstance: Firestore;
 try {
-  if (firebaseConfig.firestoreDatabaseId && firebaseConfig.firestoreDatabaseId !== "(default)") {
-    console.log("Initializing Firestore with named database:", firebaseConfig.firestoreDatabaseId);
-    dbInstance = getFirestore(app, firebaseConfig.firestoreDatabaseId);
-  } else {
-    console.log("Initializing Firestore with default database");
-    dbInstance = getFirestore(app);
-  }
+  const databaseId = firebaseConfig.firestoreDatabaseId && firebaseConfig.firestoreDatabaseId !== "(default)" 
+    ? firebaseConfig.firestoreDatabaseId 
+    : undefined;
+
+  console.log("Initializing Firestore with database:", databaseId || "(default)");
+  
+  // Force long polling to bypass ERR_QUIC_PROTOCOL_ERROR in some network environments
+  dbInstance = initializeFirestore(app, {
+    experimentalForceLongPolling: true,
+  }, databaseId);
 } catch (e) {
   console.error("Failed to initialize Firestore with named database, falling back to default:", e);
-  dbInstance = getFirestore(app);
+  dbInstance = initializeFirestore(app, {
+    experimentalForceLongPolling: true,
+  });
 }
 
 export const db = dbInstance;

@@ -113,10 +113,11 @@ export default function InboxPage() {
     }, 1500);
   };
 
-  const filteredCalls = calls.filter(call => 
-    call.phoneNumber?.toLowerCase().includes(search.toLowerCase()) ||
-    call.summary?.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredCalls = calls.filter(call => {
+    const phoneMatch = call.phoneNumber ? call.phoneNumber.toLowerCase().includes(search.toLowerCase()) : false;
+    const summaryMatch = call.summary ? call.summary.toLowerCase().includes(search.toLowerCase()) : false;
+    return search === "" || phoneMatch || summaryMatch;
+  });
 
   const handleReprocess = async (callId: string) => {
     if (!businessId) return;

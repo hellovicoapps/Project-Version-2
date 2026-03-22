@@ -94,8 +94,11 @@ export default function AgentPage() {
             })));
           }
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error fetching ElevenLabs voices:", error);
+        if (error.message?.includes("API key not configured")) {
+          showToast("ElevenLabs API Key is missing. Please add it in Settings > Secrets to enable voice selection.", "warning");
+        }
       }
     }
     fetchVoices();
@@ -228,11 +231,6 @@ export default function AgentPage() {
     setSaveStatus("Syncing with ElevenLabs...");
     
     try {
-      const elevenlabsService = await getElevenLabsService();
-      if (!elevenlabsService) {
-        throw new Error("ElevenLabs API key not configured. Please set it in Settings > Secrets.");
-      }
-
       let agentId = agent.elevenLabsAgentId;
       const fullInstructions = `
         DATE AND TIME AWARENESS:
@@ -260,36 +258,44 @@ export default function AgentPage() {
         You MUST respond in ${LANGUAGES.find(l => l.code === agent.language)?.name || "English"}.
       `;
 
-      if (!agentId) {
-        setSaveStatus("Creating ElevenLabs Agent...");
-        agentId = await elevenlabsService.createAgent(agent.name, fullInstructions, agent.voice);
-      } else {
-        try {
-          setSaveStatus("Updating ElevenLabs Agent...");
-          await elevenlabsService.updateAgent(agentId, agent.name, fullInstructions, agent.voice);
-        } catch (updateError: any) {
-          // If agent not found on ElevenLabs, try creating it
-          if (updateError.message?.includes("not found") || updateError.message?.includes("404")) {
-            console.warn("Agent not found on ElevenLabs, re-creating...");
-            setSaveStatus("Re-creating ElevenLabs Agent...");
+      try {
+        const elevenlabsService = await getElevenLabsService();
+        if (elevenlabsService) {
+          if (!agentId) {
+            setSaveStatus("Creating ElevenLabs Agent...");
             agentId = await elevenlabsService.createAgent(agent.name, fullInstructions, agent.voice);
           } else {
-            throw updateError;
+            try {
+              setSaveStatus("Updating ElevenLabs Agent...");
+              await elevenlabsService.updateAgent(agentId, agent.name, fullInstructions, agent.voice);
+            } catch (updateError: any) {
+              // If agent not found on ElevenLabs, try creating it
+              if (updateError.message?.includes("not found") || updateError.message?.includes("404")) {
+                console.warn("Agent not found on ElevenLabs, re-creating...");
+                setSaveStatus("Re-creating ElevenLabs Agent...");
+                agentId = await elevenlabsService.createAgent(agent.name, fullInstructions, agent.voice);
+              } else {
+                throw updateError;
+              }
+            }
           }
         }
+      } catch (elevenLabsError: any) {
+        console.warn("ElevenLabs sync failed, but will save to database:", elevenLabsError);
+        showToast("Voice agent sync failed. Please check your ElevenLabs API key in Settings > Secrets.", "warning");
       }
 
       setSaveStatus("Saving to database...");
       const agentRef = doc(db, `businesses/${businessId}/agents`, agent.id);
       await setDoc(agentRef, {
         ...agent,
-        elevenLabsAgentId: agentId,
+        elevenLabsAgentId: agentId || "",
         updatedAt: serverTimestamp()
       }, { merge: true });
       
-      setAgent(prev => prev ? { ...prev, elevenLabsAgentId: agentId } : null);
+      setAgent(prev => prev ? { ...prev, elevenLabsAgentId: agentId || "" } : null);
       setSaveStatus("Saved successfully!");
-      showToast("Agent synced and saved.", "success");
+      showToast("Agent configuration saved locally.", "success");
       setTimeout(() => setSaveStatus(""), 3000);
     } catch (error: any) {
       console.error("Error saving agent:", error);

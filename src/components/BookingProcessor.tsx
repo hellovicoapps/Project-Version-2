@@ -9,7 +9,8 @@ import {
   increment,
   serverTimestamp,
   getDocs,
-  setDoc
+  setDoc,
+  limit
 } from "firebase/firestore";
 import { db } from "../firebase";
 import { getGeminiService } from "../services/geminiService";
@@ -27,7 +28,7 @@ export const BookingProcessor = () => {
 
     const q = query(
       collection(db, `businesses/${businessId}/calls`),
-      where("status", "==", "PENDING_PROCESSING")
+      where("status", "in", ["PENDING_PROCESSING", "PROCESSING_ERROR"])
     );
 
     const unsubscribe = onSnapshot(q, async (snapshot) => {
@@ -42,9 +43,20 @@ export const BookingProcessor = () => {
           const callDoc = change.doc;
           const callData = callDoc.data();
           
-          if (callData.status !== "PENDING_PROCESSING") continue;
+          if (callData.status !== "PENDING_PROCESSING" && callData.status !== "PROCESSING_ERROR") continue;
 
           console.log(`BookingProcessor: Processing call ${callDoc.id}...`);
+
+          if (!callData.transcript || callData.transcript.trim().length < 10) {
+            console.warn(`BookingProcessor: Skipping call ${callDoc.id} - transcript too short or missing`);
+            await updateDoc(callDoc.ref, { 
+              status: CallStatus.COMPLETED,
+              processed: true,
+              processedAt: serverTimestamp(),
+              summary: "Transcript too short or missing"
+            });
+            continue;
+          }
 
           try {
             const result = await gemini.processTranscript(callData.transcript || "");
@@ -79,78 +91,78 @@ export const BookingProcessor = () => {
 
             await updateDoc(callDoc.ref, updateData);
             
-            // Send Booking Confirmation Email
-            if (result.status === CallStatus.BOOKED && callerEmail) {
-              try {
-                console.log(`BookingProcessor: Sending confirmation email to ${callerEmail}`);
-                const emailResponse = await fetch("/api/email/send-booking-confirmation", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({
-                    to: callerEmail,
-                    name: callerName || "Customer",
-                    dateTime: result.bookingDetails?.dateTime || "TBD",
-                    purpose: result.bookingDetails?.purpose || "Appointment",
-                    businessName: authState.user?.businessName || "Vico AI"
-                  })
-                });
-                
-                if (!emailResponse.ok) {
-                  console.error("BookingProcessor: Failed to send email", await emailResponse.text());
-                } else {
-                  console.log("BookingProcessor: Confirmation email sent successfully");
-                }
-              } catch (emailError) {
-                console.error("BookingProcessor: Error sending confirmation email:", emailError);
-              }
-            }
-            
             // CRM Integration: Update or Create Contact
             if (phoneNumber && phoneNumber !== "Unknown") {
-              const contactsRef = collection(db, `businesses/${businessId}/contacts`);
-              const contactQuery = query(contactsRef, where("phone", "==", phoneNumber));
-              const contactSnapshot = await getDocs(contactQuery);
-              
-              const contactStatus = result.status === CallStatus.BOOKED ? "BOOKED" : "INQUIRED";
-              const contactData = {
-                name: callerName || "Unknown",
-                phone: phoneNumber,
-                email: callerEmail || "",
-                status: contactStatus,
-                lastCallId: callDoc.id,
-                lastCallSummary: result.summary,
-                updatedAt: serverTimestamp(),
-                createdAt: serverTimestamp(), // Will be merged if exists
-              };
+              try {
+                const contactsRef = collection(db, `businesses/${businessId}/contacts`);
+                const contactQuery = query(contactsRef, where("phone", "==", phoneNumber), limit(1));
+                const contactSnapshot = await getDocs(contactQuery);
+                
+                const contactStatus = result.status === CallStatus.BOOKED ? "BOOKED" : "INQUIRED";
+                const contactData: any = {
+                  name: callerName || "Unknown",
+                  phone: phoneNumber,
+                  email: callerEmail || "",
+                  status: contactStatus,
+                  businessId: businessId,
+                  lastCallId: callDoc.id,
+                  lastCallSummary: result.summary,
+                  updatedAt: serverTimestamp(),
+                  createdAt: serverTimestamp(), // Will be merged if exists
+                };
 
-              if (!contactSnapshot.empty) {
-                const contactDoc = contactSnapshot.docs[0];
-                // Don't overwrite createdAt
-                const { createdAt, ...updateContactData } = contactData;
-                await updateDoc(contactDoc.ref, updateContactData);
-                console.log(`BookingProcessor: Updated contact ${contactDoc.id}`);
-              } else {
-                const newContactRef = doc(contactsRef);
-                await setDoc(newContactRef, contactData);
-                console.log(`BookingProcessor: Created new contact ${newContactRef.id}`);
+                if (!contactSnapshot.empty) {
+                  const contactDoc = contactSnapshot.docs[0];
+                  // Don't overwrite createdAt
+                  const { createdAt, ...updateContactData } = contactData;
+                  await updateDoc(contactDoc.ref, updateContactData);
+                  console.log(`BookingProcessor: Updated contact ${contactDoc.id}`);
+                } else {
+                  const newContactRef = doc(contactsRef);
+                  await setDoc(newContactRef, contactData);
+                  console.log(`BookingProcessor: Created new contact ${newContactRef.id}`);
+                }
+              } catch (contactError) {
+                console.error(`BookingProcessor: Error creating/updating contact for call ${callDoc.id}:`, contactError);
+                // We don't throw here to allow the rest of the processing (like credit deduction) to continue
               }
             }
 
             // Deduct credits
-            const businessRef = doc(db, "businesses", businessId);
-            const minutesUsed = Math.max(0.1, (callData.duration || 0) / 60);
-            await updateDoc(businessRef, {
-              usedMinutes: increment(minutesUsed)
-            });
+            try {
+              const businessRef = doc(db, "businesses", businessId);
+              const minutesUsed = Math.max(0.1, (callData.duration || 0) / 60);
+              await updateDoc(businessRef, {
+                usedMinutes: increment(minutesUsed)
+              });
+              console.log(`BookingProcessor: Updated business minutes for ${businessId}`);
+            } catch (businessError) {
+              console.error(`BookingProcessor: Error updating business minutes for ${businessId}:`, businessError);
+            }
 
-            console.log(`BookingProcessor: Successfully processed call ${callDoc.id}`);
+            // Mark call as processed
+            try {
+              await updateDoc(callDoc.ref, { 
+                status: CallStatus.COMPLETED,
+                processed: true,
+                processedAt: serverTimestamp()
+              });
+              console.log(`BookingProcessor: Marked call ${callDoc.id} as processed`);
+            } catch (callUpdateError) {
+              console.error(`BookingProcessor: Error marking call ${callDoc.id} as processed:`, callUpdateError);
+            }
           } catch (error) {
             console.error(`BookingProcessor: Error processing call ${callDoc.id}:`, error);
-            // Optionally update status to ERROR to avoid infinite loops
-            await updateDoc(callDoc.ref, { 
-              status: "PROCESSING_ERROR",
-              processingError: error instanceof Error ? error.message : String(error)
-            });
+            // Mark as failed to avoid infinite retry loops
+            try {
+              await updateDoc(callDoc.ref, { 
+                status: "PROCESSING_ERROR",
+                processed: true,
+                processingError: error instanceof Error ? error.message : String(error)
+              });
+            } catch (e) {
+              console.error("BookingProcessor: Failed to mark call as failed:", e);
+            }
           }
         }
       }

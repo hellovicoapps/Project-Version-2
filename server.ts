@@ -9,7 +9,6 @@ import admin from "firebase-admin";
 import { getFirestore } from "firebase-admin/firestore";
 import fs from "fs";
 import { GoogleGenAI, Type } from "@google/genai";
-import nodemailer from "nodemailer";
 
 const firebaseConfig = JSON.parse(fs.readFileSync("./firebase-applet-config.json", "utf-8"));
 
@@ -18,11 +17,19 @@ console.log("Server: Pre-dotenv API_KEY present:", !!process.env.API_KEY);
 if (process.env.GEMINI_API_KEY) {
   console.log("Server: Pre-dotenv GEMINI_API_KEY value:", process.env.GEMINI_API_KEY === "MY_GEMINI_API_KEY" ? "EXACTLY 'MY_GEMINI_API_KEY'" : `Starts with ${process.env.GEMINI_API_KEY.substring(0, 4)} and length is ${process.env.GEMINI_API_KEY.length}`);
 }
-dotenv.config();
+const dotenvResult = dotenv.config({ path: path.resolve(process.cwd(), ".env") });
+if (dotenvResult.error) {
+  console.error("Server: Error loading .env file from " + path.resolve(process.cwd(), ".env") + ":", dotenvResult.error);
+} else {
+  console.log("Server: .env file loaded successfully from " + path.resolve(process.cwd(), ".env"));
+}
 console.log("Server: Post-dotenv GEMINI_API_KEY present:", !!process.env.GEMINI_API_KEY);
 console.log("Server: Post-dotenv API_KEY present:", !!process.env.API_KEY);
 if (process.env.GEMINI_API_KEY) {
   console.log("Server: Post-dotenv GEMINI_API_KEY value:", process.env.GEMINI_API_KEY === "MY_GEMINI_API_KEY" ? "EXACTLY 'MY_GEMINI_API_KEY'" : `Starts with ${process.env.GEMINI_API_KEY.substring(0, 4)} and length is ${process.env.GEMINI_API_KEY.length}`);
+}
+if (process.env.API_KEY) {
+  console.log("Server: Post-dotenv API_KEY value:", `Starts with ${process.env.API_KEY.substring(0, 4)} and length is ${process.env.API_KEY.length}`);
 }
 
 // Initialize Firebase Admin
@@ -37,9 +44,9 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = Number(process.env.PORT) || 3000;
+const PORT = process.env.PORT || 3000;
 
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
 app.use(cookieParser());
 
 // Mock DB
@@ -139,30 +146,80 @@ app.get("/api/botcake/user", async (req, res) => {
   }
 });
 
+function getGeminiKey() {
+  const sources = [
+    { name: "GEMINI_API_KEY", value: process.env.GEMINI_API_KEY },
+    { name: "GOOGLE_API_KEY", value: process.env.GOOGLE_API_KEY },
+    { name: "API_KEY", value: process.env.API_KEY }
+  ];
+  
+  for (const source of sources) {
+    const key = source.value;
+    if (key && key.length > 10 && !key.includes("YOUR_") && !key.includes("MY_") && !key.includes("TODO_")) {
+      const masked = key.substring(0, 4) + "..." + key.substring(key.length - 4);
+      console.log(`[Gemini Proxy] Using key from ${source.name} (${masked})`);
+      return key;
+    }
+  }
+  
+  console.warn("[Gemini Proxy] No valid API key found. Keys checked:", sources.map(s => `${s.name}: ${s.value ? (s.value.length > 5 ? "Present" : "Too short") : "Missing"}`).join(", "));
+  return null;
+}
+
 // Gemini Proxy
 app.post("/api/gemini/generate", async (req, res) => {
-  const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || process.env.API_KEY;
-  if (!apiKey) return res.status(500).json({ error: "Gemini API Key not configured on server" });
-
-  const { contents, config } = req.body;
-  const ai = new GoogleGenAI({ apiKey });
-
   try {
-    const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
-      contents,
-      config
-    });
-    res.json(response);
+    const apiKey = getGeminiKey();
+    if (!apiKey) {
+      return res.status(500).json({ error: "Gemini API Key not configured on server. Please set GEMINI_API_KEY in Settings > Secrets." });
+    }
+
+    const { contents, config, model } = req.body;
+    console.log(`[Gemini Proxy] Request Body: ${JSON.stringify(req.body)}`);
+    const ai = new GoogleGenAI({ apiKey });
+
+    const targetModel = model || "gemini-3-flash-preview";
+    console.log(`[Gemini Proxy] Calling model: ${targetModel}`);
+
+    try {
+      console.log(`[Gemini Proxy] Sending request to Gemini API. Model: ${targetModel}, Contents length: ${JSON.stringify(contents).length}`);
+      const response = await ai.models.generateContent({
+        model: targetModel,
+        contents,
+        config
+      });
+      console.log(`[Gemini Proxy] Received response from Gemini API.`);
+
+      if (!response || !response.text) {
+        console.error("[Gemini Proxy] Empty or invalid response from Gemini API:", JSON.stringify(response));
+        return res.status(500).json({ error: "Empty or invalid response from Gemini API" });
+      }
+
+      // Return only the text and metadata to ensure clean serialization
+      res.json({
+        text: response.text,
+        finishReason: response.candidates?.[0]?.finishReason,
+        usage: response.usageMetadata
+      });
+    } catch (genAiError: any) {
+      console.error("[Gemini Proxy] GenAI Error:", JSON.stringify(genAiError, Object.getOwnPropertyNames(genAiError)));
+      // If it's a 401/403, it's likely an API key issue
+      const status = genAiError.status || 500;
+      const message = genAiError.message || "Error from Gemini API";
+      res.status(status).json({ error: message });
+    }
   } catch (error: any) {
-    console.error("Server Gemini Generate Error:", error);
-    res.status(500).json({ error: error.message });
+    console.error("[Gemini Proxy] Unexpected Error:", JSON.stringify(error, Object.getOwnPropertyNames(error)));
+    res.status(500).json({ error: error.message || "Internal server error during Gemini generation" });
   }
 });
 
 app.post("/api/gemini/tts", async (req, res) => {
-  const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || process.env.API_KEY;
-  if (!apiKey) return res.status(500).json({ error: "Gemini API Key not configured on server" });
+  const apiKey = getGeminiKey();
+  if (!apiKey) {
+    console.error("Server: No valid Gemini API Key found for TTS");
+    return res.status(500).json({ error: "Gemini API Key not configured on server. Please set GEMINI_API_KEY in Settings > Secrets." });
+  }
 
   const { text, voiceName } = req.body;
   const ai = new GoogleGenAI({ apiKey });
@@ -194,7 +251,7 @@ app.post("/api/elevenlabs/tts", async (req, res) => {
   const apiKey = process.env.ELEVENLABS_API_KEY;
 
   if (!apiKey) {
-    return res.status(500).json({ error: "ElevenLabs API key not configured on server" });
+    return res.status(400).json({ error: "ElevenLabs API key not configured on server. Please set ELEVENLABS_API_KEY in Settings > Secrets." });
   }
 
   try {
@@ -232,13 +289,20 @@ app.post("/api/elevenlabs/tts", async (req, res) => {
 // ElevenLabs Conversational AI Proxy Routes
 app.get("/api/elevenlabs/voices", async (req, res) => {
   const apiKey = process.env.ELEVENLABS_API_KEY;
-  if (!apiKey) return res.status(500).json({ error: "Missing API Key" });
+  if (!apiKey) {
+    return res.status(200).json({ voices: [], error: "ElevenLabs API key not configured. Please set ELEVENLABS_API_KEY in Settings > Secrets." });
+  }
   
   try {
     const r = await fetch("https://api.elevenlabs.io/v1/voices", {
       headers: { "xi-api-key": apiKey }
     });
-    res.status(r.status).send(await r.text());
+    if (!r.ok) {
+      const text = await r.text();
+      return res.status(r.status).json({ error: text });
+    }
+    const data = await r.json();
+    res.json(data);
   } catch (e: any) {
     res.status(500).json({ error: e.message });
   }
@@ -296,7 +360,7 @@ app.get("/api/elevenlabs/preview/:voiceId", async (req, res) => {
 
 app.post("/api/elevenlabs/agents", async (req, res) => {
   const apiKey = process.env.ELEVENLABS_API_KEY;
-  if (!apiKey) return res.status(500).json({ error: "Missing API Key" });
+  if (!apiKey) return res.status(400).json({ error: "ElevenLabs API key missing. Please set ELEVENLABS_API_KEY in Settings > Secrets to enable voice agent features." });
   
   try {
     const body = { ...req.body };
@@ -340,7 +404,7 @@ app.post("/api/elevenlabs/agents", async (req, res) => {
 app.patch("/api/elevenlabs/agents/:id", async (req, res) => {
   const apiKey = process.env.ELEVENLABS_API_KEY;
   const agentId = req.params.id;
-  if (!apiKey) return res.status(500).json({ error: "Missing API Key" });
+  if (!apiKey) return res.status(400).json({ error: "ElevenLabs API key missing. Please set ELEVENLABS_API_KEY in Settings > Secrets to enable voice agent features." });
   
   try {
     const body = { ...req.body };
@@ -408,7 +472,9 @@ app.post("/api/webhooks/elevenlabs/tools", async (req, res) => {
     }
 
     try {
-      const db = getFirestore();
+      const db = firebaseConfig.firestoreDatabaseId && firebaseConfig.firestoreDatabaseId !== "(default)" 
+        ? getFirestore(admin.app(), firebaseConfig.firestoreDatabaseId) 
+        : getFirestore();
       const businessDoc = await db.collection("businesses").doc(businessId).get();
       
       if (!businessDoc.exists) {
@@ -467,7 +533,9 @@ app.post("/api/webhooks/elevenlabs", async (req, res) => {
   }
 
   try {
-    const db = getFirestore();
+    const db = firebaseConfig.firestoreDatabaseId && firebaseConfig.firestoreDatabaseId !== "(default)" 
+      ? getFirestore(admin.app(), firebaseConfig.firestoreDatabaseId) 
+      : getFirestore();
     
     // 1. Find the agent and business
     // We need to find which business this agent belongs to.
@@ -546,7 +614,7 @@ app.get("/api/elevenlabs/signed-url", async (req, res) => {
   
   if (!apiKey) {
     console.error("Server: Missing ElevenLabs API Key");
-    return res.status(500).json({ error: "Missing API Key" });
+    return res.status(400).json({ error: "ElevenLabs API key not configured on server. Please set ELEVENLABS_API_KEY in Settings > Secrets." });
   }
   if (!agent_id) {
     console.error("Server: Missing agent_id in request");
@@ -578,10 +646,24 @@ app.get("/api/elevenlabs/signed-url", async (req, res) => {
 
 app.get("/api/elevenlabs/agents/:id", async (req, res) => {
   const apiKey = process.env.ELEVENLABS_API_KEY;
-  if (!apiKey) return res.status(500).json({ error: "Missing API Key" });
+  if (!apiKey) return res.status(400).json({ error: "ElevenLabs API key not configured on server. Please set ELEVENLABS_API_KEY in Settings > Secrets." });
   
   try {
     const r = await fetch(`https://api.elevenlabs.io/v1/convai/agents/${req.params.id}`, {
+      headers: { "xi-api-key": apiKey }
+    });
+    res.status(r.status).send(await r.text());
+  } catch (e: any) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.get("/api/elevenlabs/conversations/:id", async (req, res) => {
+  const apiKey = process.env.ELEVENLABS_API_KEY;
+  if (!apiKey) return res.status(400).json({ error: "ElevenLabs API key not configured on server. Please set ELEVENLABS_API_KEY in Settings > Secrets." });
+  
+  try {
+    const r = await fetch(`https://api.elevenlabs.io/v1/convai/conversations/${req.params.id}`, {
       headers: { "xi-api-key": apiKey }
     });
     res.status(r.status).send(await r.text());
@@ -683,92 +765,14 @@ app.post("/api/paypal/capture-order", async (req, res) => {
   }
 });
 
-// Email Integration
-app.post("/api/email/send-booking-confirmation", async (req, res) => {
-  try {
-    const { to, name, dateTime, purpose, businessName } = req.body;
-    
-    if (!to) {
-      return res.status(400).json({ error: "Missing recipient email" });
-    }
-
-    let transporter;
-    if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
-      transporter = nodemailer.createTransport({
-        host: process.env.SMTP_HOST,
-        port: Number(process.env.SMTP_PORT) || 587,
-        secure: process.env.SMTP_SECURE === "true",
-        auth: {
-          user: process.env.SMTP_USER,
-          pass: process.env.SMTP_PASS,
-        },
-      });
-    } else {
-      // Fallback to Ethereal for testing
-      const testAccount = await nodemailer.createTestAccount();
-      transporter = nodemailer.createTransport({
-        host: "smtp.ethereal.email",
-        port: 587,
-        secure: false,
-        auth: {
-          user: testAccount.user,
-          pass: testAccount.pass,
-        },
-      });
-      console.log("Server: Using Ethereal Email for testing");
-    }
-
-    const info = await transporter.sendMail({
-      from: `"${businessName || 'Vico AI'}" <noreply@vico.ai>`,
-      to,
-      subject: `Booking Confirmation: ${purpose || 'Appointment'}`,
-      text: `Hi ${name || 'there'},\n\nYour booking for ${purpose || 'an appointment'} is confirmed for ${dateTime}.\n\nThank you,\n${businessName || 'Vico AI'}`,
-      html: `
-        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
-          <h2 style="color: #1d4ed8;">Booking Confirmation</h2>
-          <p>Hi ${name || 'there'},</p>
-          <p>Your booking is confirmed. Here are the details:</p>
-          <ul style="background: #f8fafc; padding: 15px 30px; border-radius: 8px;">
-            <li style="margin-bottom: 10px;"><strong>Purpose:</strong> ${purpose || 'Appointment'}</li>
-            <li style="margin-bottom: 10px;"><strong>Date & Time:</strong> ${dateTime}</li>
-          </ul>
-          <p>Thank you,<br><strong>${businessName || 'Vico AI'}</strong></p>
-        </div>
-      `,
-    });
-
-    console.log("Server: Email sent: %s", info.messageId);
-    if (!process.env.SMTP_HOST) {
-      console.log("Server: Email Preview URL: %s", nodemailer.getTestMessageUrl(info));
-    }
-
-    res.json({ success: true, messageId: info.messageId });
-  } catch (error: any) {
-    console.error("Server: Email sending error:", error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Upload endpoint placeholder (frontend uses Firebase Storage directly)
-app.post("/api/upload", (req, res) => {
-  res.status(501).json({ 
-    error: "Server-side upload not implemented. The application is configured to use Firebase Storage for all file uploads." 
-  });
-});
-
-// Logo endpoint to serve the logo.png file
-// This endpoint is public and has CORS enabled to ensure the logo is always accessible.
-app.get("/api/logo", (req, res) => {
-  // Redirect to the public Firebase Storage URL where the logo is hosted
-  res.redirect(301, "https://firebasestorage.googleapis.com/v0/b/gen-lang-client-0425458275.firebasestorage.app/o/businesses%2F2yaZgckDZ3Yt1o9IM8sTKQGuGxG3%2Flogo.png?alt=media&token=f858bd0d-1376-41ea-a944-667bd854a164");
-});
-
 // Health check endpoint
 app.get("/api/health", (req, res) => {
   res.json({ 
     status: "ok", 
     appUrl: process.env.APP_URL ? "configured" : "missing",
     elevenLabsApiKey: process.env.ELEVENLABS_API_KEY ? "configured" : "missing",
+    geminiApiKey: process.env.GEMINI_API_KEY ? "configured" : "missing",
+    apiKey: process.env.API_KEY ? "configured" : "missing",
     nodeEnv: process.env.NODE_ENV || "development"
   });
 });
@@ -781,17 +785,7 @@ if (process.env.NODE_ENV !== "production") {
   });
   app.use(vite.middlewares);
 } else {
-  // In production, serve static files from the dist directory
-  // __dirname is the dist directory where server.js and static assets reside
-  app.use(express.static(__dirname, {
-    index: false, // Don't serve index.html automatically, we handle it with the catch-all
-    setHeaders: (res, path) => {
-      if (path.endsWith(".png") || path.endsWith(".jpg") || path.endsWith(".jpeg") || path.endsWith(".svg")) {
-        res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
-      }
-    }
-  }));
-
+  app.use(express.static(__dirname));
   app.get("*all", (req, res) => {
     res.sendFile(path.join(__dirname, "index.html"));
   });

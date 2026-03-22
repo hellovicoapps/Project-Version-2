@@ -25,6 +25,7 @@ import BotcakeRedirectPage from "./pages/BotcakeRedirectPage";
 import CallStatusPage from "./pages/CallStatusPage";
 import AdminDashboard from "./pages/AdminDashboard";
 import CalendarPage from "./pages/CalendarPage";
+import NewsPage from "./pages/NewsPage";
 
 // Components
 import Navbar from "./components/Navbar";
@@ -175,6 +176,14 @@ function AppContent() {
                   element={
                     <ProtectedRoute>
                       <CalendarPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path={ROUTES.NEWS}
+                  element={
+                    <ProtectedRoute>
+                      <NewsPage />
                     </ProtectedRoute>
                   }
                 />
