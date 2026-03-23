@@ -45,7 +45,7 @@ export const ROUTES = {
   PUBLIC_CALL: "/call/:businessId",
   BOTCAKE_REDIRECT: "/botcake/:businessId",
   CALL_STATUS: "/call-status/:callId",
-  NEWS: "/news",
+  HELP_CENTER: "/help",
 };
 
 export const CALL_STATUS_COLORS = {

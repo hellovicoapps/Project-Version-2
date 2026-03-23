@@ -8,7 +8,7 @@ export class GeminiService {
     this.ai = new GoogleGenAI({ apiKey });
   }
 
-  async processTranscript(transcript: string) {
+  async processTranscript(transcript: string, timezone: string = "UTC", currentDate: string = new Date().toISOString()) {
     try {
       const response = await this.ai.models.generateContent({
         model: "gemini-3-flash-preview",
@@ -16,6 +16,9 @@ export class GeminiService {
           role: "user",
           parts: [{
             text: `Analyze the following call transcript between an AI Agent and a User.
+              
+              Current Date/Time: ${currentDate}
+              Business Timezone: ${timezone}
               
               Transcript:
               ${transcript}
@@ -32,7 +35,9 @@ export class GeminiService {
               
               2. BOOKING DETAILS:
                  - Extract the caller's name, phone number, and email if mentioned.
-                 - Extract the date and time of the appointment. If they said "tomorrow at 3pm", try to resolve it relative to the current date (March 23, 2026).
+                 - Extract the date and time of the appointment. 
+                 - IMPORTANT: Resolve relative times (like "tomorrow at 3pm") based on the Current Date/Time provided above and the Business Timezone.
+                 - Return the dateTime in ISO 8601 format including the offset for the Business Timezone if possible.
                  - Extract the purpose of the appointment (e.g., "Dental checkup", "Haircut", "Sales demo").
               
               3. SUMMARY:
@@ -131,5 +136,10 @@ export class GeminiService {
 }
 
 export const getGeminiService = async () => {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey || apiKey === "MY_GEMINI_API_KEY" || apiKey === "") {
+    console.warn("Gemini API key is missing or placeholder");
+    return null;
+  }
   return new GeminiService();
 };

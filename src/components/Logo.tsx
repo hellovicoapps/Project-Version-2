@@ -6,13 +6,15 @@ interface LogoProps {
   iconSize?: number;
   showText?: boolean;
   textSize?: string;
+  textColor?: string;
 }
 
 export const Logo: React.FC<LogoProps> = ({ 
   className = "", 
   iconSize = 56, 
   showText = false,
-  textSize = "text-3xl"
+  textSize = "text-3xl",
+  textColor = "text-[var(--text-main)]"
 }) => {
   // Calculate container size based on iconSize to maintain proportions
   const containerSize = iconSize * 1.5;
@@ -28,7 +30,7 @@ export const Logo: React.FC<LogoProps> = ({
         />
       </div>
       {showText && (
-        <span className={`ml-4 ${textSize} font-bold tracking-tighter text-[var(--text-main)]`}>
+        <span className={`ml-4 ${textSize} font-bold tracking-tighter ${textColor}`}>
           Vico
         </span>
       )}

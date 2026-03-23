@@ -25,7 +25,7 @@ import BotcakeRedirectPage from "./pages/BotcakeRedirectPage";
 import CallStatusPage from "./pages/CallStatusPage";
 import AdminDashboard from "./pages/AdminDashboard";
 import CalendarPage from "./pages/CalendarPage";
-import NewsPage from "./pages/NewsPage";
+import HelpPage from "./pages/HelpPage";
 
 // Components
 import Navbar from "./components/Navbar";
@@ -180,10 +180,10 @@ function AppContent() {
                   }
                 />
                 <Route
-                  path={ROUTES.NEWS}
+                  path={ROUTES.HELP_CENTER}
                   element={
                     <ProtectedRoute>
-                      <NewsPage />
+                      <HelpPage />
                     </ProtectedRoute>
                   }
                 />

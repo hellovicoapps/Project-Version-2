@@ -3,7 +3,8 @@ import { motion, useScroll, useTransform, useMotionValue, useSpring } from "fram
 import { ROUTES } from "../constants";
 import { 
   Zap, Clock, ArrowRight, MessageSquare, Calendar, Users, 
-  Bot, CheckCircle2, TrendingUp, Shield, Smartphone, Play, Mic
+  Bot, CheckCircle2, TrendingUp, Shield, Smartphone, Play, Mic,
+  Star, ChevronLeft, ChevronRight
 } from "lucide-react";
 import { Logo } from "../components/Logo";
 import React from "react";
@@ -44,23 +45,23 @@ export default function LandingPage() {
       </div>
 
       {/* Navigation */}
-      <nav className="fixed top-0 w-full z-50 bg-[var(--bg-main)]/80 backdrop-blur-xl border-b border-[var(--border-main)]">
+      <nav className="fixed top-0 w-full z-50 bg-blue-600 border-b border-blue-700 shadow-lg">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           <Link to={ROUTES.HOME} className="relative z-10">
-            <Logo iconSize={32} showText={true} textSize="text-2xl" />
+            <Logo iconSize={32} showText={true} textSize="text-2xl" textColor="text-white" />
           </Link>
-          <div className="hidden md:flex items-center space-x-8 text-sm font-medium text-[var(--text-muted)]">
-            <a href="#problem" className="hover:text-[var(--brand-primary)] transition-colors">Problem</a>
-            <a href="#solution" className="hover:text-[var(--brand-primary)] transition-colors">Solution</a>
-            <a href="#how-it-works" className="hover:text-[var(--brand-primary)] transition-colors">How it Works</a>
+          <div className="hidden md:flex items-center space-x-8 text-sm font-medium text-blue-100">
+            <a href="#problem" className="hover:text-white transition-colors">Problem</a>
+            <a href="#solution" className="hover:text-white transition-colors">Solution</a>
+            <a href="#how-it-works" className="hover:text-white transition-colors">How it Works</a>
           </div>
           <div className="flex items-center space-x-4 relative z-10">
-            <Link to={ROUTES.LOGIN} className="text-sm font-medium text-[var(--text-muted)] hover:text-[var(--brand-primary)] transition-colors hidden sm:block">
+            <Link to={ROUTES.LOGIN} className="text-sm font-medium text-blue-100 hover:text-white transition-colors hidden sm:block">
               Sign In
             </Link>
             <Link 
               to={ROUTES.ONBOARDING}
-              className="px-5 py-2.5 bg-[var(--brand-primary)] text-white rounded-full text-sm font-bold hover:scale-105 transition-transform shadow-lg shadow-[var(--brand-primary)]/20"
+              className="px-5 py-2.5 bg-white text-blue-600 rounded-full text-sm font-bold hover:scale-105 transition-transform shadow-lg shadow-black/10"
             >
               Get Started
             </Link>
@@ -92,7 +93,7 @@ export default function LandingPage() {
               </span>
               <span>Vico AI is now live for Messenger</span>
             </div>
-            <h1 className="text-5xl md:text-7xl font-bold tracking-tighter leading-[1.1] mb-6 text-[var(--text-main)]">
+            <h1 className="text-5xl md:text-7xl font-display font-bold uppercase tracking-wide leading-[1.1] mb-6 text-[var(--text-main)]">
               Turn Every Inquiry Into a <br/>
               <span className="text-[var(--brand-primary)] drop-shadow-sm">
                 Booked Appointment
@@ -203,29 +204,29 @@ export default function LandingPage() {
                     Yes, 2:00 PM works perfectly!
                   </motion.div>
                 </div>
-
-                {/* Booking Card */}
-                <motion.div 
-                  initial={{ scale: 0.8, opacity: 0, y: 20 }}
-                  animate={{ scale: 1, opacity: 1, y: 0 }}
-                  transition={{ delay: 6.5, type: "spring" }}
-                  className="absolute bottom-4 left-4 right-4 bg-white border border-emerald-200 rounded-xl p-3 shadow-lg z-30"
-                >
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center">
-                      <CheckCircle2 size={16} className="text-emerald-600" />
-                    </div>
-                    <p className="text-sm font-bold text-emerald-700">Appointment Confirmed</p>
-                  </div>
-                  <div className="bg-slate-50 rounded-lg p-2 border border-slate-100">
-                    <p className="text-xs text-slate-500">Date & Time</p>
-                    <p className="text-sm text-slate-800 font-medium">Tomorrow, 2:00 PM</p>
-                  </div>
-                </motion.div>
               </div>
             </div>
             
             {/* Floating elements around the phone */}
+            <motion.div 
+              initial={{ scale: 0.8, opacity: 0, x: 20 }}
+              animate={{ scale: 1, opacity: 1, x: 0 }}
+              transition={{ delay: 6.5, type: "spring" }}
+              className="absolute -right-20 bottom-40 w-[240px] bg-white border border-emerald-200 rounded-2xl p-4 shadow-2xl z-40"
+              style={{ translateZ: 100, x: useTransform(translateX, v => v * 2), y: useTransform(translateY, v => v * 2) }}
+            >
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center">
+                  <CheckCircle2 size={20} className="text-emerald-600" />
+                </div>
+                <p className="text-base font-bold text-emerald-700">Appointment Confirmed</p>
+              </div>
+              <div className="bg-slate-50 rounded-xl p-3 border border-slate-100">
+                <p className="text-xs text-slate-500 mb-1">Date & Time</p>
+                <p className="text-sm text-slate-800 font-bold">Tomorrow, 2:00 PM</p>
+              </div>
+            </motion.div>
+
             <motion.div 
               animate={{ y: [-10, 10, -10] }}
               transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
@@ -253,7 +254,7 @@ export default function LandingPage() {
       <section id="problem" className="py-32 px-6 relative z-10 border-t border-[var(--border-main)] bg-[var(--bg-card)]">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-20">
-            <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-6 text-[var(--text-main)]">Still Losing Customers to <span className="text-red-500">Slow Replies?</span></h2>
+            <h2 className="text-4xl md:text-5xl font-display font-bold uppercase tracking-wide mb-6 text-[var(--text-main)]">Still Losing Customers to <span className="text-red-500">Slow Replies?</span></h2>
             <p className="text-[var(--text-muted)] text-lg max-w-2xl mx-auto">When you rely on manual responses or generic auto-replies, your business suffers.</p>
           </div>
 
@@ -317,20 +318,20 @@ export default function LandingPage() {
       </section>
 
       {/* 3. SOLUTION SECTION */}
-      <section id="solution" className="py-32 px-6 relative z-10 border-t border-[var(--border-main)] bg-[var(--bg-main)] overflow-hidden">
+      <section id="solution" className="py-32 px-6 relative z-10 bg-blue-600 overflow-hidden">
         {/* Parallax Background Elements */}
         <motion.div 
-          className="absolute top-[20%] left-[5%] w-64 h-64 rounded-full border border-[var(--brand-primary)]/10"
+          className="absolute top-[20%] left-[5%] w-64 h-64 rounded-full border border-white/10"
           style={{ y: useTransform(scrollY, [0, 3000], [0, 300]), rotate: useTransform(scrollY, [0, 3000], [0, 180]) }}
         />
         <motion.div 
-          className="absolute bottom-[10%] right-[5%] w-96 h-96 rounded-full border border-[var(--brand-primary)]/5"
+          className="absolute bottom-[10%] right-[5%] w-96 h-96 rounded-full border border-white/5"
           style={{ y: useTransform(scrollY, [0, 3000], [0, -300]), rotate: useTransform(scrollY, [0, 3000], [0, -90]) }}
         />
         <div className="max-w-7xl mx-auto relative z-10">
           <div className="text-center mb-20">
-            <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-6 text-[var(--text-main)]">Meet Vico — Your AI Employee <br/><span className="text-[var(--brand-primary)]">That Never Sleeps</span></h2>
-            <p className="text-[var(--text-muted)] text-lg max-w-2xl mx-auto">
+            <h2 className="text-4xl md:text-5xl font-display font-bold uppercase tracking-wide mb-6 text-white">Meet Vico — Your AI Employee <br/><span className="text-white">That Never Sleeps</span></h2>
+            <p className="text-blue-100 text-lg max-w-2xl mx-auto">
               Vico responds instantly, understands customer intent, and turns conversations into confirmed bookings — all without human effort.
             </p>
           </div>
@@ -351,13 +352,13 @@ export default function LandingPage() {
                 viewport={{ once: true, margin: "-50px" }}
                 transition={{ delay: i * 0.1, type: "spring", stiffness: 100 }}
                 whileHover={{ scale: 1.05, rotateY: 5, rotateX: -5, zIndex: 10 }}
-                className="p-8 rounded-3xl bg-white border border-[var(--border-main)] hover:border-[var(--brand-primary)]/30 transition-all group shadow-sm hover:shadow-xl preserve-3d"
+                className="p-8 rounded-3xl bg-white/10 backdrop-blur-md border border-white/20 hover:border-white/40 transition-all group shadow-xl preserve-3d"
               >
-                <div className="w-12 h-12 rounded-2xl bg-[var(--brand-primary)]/10 flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-[var(--brand-primary)]/20 transition-all transform-gpu translate-z-10">
-                  <feature.icon className="w-6 h-6 text-[var(--brand-primary)]" />
+                <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-white/30 transition-all transform-gpu translate-z-10">
+                  <feature.icon className="w-6 h-6 text-white" />
                 </div>
-                <h3 className="text-xl font-bold mb-3 transform-gpu translate-z-10 text-[var(--text-main)]">{feature.title}</h3>
-                <p className="text-[var(--text-muted)] leading-relaxed transform-gpu translate-z-10">{feature.desc}</p>
+                <h3 className="text-xl font-display font-bold uppercase tracking-wide mb-3 transform-gpu translate-z-10 text-white">{feature.title}</h3>
+                <p className="text-blue-50 leading-relaxed transform-gpu translate-z-10">{feature.desc}</p>
               </motion.div>
             ))}
           </div>
@@ -372,7 +373,7 @@ export default function LandingPage() {
         />
         <div className="max-w-7xl mx-auto relative z-10">
           <div className="text-center mb-20">
-            <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-6 text-[var(--text-main)]">How It Works</h2>
+            <h2 className="text-4xl md:text-5xl font-display font-bold uppercase tracking-wide mb-6 text-[var(--text-main)]">How It Works</h2>
             <p className="text-[var(--text-muted)] text-lg">Three simple steps to automated revenue.</p>
           </div>
 
@@ -397,10 +398,123 @@ export default function LandingPage() {
                 <div className="w-16 h-16 mx-auto rounded-full bg-[var(--brand-primary)] flex items-center justify-center text-2xl font-bold shadow-lg shadow-[var(--brand-primary)]/30 mb-6 text-white">
                   {item.step}
                 </div>
-                <h3 className="text-2xl font-bold mb-4 text-[var(--text-main)]">{item.title}</h3>
+                <h3 className="text-2xl font-display font-bold uppercase tracking-wide mb-4 text-[var(--text-main)]">{item.title}</h3>
                 <p className="text-[var(--text-muted)]">{item.desc}</p>
               </motion.div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* TESTIMONIALS SECTION */}
+      <section className="py-32 px-6 relative z-10 bg-[var(--bg-main)] overflow-hidden">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-display font-bold uppercase tracking-wide mb-6 text-[var(--text-main)]">
+              Trusted by Growing Businesses
+            </h2>
+            <p className="text-[var(--text-muted)] text-lg max-w-2xl mx-auto">
+              Join hundreds of businesses automating their customer calls and scaling their revenue with Vico.
+            </p>
+          </div>
+
+          <div className="relative overflow-hidden">
+            {/* Infinite Marquee Container */}
+            <motion.div 
+              className="flex gap-6 pb-8"
+              animate={{
+                x: [0, -1704], // Adjust based on card width (400) + gap (24) * 4
+              }}
+              transition={{
+                duration: 30,
+                repeat: Infinity,
+                ease: "linear",
+              }}
+            >
+              {[
+                {
+                  quote: "Vico has completely transformed our clinic's reception. We no longer miss calls during lunch breaks or after hours.",
+                  author: "Dr. Sarah Chen",
+                  role: "Founder, Smile Dental",
+                  image: "https://picsum.photos/seed/sarah/100/100"
+                },
+                {
+                  quote: "The ROI was immediate. We're booking 40% more consultations without adding any staff. It's like magic.",
+                  author: "James Wilson",
+                  role: "Partner, Wilson Law Group",
+                  image: "https://picsum.photos/seed/james/100/100"
+                },
+                {
+                  quote: "Our customers love the instant response. It feels like talking to a real person who actually knows our business.",
+                  author: "Elena Rodriguez",
+                  role: "Owner, Bloom Boutique",
+                  image: "https://picsum.photos/seed/elena/100/100"
+                },
+                {
+                  quote: "Integration was seamless. One click and Vico was handling our Messenger inquiries perfectly. Best decision we made this year.",
+                  author: "Mark Thompson",
+                  role: "CEO, TechFlow Solutions",
+                  image: "https://picsum.photos/seed/mark/100/100"
+                },
+                // Duplicate for seamless loop
+                {
+                  quote: "Vico has completely transformed our clinic's reception. We no longer miss calls during lunch breaks or after hours.",
+                  author: "Dr. Sarah Chen",
+                  role: "Founder, Smile Dental",
+                  image: "https://picsum.photos/seed/sarah/100/100"
+                },
+                {
+                  quote: "The ROI was immediate. We're booking 40% more consultations without adding any staff. It's like magic.",
+                  author: "James Wilson",
+                  role: "Partner, Wilson Law Group",
+                  image: "https://picsum.photos/seed/james/100/100"
+                },
+                {
+                  quote: "Our customers love the instant response. It feels like talking to a real person who actually knows our business.",
+                  author: "Elena Rodriguez",
+                  role: "Owner, Bloom Boutique",
+                  image: "https://picsum.photos/seed/elena/100/100"
+                },
+                {
+                  quote: "Integration was seamless. One click and Vico was handling our Messenger inquiries perfectly. Best decision we made this year.",
+                  author: "Mark Thompson",
+                  role: "CEO, TechFlow Solutions",
+                  image: "https://picsum.photos/seed/mark/100/100"
+                }
+              ].map((testimonial, i) => (
+                <div
+                  key={i}
+                  className="min-w-[300px] md:min-w-[400px] p-8 rounded-[2.5rem] bg-blue-600 text-white flex flex-col justify-between shadow-2xl relative overflow-hidden group/card"
+                >
+                  {/* Decorative background element */}
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16 blur-2xl group-hover/card:bg-white/10 transition-colors" />
+                  
+                  <div className="relative z-10">
+                    <div className="flex text-yellow-400 mb-6 gap-1">
+                      {[...Array(5)].map((_, i) => (
+                        <Star key={i} size={18} fill="currentColor" strokeWidth={0} />
+                      ))}
+                    </div>
+                    <p className="text-xl md:text-2xl leading-relaxed mb-8 font-medium italic">
+                      "{testimonial.quote}"
+                    </p>
+                  </div>
+                  
+                  <div className="flex items-center gap-4 relative z-10 border-t border-white/10 pt-6">
+                    <img 
+                      src={testimonial.image} 
+                      alt={testimonial.author} 
+                      className="w-14 h-14 rounded-full object-cover border-2 border-white/20"
+                      referrerPolicy="no-referrer"
+                    />
+                    <div>
+                      <p className="font-bold text-lg">{testimonial.author}</p>
+                      <p className="text-blue-100 text-sm">{testimonial.role}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </motion.div>
           </div>
         </div>
       </section>
@@ -417,7 +531,7 @@ export default function LandingPage() {
               viewport={{ once: true }}
               transition={{ duration: 0.8 }}
             >
-              <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-8 text-[var(--text-main)]">More Bookings.<br/>Less Work.</h2>
+              <h2 className="text-4xl md:text-5xl font-display font-bold uppercase tracking-wide mb-8 text-[var(--text-main)]">More Bookings.<br/>Less Work.</h2>
               <ul className="space-y-6">
                 {[
                   "Never miss a customer inquiry again",
@@ -482,7 +596,7 @@ export default function LandingPage() {
           viewport={{ once: true }}
           transition={{ duration: 0.8 }}
         >
-          <h2 className="text-5xl md:text-7xl font-bold tracking-tighter mb-8 text-[var(--text-main)]">
+          <h2 className="text-5xl md:text-7xl font-display font-bold uppercase tracking-wide mb-8 text-[var(--text-main)]">
             Let Your AI Handle the <span className="text-[var(--brand-primary)]">Conversations</span>
           </h2>
           <p className="text-xl text-[var(--text-muted)] mb-12">
@@ -499,17 +613,40 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="py-12 border-t border-[var(--border-main)] relative z-10 bg-[var(--bg-main)]">
-        <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex items-center space-x-4">
-            <Logo iconSize={24} showText={true} textSize="text-xl" />
+      <footer className="py-24 border-t border-[var(--border-main)] relative z-10 bg-[var(--bg-main)]">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
+            <div className="col-span-1 md:col-span-2 space-y-6">
+              <Logo iconSize={32} showText={true} textSize="text-2xl" />
+              <p className="text-[var(--text-muted)] text-lg max-w-sm leading-relaxed">
+                Vico AI is your enterprise-grade voice receptionist that works 24/7, books appointments, and handles customer inquiries with human-like precision.
+              </p>
+            </div>
+            <div>
+              <h4 className="text-[var(--text-main)] font-bold mb-6 uppercase tracking-widest text-xs">Product</h4>
+              <ul className="space-y-4 text-[var(--text-muted)]">
+                <li><a href="#problem" className="hover:text-[var(--brand-primary)] transition-colors">Problem</a></li>
+                <li><a href="#solution" className="hover:text-[var(--brand-primary)] transition-colors">Solution</a></li>
+                <li><a href="#how-it-works" className="hover:text-[var(--brand-primary)] transition-colors">How it Works</a></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="text-[var(--text-main)] font-bold mb-6 uppercase tracking-widest text-xs">Legal</h4>
+              <ul className="space-y-4 text-[var(--text-muted)]">
+                <li><Link to={ROUTES.PRIVACY} className="hover:text-[var(--brand-primary)] transition-colors">Privacy Policy</Link></li>
+                <li><Link to={ROUTES.TERMS} className="hover:text-[var(--brand-primary)] transition-colors">Terms of Service</Link></li>
+                <li><a href="mailto:hello.vicoapps@gmail.com" className="hover:text-[var(--brand-primary)] transition-colors">Contact Us</a></li>
+              </ul>
+            </div>
           </div>
-          <div className="text-sm text-[var(--text-muted)]">
-            © 2026 Vico AI. All rights reserved.
-          </div>
-          <div className="flex space-x-6 text-sm text-[var(--text-muted)]">
-            <Link to={ROUTES.PRIVACY} className="hover:text-[var(--text-main)] transition-colors">Privacy</Link>
-            <Link to={ROUTES.TERMS} className="hover:text-[var(--text-main)] transition-colors">Terms</Link>
+          <div className="pt-8 border-t border-[var(--border-main)] flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="text-sm text-[var(--text-muted)]">
+              © 2026 Vico AI. All rights reserved.
+            </div>
+            <div className="flex items-center space-x-2 text-xs text-[var(--text-muted)]">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span>System Status: Operational</span>
+            </div>
           </div>
         </div>
       </footer>

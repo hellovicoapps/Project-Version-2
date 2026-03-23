@@ -155,6 +155,8 @@ app.post("/api/elevenlabs/tts", async (req, res) => {
   }
 
   try {
+    const { stability = 0.5, similarity_boost = 0.75, speed = 1.0 } = req.body.voice_settings || {};
+
     const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
       method: "POST",
       headers: {
@@ -166,8 +168,9 @@ app.post("/api/elevenlabs/tts", async (req, res) => {
         text,
         model_id: "eleven_turbo_v2_5",
         voice_settings: {
-          stability: 0.5,
-          similarity_boost: 0.75,
+          stability,
+          similarity_boost,
+          speed
         }
       }),
     });

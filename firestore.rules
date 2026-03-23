@@ -22,7 +22,7 @@ service cloud.firestore {
       return isAuthenticated() && (
         businessId == request.auth.uid ||
         (exists(/databases/$(database)/documents/businesses/$(businessId)) && 
-         get(/databases/$(database)/documents/businesses/$(businessId)).data.ownerUid == request.auth.uid)
+         get(/databases/$(database)/documents/businesses/$(businessId)).data.ownerId == request.auth.uid)
       );
     }
 
@@ -50,15 +50,17 @@ service cloud.firestore {
     }
 
     function isValidBusiness(data) {
-      return data.keys().hasAll(['name', 'ownerUid']) &&
+      return data.keys().hasAll(['name', 'ownerId']) &&
              data.name is string && data.name.size() > 0 &&
-             data.ownerUid is string;
+             data.ownerId is string;
     }
 
     function isValidAgent(data) {
-      return data.keys().hasAll(['name', 'isActive']) &&
-             data.name is string &&
-             data.isActive is bool;
+      return data.keys().hasAll(['name', 'voice', 'instructions', 'businessId']) &&
+             data.name is string && data.name.size() > 0 &&
+             data.voice is string &&
+             data.instructions is string &&
+             data.businessId is string;
     }
 
     function isValidCall(data) {

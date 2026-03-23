@@ -36,6 +36,7 @@ import {
   startOfDay,
   endOfDay
 } from "date-fns";
+import { toZonedTime, formatInTimeZone } from "date-fns-tz";
 import { 
   collection, 
   query, 
@@ -53,7 +54,8 @@ import { useToast } from "../components/Toast";
 import { CallStatus } from "../types";
 
 export default function CalendarPage() {
-  const [currentDate, setCurrentDate] = useState(new Date());
+  const [businessTimezone, setBusinessTimezone] = useState("UTC");
+  const [currentDate, setCurrentDate] = useState(() => toZonedTime(new Date(), "UTC"));
   const [view, setView] = useState<'week' | 'day' | 'month'>('week');
   const [bookings, setBookings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -62,7 +64,7 @@ export default function CalendarPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [newBooking, setNewBooking] = useState({
     callerName: "",
-    date: format(new Date(), "yyyy-MM-dd"),
+    date: formatInTimeZone(new Date(), "UTC", "yyyy-MM-dd"),
     time: "10:00",
     bookingPurpose: ""
   });
@@ -72,6 +74,16 @@ export default function CalendarPage() {
 
   useEffect(() => {
     if (!businessId) return;
+
+    // Fetch business timezone
+    getDoc(doc(db, "businesses", businessId)).then(snap => {
+      if (snap.exists()) {
+        const tz = snap.data().timezone || "UTC";
+        setBusinessTimezone(tz);
+        setCurrentDate(toZonedTime(new Date(), tz));
+        setNewBooking(prev => ({ ...prev, date: formatInTimeZone(new Date(), tz, "yyyy-MM-dd") }));
+      }
+    });
 
     const callsRef = collection(db, `businesses/${businessId}/calls`);
     const q = query(
@@ -87,7 +99,10 @@ export default function CalendarPage() {
         
         if (data.bookingTime) {
           try {
-            bookingDate = new Date(data.bookingTime);
+            // Parse the ISO string and convert to zoned time for display
+            const utcDate = parseISO(data.bookingTime);
+            bookingDate = toZonedTime(utcDate, businessTimezone);
+            
             if (isNaN(bookingDate.getTime())) {
               console.warn(`CalendarPage: Invalid bookingTime for call ${doc.id}:`, data.bookingTime);
               bookingDate = null;
@@ -123,7 +138,12 @@ export default function CalendarPage() {
 
     setIsSaving(true);
     try {
-      const bookingTime = new Date(`${newBooking.date}T${newBooking.time}`).toISOString();
+      // Create a date object from the local inputs (date and time)
+      // and interpret it in the business's timezone
+      const dateStr = `${newBooking.date}T${newBooking.time}:00`;
+      const zonedDate = toZonedTime(dateStr, businessTimezone);
+      const bookingTime = zonedDate.toISOString();
+      
       const callsRef = collection(db, `businesses/${businessId}/calls`);
       
       await addDoc(callsRef, {
@@ -144,7 +164,7 @@ export default function CalendarPage() {
       setIsAddModalOpen(false);
       setNewBooking({
         callerName: "",
-        date: format(new Date(), "yyyy-MM-dd"),
+        date: formatInTimeZone(new Date(), businessTimezone, "yyyy-MM-dd"),
         time: "10:00",
         bookingPurpose: ""
       });
@@ -240,7 +260,7 @@ export default function CalendarPage() {
               <ChevronLeft className="w-5 h-5" />
             </button>
             <button 
-              onClick={() => setCurrentDate(new Date())}
+              onClick={() => setCurrentDate(toZonedTime(new Date(), businessTimezone))}
               className="px-3 py-1 text-xs font-bold text-[var(--text-muted)] hover:text-[var(--text-main)] transition-all"
             >
               Today

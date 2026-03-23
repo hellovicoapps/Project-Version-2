@@ -56,7 +56,7 @@ export class ElevenLabsService {
     }
   }
 
-  async createAgent(name: string, instructions: string, voiceId: string): Promise<string> {
+  async createAgent(name: string, instructions: string, voiceId: string, voiceSettings?: any): Promise<string> {
     const response = await fetch("/api/elevenlabs/agents", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -119,7 +119,11 @@ export class ElevenLabsService {
               }
             ]
           },
-          tts: { voice_id: voiceId }
+          tts: { 
+            voice_id: voiceId,
+            model_id: "eleven_turbo_v2_5",
+            voice_settings: voiceSettings 
+          }
         },
         data_collection: {
           fields: [
@@ -165,7 +169,7 @@ export class ElevenLabsService {
     return data.agent_id;
   }
 
-  async updateAgent(agentId: string, name: string, instructions: string, voiceId: string): Promise<void> {
+  async updateAgent(agentId: string, name: string, instructions: string, voiceId: string, voiceSettings?: any): Promise<void> {
     const response = await fetch(`/api/elevenlabs/agents/${agentId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -228,7 +232,11 @@ export class ElevenLabsService {
               }
             ]
           },
-          tts: { voice_id: voiceId }
+          tts: { 
+            voice_id: voiceId,
+            model_id: "eleven_turbo_v2_5",
+            voice_settings: voiceSettings 
+          }
         },
         data_collection: {
           fields: [

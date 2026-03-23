@@ -16,8 +16,7 @@ import {
   HelpCircle,
   CreditCard,
   Link as LinkIcon,
-  ShieldCheck,
-  Newspaper
+  ShieldCheck
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { ROUTES } from "../constants";
@@ -90,7 +89,6 @@ export default function Sidebar() {
         <SidebarItem isMinimized={isMinimized} to={ROUTES.CALENDAR} icon={Calendar} label="Calendar" active={location.pathname === ROUTES.CALENDAR} />
         <SidebarItem isMinimized={isMinimized} to={ROUTES.AGENT} icon={User} label="Agent" active={location.pathname === ROUTES.AGENT} />
         <SidebarItem isMinimized={isMinimized} to={ROUTES.LINKS} icon={LinkIcon} label="Links" active={location.pathname === ROUTES.LINKS} />
-        <SidebarItem isMinimized={isMinimized} to={ROUTES.NEWS} icon={Newspaper} label="News" active={location.pathname === ROUTES.NEWS} />
         <SidebarItem isMinimized={isMinimized} to={ROUTES.VOICE_INTERFACE} icon={Phone} label="Test call" active={location.pathname === ROUTES.VOICE_INTERFACE} />
         
         {authState.user?.role === "admin" && (
@@ -111,7 +109,7 @@ export default function Sidebar() {
         )}
         <SidebarItem isMinimized={isMinimized} to={ROUTES.PRICING} icon={CreditCard} label="Subscription" active={location.pathname === ROUTES.PRICING} />
         <SidebarItem isMinimized={isMinimized} to={ROUTES.SETTINGS} icon={Settings} label="Settings" active={location.pathname === ROUTES.SETTINGS} />
-        <SidebarItem isMinimized={isMinimized} to="/help" icon={HelpCircle} label="Help Center" active={location.pathname === "/help"} />
+        <SidebarItem isMinimized={isMinimized} to={ROUTES.HELP_CENTER} icon={HelpCircle} label="Help Center" active={location.pathname === ROUTES.HELP_CENTER} />
       </nav>
 
       <div className={`p-6 border-t border-[var(--border-main)] ${isMinimized ? 'flex justify-center px-2' : ''}`}>

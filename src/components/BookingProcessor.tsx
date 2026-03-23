@@ -9,6 +9,7 @@ import {
   increment,
   serverTimestamp,
   getDocs,
+  getDoc,
   setDoc,
   limit,
   runTransaction
@@ -54,6 +55,11 @@ export const BookingProcessor = () => {
           if (processingIds.current.has(callId)) continue;
           
           try {
+            // Fetch business timezone
+            const businessSnap = await getDoc(doc(db, "businesses", businessId));
+            const businessData = businessSnap.data();
+            const timezone = businessData?.timezone || "UTC";
+
             // Use a transaction to "lock" the document for processing
             // This prevents multiple tabs from processing the same call
             await runTransaction(db, async (transaction) => {
@@ -91,7 +97,7 @@ export const BookingProcessor = () => {
             }
 
             // 1. Extract data using Gemini
-            const result = await gemini.processTranscript(callData.transcript || "");
+            const result = await gemini.processTranscript(callData.transcript || "", timezone);
             console.log(`[BookingProcessor] Gemini result for ${callId}:`, result);
 
             // Prepare single update for the call
@@ -175,6 +181,11 @@ export const BookingProcessor = () => {
 
             console.log(`BookingProcessor: Successfully processed call ${callDoc.id}`);
           } catch (error) {
+            if (error instanceof Error && error.message === "Already processing or processed") {
+              console.log(`[BookingProcessor] Call ${callDoc.id} is already being handled elsewhere.`);
+              return;
+            }
+
             console.error(`BookingProcessor: Error processing call ${callDoc.id}:`, error);
             try {
               await updateDoc(callDoc.ref, { 

@@ -15,7 +15,8 @@ import {
   Loader2,
   MessageSquare,
   Send,
-  Settings
+  Settings,
+  ChevronDown
 } from "lucide-react";
 import { Agent, CallStatus, Business, SubscriptionPlan } from "../types";
 import { Logo } from "../components/Logo";
@@ -89,9 +90,11 @@ export default function PublicCallPage() {
   const [agent, setAgent] = useState<Agent | null>(null);
   const agentRef = useRef<Agent | null>(null);
   const [businessName, setBusinessName] = useState("");
+  const [businessTimezone, setBusinessTimezone] = useState("UTC");
   const [logoUrl, setLogoUrl] = useState("");
   const [backgroundUrl, setBackgroundUrl] = useState("");
   const [hasCredits, setHasCredits] = useState(true);
+  const [isTranscriptExpanded, setIsTranscriptExpanded] = useState(false);
 
   const elevenLabsAgent = useElevenLabsAgent({
     agentId: agent?.elevenLabsAgentId || "",
@@ -203,6 +206,7 @@ export default function PublicCallPage() {
         const data = businessDoc.data();
         console.log("PublicCallPage: business data received:", data);
         setBusinessName(data.name || "Our Business");
+        setBusinessTimezone(data.timezone || "UTC");
         setLogoUrl(data.logoUrl || "");
         setBackgroundUrl(data.backgroundUrl || "");
         
@@ -368,13 +372,26 @@ export default function PublicCallPage() {
       const businessDoc = await getDoc(doc(db, "businesses", businessId));
       const businessData = businessDoc.data();
       
+      const timezone = businessTimezone || businessData?.timezone || "UTC";
+      const now = new Date();
+      
       const dynamicVariables = {
         business_id: businessId,
         business_name: businessName || businessData?.name || "Our Business",
-        current_date: new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }),
-        current_time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+        current_date: now.toLocaleDateString('en-US', { 
+          weekday: 'long', 
+          year: 'numeric', 
+          month: 'long', 
+          day: 'numeric',
+          timeZone: timezone 
+        }),
+        current_time: now.toLocaleTimeString('en-US', { 
+          hour: '2-digit', 
+          minute: '2-digit',
+          timeZone: timezone 
+        }),
         business_hours: businessData?.businessHours ? businessData.businessHours.map((h: any) => `${h.day}: ${h.closed ? 'Closed' : `${h.open} - ${h.close}`}`).join(", ") : "Not provided",
-        timezone: businessData?.timezone || "Not provided",
+        timezone: timezone,
       };
 
       console.log("PublicCallPage: Starting call with dynamic variables:", dynamicVariables);
@@ -474,10 +491,10 @@ export default function PublicCallPage() {
         </div>
       )}
       
-      <main className="flex-1 w-full p-6 flex flex-col lg:flex-row lg:items-center justify-center gap-6 relative z-10">
+      <main className="flex-1 w-full p-6 flex flex-col items-center justify-center relative z-10">
         {/* Call Controls */}
-        <div className="flex-1 flex flex-col space-y-6 lg:sticky lg:top-24">
-          <div className="glass-card relative overflow-hidden flex flex-col items-center justify-center p-8 md:p-12 h-[500px] lg:h-[600px]">
+        <div className="w-full max-w-2xl flex flex-col space-y-6">
+          <div className="glass-card relative overflow-hidden flex flex-col items-center justify-center p-8 md:p-12 min-h-[600px]">
             <AnimatePresence>
               {isCalling && (
                 <motion.div 
@@ -514,9 +531,17 @@ export default function PublicCallPage() {
               <div className="space-y-6 w-full max-w-sm">
                 <div className="space-y-2">
                   <h2 className="text-2xl md:text-3xl font-bold text-[var(--text-main)] tracking-tight">{agent?.name || "AI Assistant"}</h2>
-                  <div className="flex items-center justify-center space-x-2 text-[var(--text-muted)] font-mono text-sm">
-                    <Clock className="w-4 h-4" />
-                    <span>{formatDuration(duration)}</span>
+                  <div className="flex items-center justify-center space-x-4 text-[var(--text-muted)] font-mono text-sm">
+                    <div className="flex items-center space-x-2">
+                      <Clock className="w-4 h-4" />
+                      <span>{formatDuration(duration)}</span>
+                    </div>
+                    {isConnected && (
+                      <div className="flex items-center space-x-1.5 px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full">
+                        <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
+                        <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">Connected</span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -607,89 +632,104 @@ export default function PublicCallPage() {
                   </motion.div>
                 )}
               </div>
+
+              {/* Collapsible Transcript Section */}
+              <div className="w-full max-w-md mx-auto space-y-4">
+                <div className="flex flex-col w-full bg-[var(--bg-card)]/50 border border-[var(--border-main)] rounded-2xl overflow-hidden shadow-sm">
+                  <button 
+                    onClick={() => setIsTranscriptExpanded(!isTranscriptExpanded)}
+                    className="w-full px-4 py-3 flex items-center justify-between hover:bg-[var(--bg-card-hover)] transition-colors"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <MessageSquare className="w-4 h-4 text-blue-400" />
+                      <span className="text-xs font-bold text-[var(--text-main)] uppercase tracking-widest">Live Transcript</span>
+                    </div>
+                    <div className="flex items-center space-x-3">
+                      {isAiThinking && (
+                        <div className="flex items-center space-x-1">
+                          <div className="w-1 h-1 bg-blue-500 rounded-full animate-bounce" />
+                          <div className="w-1 h-1 bg-blue-500 rounded-full animate-bounce [animation-delay:0.2s]" />
+                          <div className="w-1 h-1 bg-blue-500 rounded-full animate-bounce [animation-delay:0.4s]" />
+                        </div>
+                      )}
+                      <ChevronDown className={`w-4 h-4 text-[var(--text-muted)] transition-transform duration-300 ${isTranscriptExpanded ? 'rotate-180' : ''}`} />
+                    </div>
+                  </button>
+
+                  <AnimatePresence>
+                    {isTranscriptExpanded && (
+                      <motion.div 
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 200, opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        className="flex flex-col border-t border-[var(--border-main)]"
+                      >
+                        <div className="flex-1 p-4 overflow-y-auto space-y-4 custom-scrollbar bg-[var(--bg-main)]/30">
+                          {transcript.length === 0 ? (
+                            <div className="h-full flex flex-col items-center justify-center text-center space-y-2 opacity-30">
+                              <MessageSquare className="w-8 h-8 text-[var(--text-muted)]" />
+                              <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-widest">No messages yet</p>
+                            </div>
+                          ) : (
+                            <>
+                              {transcript.map((msg, i) => (
+                                <motion.div 
+                                  key={i}
+                                  initial={{ opacity: 0, y: 10 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  className={`flex flex-col w-full ${msg.role === "ai" ? "items-start" : "items-end"}`}
+                                >
+                                  <div className={`max-w-[85%] p-3 rounded-xl text-xs leading-relaxed shadow-sm ${
+                                    msg.role === "ai" 
+                                      ? "bg-[var(--bg-card)] text-[var(--text-main)] rounded-tl-none border border-[var(--border-main)]/50" 
+                                      : "bg-blue-500 text-white font-medium rounded-tr-none shadow-blue-500/10"
+                                  }`}>
+                                    {msg.text}
+                                  </div>
+                                </motion.div>
+                              ))}
+                              <div ref={transcriptEndRef} />
+                            </>
+                          )}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  {/* Chat Input Placeholder (Always visible when calling) */}
+                  <div className="p-3 bg-[var(--bg-card)] border-t border-[var(--border-main)]">
+                    <form 
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        handleSendMessage(inputText);
+                      }}
+                      className="relative"
+                    >
+                      <input 
+                        type="text" 
+                        value={inputText}
+                        onChange={(e) => setInputText(e.target.value)}
+                        disabled={!isCalling}
+                        placeholder={isCalling ? "Type a message..." : "Start a call to chat..."}
+                        className="w-full pl-4 pr-10 py-2.5 bg-[var(--bg-main)] border border-[var(--border-main)] rounded-xl text-xs text-[var(--text-main)] focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all disabled:opacity-50"
+                      />
+                      <button 
+                        type="submit"
+                        disabled={!isCalling || !inputText.trim()}
+                        className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1.5 bg-blue-500 text-white rounded-lg hover:bg-blue-400 transition-colors disabled:opacity-50"
+                      >
+                        <Send className="w-3.5 h-3.5" />
+                      </button>
+                    </form>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
           {/* Removed security footer */}
         </div>
 
-        {/* Transcript */}
-        <div className="w-full lg:w-96 glass-card flex flex-col h-[500px] lg:h-[600px] lg:sticky lg:top-24 overflow-hidden">
-          <div className="p-6 border-b border-[var(--border-main)] flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <MessageSquare className="w-5 h-5 text-blue-400" />
-              <h3 className="font-semibold text-[var(--text-main)]">Live Transcript</h3>
-            </div>
-            <div className="flex items-center space-x-3">
-              {isAiThinking && (
-                <div className="flex items-center space-x-1">
-                  <div className="w-1 h-1 bg-blue-500 rounded-full animate-bounce" />
-                  <div className="w-1 h-1 bg-blue-500 rounded-full animate-bounce [animation-delay:0.2s]" />
-                  <div className="w-1 h-1 bg-blue-500 rounded-full animate-bounce [animation-delay:0.4s]" />
-                </div>
-              )}
-              <button 
-                onClick={() => setTranscript([])}
-                className="text-[10px] font-bold text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors uppercase tracking-widest"
-              >
-                Clear
-              </button>
-            </div>
-          </div>
-          <div className="flex-1 p-6 overflow-y-auto space-y-6 custom-scrollbar">
-            {transcript.length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center text-center space-y-4 opacity-30">
-                <MessageSquare className="w-12 h-12 text-[var(--text-muted)]" />
-                <p className="text-sm text-[var(--text-muted)]">Transcript will appear here <br /> once the call starts.</p>
-              </div>
-            ) : (
-              <>
-                {transcript.map((msg, i) => (
-                  <motion.div 
-                    key={i}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className={`flex flex-col w-full ${msg.role === "ai" ? "items-start" : "items-end"}`}
-                  >
-                    <div className={`max-w-[90%] p-4 rounded-2xl text-sm leading-relaxed shadow-sm ${
-                      msg.role === "ai" 
-                        ? "bg-[var(--bg-card)]/80 text-[var(--text-main)] rounded-tl-none border border-[var(--border-main)]/50" 
-                        : "bg-blue-500 text-white font-medium rounded-tr-none shadow-blue-500/10"
-                    }`}>
-                      {msg.text}
-                    </div>
-                  </motion.div>
-                ))}
-                <div ref={transcriptEndRef} />
-              </>
-            )}
-          </div>
-          <div className="p-4 bg-[var(--bg-card)]/50 border-t border-[var(--border-main)]">
-            <form 
-              onSubmit={(e) => {
-                e.preventDefault();
-                handleSendMessage(inputText);
-              }}
-              className="relative"
-            >
-              <input 
-                type="text" 
-                value={inputText}
-                onChange={(e) => setInputText(e.target.value)}
-                disabled={!isCalling}
-                placeholder={isCalling ? "Type a message..." : "Start a call to chat..."}
-                className="w-full pl-4 pr-12 py-3 bg-[var(--bg-main)] border border-[var(--border-main)] rounded-xl text-sm text-[var(--text-main)] focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all disabled:opacity-50"
-              />
-              <button 
-                type="submit"
-                disabled={!isCalling || !inputText.trim()}
-                className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-400 transition-colors disabled:opacity-50"
-              >
-                <Send className="w-4 h-4" />
-              </button>
-            </form>
-          </div>
-        </div>
       </main>
     </div>
   );

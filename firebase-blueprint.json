@@ -28,12 +28,24 @@
       "properties": {
         "businessId": { "type": "string", "description": "The ID of the business this agent belongs to." },
         "name": { "type": "string" },
-        "voiceId": { "type": "string" },
-        "prompt": { "type": "string" },
-        "isActive": { "type": "boolean" },
-        "createdAt": { "type": "string", "format": "date-time" }
+        "voice": { "type": "string" },
+        "voiceProvider": { "type": "string", "enum": ["GEMINI", "ELEVENLABS"] },
+        "instructions": { "type": "string" },
+        "knowledgeBase": { "type": "string" },
+        "language": { "type": "string" },
+        "elevenLabsAgentId": { "type": "string" },
+        "voiceSettings": {
+          "type": "object",
+          "properties": {
+            "stability": { "type": "number" },
+            "similarity_boost": { "type": "number" },
+            "speed": { "type": "number" }
+          }
+        },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["businessId", "name", "isActive"]
+      "required": ["businessId", "name", "voice", "instructions"]
     },
     "Call": {
       "title": "Call",

@@ -72,6 +72,11 @@ export default function AgentPage() {
   const [showTemplatesModal, setShowTemplatesModal] = useState(false);
   const [availableVoices, setAvailableVoices] = useState<any[]>(DEFAULT_VOICES);
   const [playingVoiceId, setPlayingVoiceId] = useState<string | null>(null);
+  const [voiceSettings, setVoiceSettings] = useState({
+    stability: 0.5,
+    similarity_boost: 0.75,
+    speed: 1.0
+  });
   const [audio, setAudio] = useState<HTMLAudioElement | null>(null);
   const navigate = useNavigate();
   const { showToast } = useToast();
@@ -122,10 +127,18 @@ export default function AgentPage() {
         if (!querySnapshot.empty) {
           const agentDoc = querySnapshot.docs[0];
           const agentData = agentDoc.data();
-          setAgent({ 
+          const loadedAgent = { 
             id: agentDoc.id, 
             ...agentData
-          } as Agent);
+          } as Agent;
+          setAgent(loadedAgent);
+          if (loadedAgent.voiceSettings) {
+            setVoiceSettings({
+              stability: loadedAgent.voiceSettings.stability ?? 0.5,
+              similarity_boost: loadedAgent.voiceSettings.similarity_boost ?? 0.75,
+              speed: loadedAgent.voiceSettings.speed ?? 1.0
+            });
+          }
         } else {
           // Create default agent if none exists
           const defaultAgent: Omit<Agent, "id"> = {
@@ -272,17 +285,17 @@ export default function AgentPage() {
         if (elevenlabsService) {
           if (!agentId) {
             setSaveStatus("Creating ElevenLabs Agent...");
-            agentId = await elevenlabsService.createAgent(agent.name, fullInstructions, agent.voice);
+            agentId = await elevenlabsService.createAgent(agent.name, fullInstructions, agent.voice, voiceSettings);
           } else {
             try {
               setSaveStatus("Updating ElevenLabs Agent...");
-              await elevenlabsService.updateAgent(agentId, agent.name, fullInstructions, agent.voice);
+              await elevenlabsService.updateAgent(agentId, agent.name, fullInstructions, agent.voice, voiceSettings);
             } catch (updateError: any) {
               // If agent not found on ElevenLabs, try creating it
               if (updateError.message?.includes("not found") || updateError.message?.includes("404")) {
                 console.warn("Agent not found on ElevenLabs, re-creating...");
                 setSaveStatus("Re-creating ElevenLabs Agent...");
-                agentId = await elevenlabsService.createAgent(agent.name, fullInstructions, agent.voice);
+                agentId = await elevenlabsService.createAgent(agent.name, fullInstructions, agent.voice, voiceSettings);
               } else {
                 throw updateError;
               }
@@ -293,16 +306,17 @@ export default function AgentPage() {
         console.warn("ElevenLabs sync failed, but will save to database:", elevenLabsError);
         showToast("Voice agent sync failed. Please check your ElevenLabs API key in Settings > Secrets.", "warning");
       }
-
+ 
       setSaveStatus("Saving to database...");
       const agentRef = doc(db, `businesses/${businessId}/agents`, agent.id);
       await setDoc(agentRef, {
         ...agent,
+        voiceSettings,
         elevenLabsAgentId: agentId || "",
         updatedAt: serverTimestamp()
       }, { merge: true });
       
-      setAgent(prev => prev ? { ...prev, elevenLabsAgentId: agentId || "" } : null);
+      setAgent(prev => prev ? { ...prev, elevenLabsAgentId: agentId || "", voiceSettings } : null);
       setSaveStatus("Saved successfully!");
       showToast("Agent configuration saved locally.", "success");
       setTimeout(() => setSaveStatus(""), 3000);
@@ -600,6 +614,67 @@ export default function AgentPage() {
                 </div>
               </div>
             ))}
+          </div>
+
+          {/* Voice Settings */}
+          <div className="mt-8 pt-6 border-t border-blue-500/10 space-y-6">
+            <div className="flex items-center space-x-2 text-blue-500">
+              <Zap className="w-4 h-4" />
+              <h3 className="text-sm font-bold uppercase tracking-wider">Voice Fine-tuning</h3>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-muted uppercase tracking-widest">Stability</label>
+                  <span className="text-xs font-mono text-blue-500 font-bold">{Math.round(voiceSettings.stability * 100)}%</span>
+                </div>
+                <input 
+                  type="range" 
+                  min="0" 
+                  max="1" 
+                  step="0.01"
+                  value={voiceSettings.stability}
+                  onChange={(e) => setVoiceSettings({ ...voiceSettings, stability: parseFloat(e.target.value) })}
+                  className="w-full h-1.5 bg-blue-500/10 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                />
+                <p className="text-[9px] text-muted leading-relaxed">Lower values make the voice more expressive but can be unstable.</p>
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-muted uppercase tracking-widest">Clarity</label>
+                  <span className="text-xs font-mono text-blue-500 font-bold">{Math.round(voiceSettings.similarity_boost * 100)}%</span>
+                </div>
+                <input 
+                  type="range" 
+                  min="0" 
+                  max="1" 
+                  step="0.01"
+                  value={voiceSettings.similarity_boost}
+                  onChange={(e) => setVoiceSettings({ ...voiceSettings, similarity_boost: parseFloat(e.target.value) })}
+                  className="w-full h-1.5 bg-blue-500/10 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                />
+                <p className="text-[9px] text-muted leading-relaxed">Higher values boost clarity and similarity to the original voice.</p>
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-muted uppercase tracking-widest">Speaking Speed</label>
+                  <span className="text-xs font-mono text-blue-500 font-bold">{voiceSettings.speed}x</span>
+                </div>
+                <input 
+                  type="range" 
+                  min="0.5" 
+                  max="2.0" 
+                  step="0.1"
+                  value={voiceSettings.speed}
+                  onChange={(e) => setVoiceSettings({ ...voiceSettings, speed: parseFloat(e.target.value) })}
+                  className="w-full h-1.5 bg-blue-500/10 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                />
+                <p className="text-[9px] text-muted leading-relaxed">Adjust how fast the agent speaks. 1.0 is normal speed.</p>
+              </div>
+            </div>
           </div>
         </div>
 

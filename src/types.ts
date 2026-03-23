@@ -98,6 +98,11 @@ export interface Agent {
   language?: string;
   businessId: string;
   elevenLabsAgentId?: string;
+  voiceSettings?: {
+    stability: number;
+    similarity_boost: number;
+    speed?: number;
+  };
 }
 
 export interface CalendarEvent {
