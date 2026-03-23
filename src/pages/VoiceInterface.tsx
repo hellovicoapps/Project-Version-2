@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { formatInTimeZone } from "date-fns-tz";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Phone, 
@@ -32,7 +33,7 @@ import {
   addDoc,
   serverTimestamp
 } from "firebase/firestore";
-import { db, handleFirestoreError, OperationType } from "../firebase";
+import { db, handleFirestoreError, OperationType, auth } from "../firebase";
 import { AuthService } from "../services/authService";
 import { useToast } from "../components/Toast";
 import { Logo } from "../components/Logo";
@@ -269,6 +270,33 @@ export default function VoiceInterface() {
         createdAt: serverTimestamp()
       });
       
+      // Send confirmation email if booked
+      if (callStatus === CallStatus.BOOKED && callerEmail && bookingTime) {
+        try {
+          const businessDoc = await getDoc(doc(db, "businesses", businessId));
+          const businessTimezone = businessDoc.exists() ? (businessDoc.data().timezone || "UTC") : "UTC";
+          const bookingDate = new Date(bookingTime);
+          const formattedTime = formatInTimeZone(bookingDate, businessTimezone, "MMMM d, yyyy 'at' h:mm a");
+          const idToken = await auth.currentUser?.getIdToken();
+          await fetch("/api/send-email", {
+            method: "POST",
+            headers: { 
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${idToken}`
+            },
+            body: JSON.stringify({
+              to: callerEmail,
+              subject: "Appointment Confirmation",
+              text: `Hi ${callerName || "there"},\n\nYour appointment has been confirmed for ${formattedTime} (${businessTimezone}).\n\nPurpose: ${bookingPurpose || "Appointment"}\n\nThank you!`,
+              html: `<p>Hi ${callerName || "there"},</p><p>Your appointment has been confirmed for <strong>${formattedTime} (${businessTimezone})</strong>.</p><p>Purpose: ${bookingPurpose || "Appointment"}</p><p>Thank you!</p>`
+            })
+          });
+          console.log(`VoiceInterface: Sent confirmation email to ${callerEmail}`);
+        } catch (emailError) {
+          console.error(`VoiceInterface: Failed to send confirmation email to ${callerEmail}:`, emailError);
+        }
+      }
+
       setStatus("Call saved");
 
       // Deduct credits

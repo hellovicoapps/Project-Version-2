@@ -123,7 +123,7 @@ export class AuthService {
           ownerId: firebaseUser.uid,
           email: firebaseUser.email,
           createdAt: serverTimestamp(),
-          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
+          timezone: "Asia/Manila",
           calendarConnected: false,
           plan: "FREE",
           totalMinutes: 60,

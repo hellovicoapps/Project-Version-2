@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   ChevronLeft, 
@@ -13,7 +13,8 @@ import {
   Filter,
   LayoutGrid,
   List,
-  CalendarDays
+  CalendarDays,
+  Globe
 } from "lucide-react";
 import { 
   format, 
@@ -48,10 +49,11 @@ import {
   addDoc,
   serverTimestamp
 } from "firebase/firestore";
-import { db, handleFirestoreError, OperationType } from "../firebase";
+import { db, auth, handleFirestoreError, OperationType } from "../firebase";
 import { AuthService } from "../services/authService";
 import { useToast } from "../components/Toast";
 import { CallStatus } from "../types";
+import { TIMEZONES } from "../constants";
 
 export default function CalendarPage() {
   const [businessTimezone, setBusinessTimezone] = useState("UTC");
@@ -64,6 +66,7 @@ export default function CalendarPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [newBooking, setNewBooking] = useState({
     callerName: "",
+    callerEmail: "",
     date: formatInTimeZone(new Date(), "UTC", "yyyy-MM-dd"),
     time: "10:00",
     bookingPurpose: ""
@@ -95,7 +98,7 @@ export default function CalendarPage() {
       console.log(`CalendarPage: Found ${snapshot.docs.length} total calls`);
       const bookingData = snapshot.docs.map(doc => {
         const data = doc.data();
-        let bookingDate = null;
+        let utcDateObj = null;
         
         if (data.bookingTime) {
           try {
@@ -108,7 +111,7 @@ export default function CalendarPage() {
             }
 
             if (!isNaN(utcDate.getTime())) {
-              bookingDate = toZonedTime(utcDate, businessTimezone);
+              utcDateObj = utcDate;
             } else {
               console.warn(`CalendarPage: Invalid bookingTime for call ${doc.id}:`, data.bookingTime);
             }
@@ -120,9 +123,9 @@ export default function CalendarPage() {
         return {
           id: doc.id,
           ...data,
-          parsedDate: bookingDate
+          utcDate: utcDateObj
         };
-      }).filter(b => b.parsedDate !== null);
+      }).filter(b => b.utcDate !== null);
 
       setBookings(bookingData);
       setLoading(false);
@@ -133,6 +136,13 @@ export default function CalendarPage() {
 
     return () => unsubscribe();
   }, [businessId]);
+
+  const processedBookings = useMemo(() => {
+    return bookings.map(b => ({
+      ...b,
+      parsedDate: b.utcDate ? toZonedTime(b.utcDate, businessTimezone) : null
+    })).filter(b => b.parsedDate !== null);
+  }, [bookings, businessTimezone]);
 
   const handleSaveAppointment = async () => {
     if (!businessId) return;
@@ -154,7 +164,7 @@ export default function CalendarPage() {
       
       const callsRef = collection(db, `businesses/${businessId}/calls`);
       
-      await addDoc(callsRef, {
+      const callData: any = {
         businessId,
         agentId: "manual",
         status: CallStatus.BOOKED,
@@ -166,12 +176,43 @@ export default function CalendarPage() {
         summary: `Manually added appointment for ${newBooking.callerName}`,
         answeredCorrectly: true,
         phoneNumber: "Manual Entry"
-      });
+      };
+
+      if (newBooking.callerEmail) {
+        callData.callerEmail = newBooking.callerEmail;
+      }
+
+      await addDoc(callsRef, callData);
+
+      // Send confirmation email if email is provided
+      if (newBooking.callerEmail) {
+        try {
+          const formattedTime = formatInTimeZone(utcDate, businessTimezone, "MMMM d, yyyy 'at' h:mm a");
+          const idToken = await auth.currentUser?.getIdToken();
+          await fetch("/api/send-email", {
+            method: "POST",
+            headers: { 
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${idToken}`
+            },
+            body: JSON.stringify({
+              to: newBooking.callerEmail,
+              subject: "Appointment Confirmation",
+              text: `Hi ${newBooking.callerName},\n\nYour appointment has been confirmed for ${formattedTime} (${businessTimezone}).\n\nPurpose: ${newBooking.bookingPurpose || "Manual Booking"}\n\nThank you!`,
+              html: `<p>Hi ${newBooking.callerName},</p><p>Your appointment has been confirmed for <strong>${formattedTime} (${businessTimezone})</strong>.</p><p>Purpose: ${newBooking.bookingPurpose || "Manual Booking"}</p><p>Thank you!</p>`
+            })
+          });
+        } catch (emailError) {
+          console.error("Failed to send confirmation email:", emailError);
+          showToast("Appointment saved, but failed to send email.", "error");
+        }
+      }
 
       showToast("Appointment added successfully");
       setIsAddModalOpen(false);
       setNewBooking({
         callerName: "",
+        callerEmail: "",
         date: formatInTimeZone(new Date(), businessTimezone, "yyyy-MM-dd"),
         time: "10:00",
         bookingPurpose: ""
@@ -209,7 +250,7 @@ export default function CalendarPage() {
     end: setHours(startOfDay(currentDate), 23)
   });
 
-  const filteredBookings = bookings.filter(b => 
+  const filteredBookings = processedBookings.filter(b => 
     (b.callerName?.toLowerCase() || "").includes(searchQuery.toLowerCase()) ||
     (b.bookingPurpose?.toLowerCase() || "").includes(searchQuery.toLowerCase())
   );
@@ -259,7 +300,7 @@ export default function CalendarPage() {
       </div>
 
       {/* Calendar Controls */}
-      <div className="flex items-center justify-between bg-[var(--bg-card)]/50 p-4 rounded-2xl border border-[var(--border-main)]">
+      <div className="flex flex-col md:flex-row md:items-center justify-between bg-[var(--bg-card)]/50 p-4 rounded-2xl border border-[var(--border-main)] gap-4">
         <div className="flex items-center space-x-4">
           <h2 className="text-xl font-bold text-[var(--text-main)] min-w-[200px]">
             {format(currentDate, view === 'day' ? "MMMM d, yyyy" : "MMMM yyyy")}
@@ -286,23 +327,41 @@ export default function CalendarPage() {
           </div>
         </div>
 
-        <div className="flex items-center space-x-2">
-          <div className="relative">
-            <Search className="w-4 h-4 text-[var(--text-muted)] absolute left-3 top-1/2 -translate-y-1/2" />
-            <input 
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search bookings..."
-              className="bg-[var(--bg-main)] border border-[var(--border-main)] rounded-xl py-2 pl-10 pr-4 text-sm focus:outline-none focus:border-[var(--brand-primary)]/50 transition-all w-64 text-[var(--text-main)]"
-            />
+        <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2 bg-[var(--bg-main)] border border-[var(--border-main)] rounded-xl px-3 py-2">
+            <Globe className="w-4 h-4 text-[var(--text-muted)]" />
+            <select 
+              value={businessTimezone}
+              onChange={(e) => {
+                setBusinessTimezone(e.target.value);
+                setCurrentDate(toZonedTime(new Date(), e.target.value));
+              }}
+              className="bg-transparent text-sm text-[var(--text-main)] focus:outline-none appearance-none cursor-pointer pr-4"
+            >
+              {TIMEZONES.map(tz => (
+                <option key={tz} value={tz}>{tz}</option>
+              ))}
+            </select>
           </div>
-          <button 
-            onClick={() => setSearchQuery("")}
-            className="p-2 bg-[var(--bg-main)] border border-[var(--border-main)] rounded-xl text-[var(--text-muted)] hover:text-[var(--text-main)] transition-all"
-          >
-            <Filter className="w-5 h-5" />
-          </button>
+
+          <div className="flex items-center space-x-2">
+            <div className="relative">
+              <Search className="w-4 h-4 text-[var(--text-muted)] absolute left-3 top-1/2 -translate-y-1/2" />
+              <input 
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search bookings..."
+                className="bg-[var(--bg-main)] border border-[var(--border-main)] rounded-xl py-2 pl-10 pr-4 text-sm focus:outline-none focus:border-[var(--brand-primary)]/50 transition-all w-64 text-[var(--text-main)]"
+              />
+            </div>
+            <button 
+              onClick={() => setSearchQuery("")}
+              className="p-2 bg-[var(--bg-main)] border border-[var(--border-main)] rounded-xl text-[var(--text-muted)] hover:text-[var(--text-main)] transition-all"
+            >
+              <Filter className="w-5 h-5" />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -511,6 +570,16 @@ export default function CalendarPage() {
                     onChange={(e) => setNewBooking(prev => ({ ...prev, callerName: e.target.value }))}
                     className="w-full bg-[var(--bg-main)] border border-[var(--border-main)] rounded-xl px-4 py-3 focus:outline-none focus:border-[var(--brand-primary)] transition-all text-[var(--text-main)]" 
                     placeholder="John Doe" 
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest mb-2">Customer Email (Optional)</label>
+                  <input 
+                    type="email" 
+                    value={newBooking.callerEmail}
+                    onChange={(e) => setNewBooking(prev => ({ ...prev, callerEmail: e.target.value }))}
+                    className="w-full bg-[var(--bg-main)] border border-[var(--border-main)] rounded-xl px-4 py-3 focus:outline-none focus:border-[var(--brand-primary)] transition-all text-[var(--text-main)]" 
+                    placeholder="john@example.com" 
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4">

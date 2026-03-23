@@ -9,6 +9,8 @@ import admin from "firebase-admin";
 import { getFirestore } from "firebase-admin/firestore";
 import fs from "fs";
 import { GoogleGenAI, Type } from "@google/genai";
+import nodemailer from "nodemailer";
+import { formatInTimeZone } from "date-fns-tz";
 
 const firebaseConfig = JSON.parse(fs.readFileSync("./firebase-applet-config.json", "utf-8"));
 
@@ -142,6 +144,23 @@ async function runWithDbRetry<T>(operation: (db: admin.firestore.Firestore) => P
     throw e;
   }
 }
+
+// User Middleware
+const verifyUser = async (req: any, res: any, next: any) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+  const idToken = authHeader.split("Bearer ")[1];
+  try {
+    const decodedToken = await admin.auth().verifyIdToken(idToken);
+    req.userUid = decodedToken.uid;
+    return next();
+  } catch (error) {
+    console.error("[Server] verifyUser: Error verifying token:", error);
+    return res.status(403).json({ message: "Forbidden" });
+  }
+};
 
 // Admin Middleware
 const verifyAdmin = async (req: any, res: any, next: any) => {
@@ -411,6 +430,38 @@ async function startBookingProcessor() {
               }
 
               await callDoc.ref.set(updateData, { merge: true });
+
+              // Send confirmation email if booked
+              if (updateData.status === "BOOKED" && updateData.callerEmail && updateData.bookingTime) {
+                if (process.env.SMTP_USER && process.env.SMTP_PASS) {
+                  try {
+                    const transporter = nodemailer.createTransport({
+                      service: 'gmail',
+                      auth: {
+                        user: process.env.SMTP_USER,
+                        pass: process.env.SMTP_PASS,
+                      },
+                    });
+                    
+                    const bookingDate = new Date(updateData.bookingTime);
+                    const formattedTime = formatInTimeZone(bookingDate, timezone, "MMMM d, yyyy 'at' h:mm a");
+                    const callerName = updateData.callerName || "there";
+                    
+                    await transporter.sendMail({
+                      from: process.env.SMTP_USER,
+                      to: updateData.callerEmail,
+                      subject: "Appointment Confirmation",
+                      text: `Hi ${callerName},\n\nYour appointment has been confirmed for ${formattedTime} (${timezone}).\n\nPurpose: ${updateData.bookingPurpose || "Appointment"}\n\nThank you!`,
+                      html: `<p>Hi ${callerName},</p><p>Your appointment has been confirmed for <strong>${formattedTime} (${timezone})</strong>.</p><p>Purpose: ${updateData.bookingPurpose || "Appointment"}</p><p>Thank you!</p>`
+                    });
+                    console.log(`[Server] Sent confirmation email to ${updateData.callerEmail}`);
+                  } catch (emailError) {
+                    console.error(`[Server] Failed to send confirmation email to ${updateData.callerEmail}:`, emailError);
+                  }
+                } else {
+                  console.warn("[Server] SMTP credentials not configured. Skipping confirmation email.");
+                }
+              }
 
               // CRM Integration
               const phoneNumber = updateData.phoneNumber || callData.phoneNumber;
@@ -1026,6 +1077,39 @@ app.get("/api/elevenlabs/conversations/:id", async (req, res) => {
     res.status(r.status).send(await r.text());
   } catch (e: any) {
     res.status(500).json({ error: e.message });
+  }
+});
+
+// Email Integration
+app.post("/api/send-email", verifyUser, async (req, res) => {
+  const { to, subject, text, html } = req.body;
+  
+  if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+    return res.status(500).json({ error: "Email credentials not configured on server. Please set SMTP_USER and SMTP_PASS in Settings > Secrets." });
+  }
+
+  try {
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+    });
+
+    const mailOptions = {
+      from: process.env.SMTP_USER,
+      to,
+      subject,
+      text,
+      html,
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    res.json({ success: true, messageId: info.messageId });
+  } catch (error: any) {
+    console.error("Server Email Error:", error);
+    res.status(500).json({ error: error.message });
   }
 });
 

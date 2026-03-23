@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { formatInTimeZone } from "date-fns-tz";
 import { 
   collection, 
   query, 
@@ -14,7 +15,7 @@ import {
   limit,
   runTransaction
 } from "firebase/firestore";
-import { db } from "../firebase";
+import { db, auth } from "../firebase";
 import { getGeminiService } from "../services/geminiService";
 import { CallStatus } from "../types";
 import { AuthService } from "../services/authService";
@@ -132,6 +133,31 @@ export const BookingProcessor = () => {
             // Perform the main call update ONCE
             await updateDoc(callDoc.ref, updateData);
             
+            // Send confirmation email if booked
+            if (updateData.status === CallStatus.BOOKED && callerEmail && updateData.bookingTime) {
+              try {
+                const bookingDate = new Date(updateData.bookingTime);
+                const formattedTime = formatInTimeZone(bookingDate, timezone, "MMMM d, yyyy 'at' h:mm a");
+                const idToken = await auth.currentUser?.getIdToken();
+                await fetch("/api/send-email", {
+                  method: "POST",
+                  headers: { 
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${idToken}`
+                  },
+                  body: JSON.stringify({
+                    to: callerEmail,
+                    subject: "Appointment Confirmation",
+                    text: `Hi ${callerName || "there"},\n\nYour appointment has been confirmed for ${formattedTime} (${timezone}).\n\nPurpose: ${updateData.bookingPurpose || "Appointment"}\n\nThank you!`,
+                    html: `<p>Hi ${callerName || "there"},</p><p>Your appointment has been confirmed for <strong>${formattedTime} (${timezone})</strong>.</p><p>Purpose: ${updateData.bookingPurpose || "Appointment"}</p><p>Thank you!</p>`
+                  })
+                });
+                console.log(`BookingProcessor: Sent confirmation email to ${callerEmail}`);
+              } catch (emailError) {
+                console.error(`BookingProcessor: Failed to send confirmation email to ${callerEmail}:`, emailError);
+              }
+            }
+
             // CRM Integration: Update or Create Contact
             if (phoneNumber && phoneNumber !== "Unknown") {
               try {
