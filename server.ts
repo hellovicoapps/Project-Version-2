@@ -433,12 +433,13 @@ async function startBookingProcessor() {
 
               // Send confirmation email if booked
               if (updateData.status === "BOOKED" && updateData.callerEmail && updateData.bookingTime) {
-                if (process.env.SMTP_PASS) {
+                const resendApiKey = process.env.RESEND_API_KEY || process.env.SMTP_PASS;
+                if (resendApiKey) {
                   try {
                     const businessData = businessDoc.data() || {};
                     const businessName = businessData.name || "Vico";
                     const businessEmail = businessData.email || process.env.SMTP_USER;
-                    const fromEmail = process.env.SMTP_FROM_EMAIL || "notifications@vicoapps.com";
+                    const fromEmail = process.env.RESEND_FROM_EMAIL || process.env.SMTP_FROM_EMAIL || "notifications@vicoapps.com";
 
                     const transporter = nodemailer.createTransport({
                       host: "smtp.resend.com",
@@ -446,7 +447,7 @@ async function startBookingProcessor() {
                       secure: true,
                       auth: {
                         user: "resend",
-                        pass: process.env.SMTP_PASS,
+                        pass: resendApiKey,
                       },
                     });
                     
@@ -1052,8 +1053,9 @@ app.get("/api/elevenlabs/conversations/:id", async (req, res) => {
 app.post("/api/send-email", verifyUser, async (req: any, res) => {
   const { to, subject, text, html } = req.body;
   
-  if (!process.env.SMTP_PASS) {
-    return res.status(500).json({ error: "Email credentials not configured on server. Please set SMTP_PASS in Settings > Secrets." });
+  const resendApiKey = process.env.RESEND_API_KEY || process.env.SMTP_PASS;
+  if (!resendApiKey) {
+    return res.status(500).json({ error: "Email credentials not configured on server. Please set RESEND_API_KEY in Settings > Secrets." });
   }
 
   try {
@@ -1062,7 +1064,7 @@ app.post("/api/send-email", verifyUser, async (req: any, res) => {
     const businessData = businessDoc.data() || {};
     const businessName = businessData.name || "Vico";
     const businessEmail = businessData.email || process.env.SMTP_USER;
-    const fromEmail = process.env.SMTP_FROM_EMAIL || "notifications@vicoapps.com";
+    const fromEmail = process.env.RESEND_FROM_EMAIL || process.env.SMTP_FROM_EMAIL || "notifications@vicoapps.com";
 
     const transporter = nodemailer.createTransport({
       host: "smtp.resend.com",
@@ -1070,7 +1072,7 @@ app.post("/api/send-email", verifyUser, async (req: any, res) => {
       secure: true,
       auth: {
         user: "resend",
-        pass: process.env.SMTP_PASS,
+        pass: resendApiKey,
       },
     });
 
