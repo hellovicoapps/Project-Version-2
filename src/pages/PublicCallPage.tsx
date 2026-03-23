@@ -546,14 +546,14 @@ export default function PublicCallPage() {
                 </div>
 
                 {/* Futuristic Soundwave Animation */}
-                <div className="flex items-end justify-center space-x-1.5 h-16 px-4">
+                <div className="flex items-end justify-center space-x-1.5 h-10 px-4">
                   {[...Array(24)].map((_, i) => {
-                    const baseHeight = 15 + (i % 7) * 6;
+                    const baseHeight = 10 + (i % 7) * 4;
                     return (
                       <motion.div
                         key={i}
                         animate={isCalling ? {
-                          height: [8, baseHeight, 12, baseHeight + 12, 8],
+                          height: [6, baseHeight, 8, baseHeight + 8, 6],
                           opacity: [0.3, 1, 0.3],
                         } : {
                           height: 4,
@@ -572,65 +572,6 @@ export default function PublicCallPage() {
                     );
                   })}
                 </div>
-              </div>
-
-              <div className="flex flex-col items-center space-y-6 pt-4">
-                <div className="flex items-center space-x-6">
-                  <button 
-                    onClick={() => setIsMuted(!isMuted)}
-                    className={`p-4 rounded-2xl border transition-all ${
-                      isMuted ? "bg-rose-500/10 border-rose-500/20 text-rose-400" : "bg-[var(--bg-card)] border-[var(--border-main)] text-[var(--text-muted)] hover:text-[var(--text-main)]"
-                    }`}
-                  >
-                    {isMuted ? <MicOff className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
-                  </button>
-
-                  <button 
-                    onClick={handleCall}
-                    className={`w-20 h-20 rounded-full flex items-center justify-center shadow-2xl transition-all transform active:scale-95 ${
-                      isCalling 
-                        ? "bg-rose-500 hover:bg-rose-600 text-white shadow-rose-500/20 rotate-[135deg]" 
-                        : "bg-blue-500 hover:bg-blue-600 text-white shadow-blue-500/20"
-                    }`}
-                  >
-                    {status === "Connecting..." ? <Loader2 className="w-8 h-8 animate-spin" /> : <Phone className="w-8 h-8" />}
-                  </button>
-
-                  <button 
-                    onClick={() => {
-                      if (isSpeakerOn) {
-                        setVolume(0);
-                      } else {
-                        setVolume(1);
-                      }
-                      setIsSpeakerOn(!isSpeakerOn);
-                    }}
-                    className={`p-4 rounded-2xl border transition-all ${
-                      !isSpeakerOn ? "bg-rose-500/10 border-rose-500/20 text-rose-400" : "bg-[var(--bg-card)] border-[var(--border-main)] text-[var(--text-muted)] hover:text-[var(--text-main)]"
-                    }`}
-                  >
-                    {isSpeakerOn ? <Volume2 className="w-6 h-6" /> : <VolumeX className="w-6 h-6" />}
-                  </button>
-                </div>
-
-                {isCalling && (
-                  <motion.div 
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="flex items-center space-x-3 bg-[var(--bg-card)]/50 backdrop-blur-md border border-[var(--border-main)] px-4 py-2 rounded-2xl"
-                  >
-                    <Volume2 className="w-4 h-4 text-[var(--text-muted)]" />
-                    <input 
-                      type="range" 
-                      min="0" 
-                      max="1" 
-                      step="0.01" 
-                      value={volume}
-                      onChange={(e) => setVolume(parseFloat(e.target.value))}
-                      className="w-32 h-1 bg-[var(--border-main)] rounded-lg appearance-none cursor-pointer accent-blue-500"
-                    />
-                  </motion.div>
-                )}
               </div>
 
               {/* Collapsible Transcript Section */}
@@ -723,6 +664,65 @@ export default function PublicCallPage() {
                     </form>
                   </div>
                 </div>
+              </div>
+
+              <div className="flex flex-col items-center space-y-6 pt-4">
+                <div className="flex items-center space-x-6">
+                  <button 
+                    onClick={() => setIsMuted(!isMuted)}
+                    className={`p-4 rounded-2xl border transition-all ${
+                      isMuted ? "bg-rose-500/10 border-rose-500/20 text-rose-400" : "bg-[var(--bg-card)] border-[var(--border-main)] text-[var(--text-muted)] hover:text-[var(--text-main)]"
+                    }`}
+                  >
+                    {isMuted ? <MicOff className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
+                  </button>
+
+                  <button 
+                    onClick={handleCall}
+                    className={`w-20 h-20 rounded-full flex items-center justify-center shadow-2xl transition-all transform active:scale-95 ${
+                      isCalling 
+                        ? "bg-rose-500 hover:bg-rose-600 text-white shadow-rose-500/20 rotate-[135deg]" 
+                        : "bg-blue-500 hover:bg-blue-600 text-white shadow-blue-500/20"
+                    }`}
+                  >
+                    {status === "Connecting..." ? <Loader2 className="w-8 h-8 animate-spin" /> : <Phone className="w-8 h-8" />}
+                  </button>
+
+                  <button 
+                    onClick={() => {
+                      if (isSpeakerOn) {
+                        setVolume(0);
+                      } else {
+                        setVolume(1);
+                      }
+                      setIsSpeakerOn(!isSpeakerOn);
+                    }}
+                    className={`p-4 rounded-2xl border transition-all ${
+                      !isSpeakerOn ? "bg-rose-500/10 border-rose-500/20 text-rose-400" : "bg-[var(--bg-card)] border-[var(--border-main)] text-[var(--text-muted)] hover:text-[var(--text-main)]"
+                    }`}
+                  >
+                    {isSpeakerOn ? <Volume2 className="w-6 h-6" /> : <VolumeX className="w-6 h-6" />}
+                  </button>
+                </div>
+
+                {isCalling && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex items-center space-x-3 bg-[var(--bg-card)]/50 backdrop-blur-md border border-[var(--border-main)] px-4 py-2 rounded-2xl"
+                  >
+                    <Volume2 className="w-4 h-4 text-[var(--text-muted)]" />
+                    <input 
+                      type="range" 
+                      min="0" 
+                      max="1" 
+                      step="0.01" 
+                      value={volume}
+                      onChange={(e) => setVolume(parseFloat(e.target.value))}
+                      className="w-32 h-1 bg-[var(--border-main)] rounded-lg appearance-none cursor-pointer accent-blue-500"
+                    />
+                  </motion.div>
+                )}
               </div>
             </div>
           </div>

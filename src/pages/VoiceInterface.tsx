@@ -564,6 +564,89 @@ export default function VoiceInterface() {
       </div>
 
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-6 min-h-0">
+        {/* Real-time Transcript */}
+        <div className="glass-card flex flex-col overflow-hidden h-[600px] card-hover">
+          <div className="p-6 border-b border-zinc-900 flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <MessageSquare className="w-5 h-5 text-blue-400" />
+              <h3 className="font-semibold text-white">Live Transcript</h3>
+            </div>
+            <div className="flex items-center space-x-3">
+              {isAiThinking && (
+                <div className="flex items-center space-x-1">
+                  <div className="w-1 h-1 bg-blue-500 rounded-full animate-bounce" />
+                  <div className="w-1 h-1 bg-blue-500 rounded-full animate-bounce [animation-delay:0.2s]" />
+                  <div className="w-1 h-1 bg-blue-500 rounded-full animate-bounce [animation-delay:0.4s]" />
+                </div>
+              )}
+              <button 
+                onClick={() => setTranscript([])}
+                className="text-[10px] font-bold text-zinc-500 hover:text-white transition-colors uppercase tracking-widest"
+              >
+                Clear
+              </button>
+            </div>
+          </div>
+          <div className="flex-1 p-6 overflow-y-auto space-y-6 custom-scrollbar">
+            {transcript.length === 0 ? (
+              <div className="h-full flex flex-col items-center justify-center text-center space-y-4 opacity-30">
+                <MessageSquare className="w-12 h-12" />
+                <p className="text-sm">Transcript will appear here <br /> once the call starts.</p>
+              </div>
+            ) : (
+              <>
+                {transcript.map((msg, i) => (
+                  <motion.div 
+                    key={i}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className={`flex flex-col w-full ${msg.role === "ai" ? "items-start" : "items-end"}`}
+                  >
+                    <div className={`max-w-[90%] p-4 rounded-2xl text-sm leading-relaxed shadow-sm ${
+                      msg.role === "ai" 
+                        ? "bg-zinc-800/80 text-zinc-200 rounded-tl-none border border-zinc-700/50" 
+                        : "bg-blue-500 text-zinc-950 font-medium rounded-tr-none shadow-blue-500/10"
+                    }`}>
+                      {msg.text}
+                    </div>
+                    <span className={`text-[10px] text-[var(--text-muted)] mt-2 uppercase tracking-widest font-bold flex items-center space-x-1 ${msg.role === "ai" ? "justify-start" : "justify-end"}`}>
+                      <span>{msg.role === "ai" ? agent.name : "You"}</span>
+                      <span>•</span>
+                      <span>{new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    </span>
+                  </motion.div>
+                ))}
+                <div ref={transcriptEndRef} />
+              </>
+            )}
+          </div>
+          <div className="p-4 bg-zinc-900/50 border-t border-zinc-900">
+            <form 
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleSendMessage(inputText);
+              }}
+              className="relative"
+            >
+              <input 
+                type="text" 
+                value={inputText}
+                onChange={(e) => setInputText(e.target.value)}
+                disabled={!isCalling || isAiThinking}
+                placeholder={isCalling ? "Type a message to AI..." : "Start a call to chat..."}
+                className="w-full pl-4 pr-12 py-3 bg-zinc-950 border border-zinc-800 rounded-xl text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all disabled:opacity-50"
+              />
+              <button 
+                type="submit"
+                disabled={!isCalling || isAiThinking || !inputText.trim()}
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-blue-500 text-zinc-950 rounded-lg hover:bg-blue-400 transition-colors disabled:opacity-50"
+              >
+                <Send className="w-4 h-4" />
+              </button>
+            </form>
+          </div>
+        </div>
+
         {/* Call Controls & Visualizer */}
         <div className="lg:col-span-2 flex flex-col space-y-6 min-h-[500px] lg:min-h-0">
           <div className="flex-1 glass-card relative overflow-hidden flex flex-col items-center justify-center p-6 md:p-12 card-hover">
@@ -674,14 +757,14 @@ export default function VoiceInterface() {
               </div>
             </div>
 
-            <div className="absolute bottom-0 left-0 right-0 h-24 flex items-end justify-center space-x-1 px-12 pb-8 pointer-events-none">
+            <div className="absolute bottom-0 left-0 right-0 h-12 flex items-end justify-center space-x-1 px-12 pb-4 pointer-events-none">
               {Array.from({ length: 40 }).map((_, i) => (
                 <motion.div 
                   key={i}
                   animate={isCalling ? { 
                     height: isAiSpeaking 
-                      ? [10, 10 + Math.random() * (audioLevel * 100), 10] 
-                      : [10, Math.random() * 20 + 10, 10] 
+                      ? [6, 6 + Math.random() * (audioLevel * 60), 6] 
+                      : [6, Math.random() * 10 + 6, 6] 
                   } : { height: 4 }}
                   transition={{ duration: 0.5, repeat: Infinity, delay: i * 0.02 }}
                   className={`w-1 rounded-full ${isCalling ? (isAiSpeaking ? "bg-blue-500" : "bg-blue-500/40") : "bg-zinc-800"}`}
@@ -691,89 +774,6 @@ export default function VoiceInterface() {
           </div>
 
           {/* Removed security footer */}
-        </div>
-
-        {/* Real-time Transcript */}
-        <div className="glass-card flex flex-col overflow-hidden h-[600px] card-hover">
-          <div className="p-6 border-b border-zinc-900 flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <MessageSquare className="w-5 h-5 text-blue-400" />
-              <h3 className="font-semibold text-white">Live Transcript</h3>
-            </div>
-            <div className="flex items-center space-x-3">
-              {isAiThinking && (
-                <div className="flex items-center space-x-1">
-                  <div className="w-1 h-1 bg-blue-500 rounded-full animate-bounce" />
-                  <div className="w-1 h-1 bg-blue-500 rounded-full animate-bounce [animation-delay:0.2s]" />
-                  <div className="w-1 h-1 bg-blue-500 rounded-full animate-bounce [animation-delay:0.4s]" />
-                </div>
-              )}
-              <button 
-                onClick={() => setTranscript([])}
-                className="text-[10px] font-bold text-zinc-500 hover:text-white transition-colors uppercase tracking-widest"
-              >
-                Clear
-              </button>
-            </div>
-          </div>
-          <div className="flex-1 p-6 overflow-y-auto space-y-6 custom-scrollbar">
-            {transcript.length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center text-center space-y-4 opacity-30">
-                <MessageSquare className="w-12 h-12" />
-                <p className="text-sm">Transcript will appear here <br /> once the call starts.</p>
-              </div>
-            ) : (
-              <>
-                {transcript.map((msg, i) => (
-                  <motion.div 
-                    key={i}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className={`flex flex-col w-full ${msg.role === "ai" ? "items-start" : "items-end"}`}
-                  >
-                    <div className={`max-w-[90%] p-4 rounded-2xl text-sm leading-relaxed shadow-sm ${
-                      msg.role === "ai" 
-                        ? "bg-zinc-800/80 text-zinc-200 rounded-tl-none border border-zinc-700/50" 
-                        : "bg-blue-500 text-zinc-950 font-medium rounded-tr-none shadow-blue-500/10"
-                    }`}>
-                      {msg.text}
-                    </div>
-                    <span className={`text-[10px] text-[var(--text-muted)] mt-2 uppercase tracking-widest font-bold flex items-center space-x-1 ${msg.role === "ai" ? "justify-start" : "justify-end"}`}>
-                      <span>{msg.role === "ai" ? agent.name : "You"}</span>
-                      <span>•</span>
-                      <span>{new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                    </span>
-                  </motion.div>
-                ))}
-                <div ref={transcriptEndRef} />
-              </>
-            )}
-          </div>
-          <div className="p-4 bg-zinc-900/50 border-t border-zinc-900">
-            <form 
-              onSubmit={(e) => {
-                e.preventDefault();
-                handleSendMessage(inputText);
-              }}
-              className="relative"
-            >
-              <input 
-                type="text" 
-                value={inputText}
-                onChange={(e) => setInputText(e.target.value)}
-                disabled={!isCalling || isAiThinking}
-                placeholder={isCalling ? "Type a message to AI..." : "Start a call to chat..."}
-                className="w-full pl-4 pr-12 py-3 bg-zinc-950 border border-zinc-800 rounded-xl text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all disabled:opacity-50"
-              />
-              <button 
-                type="submit"
-                disabled={!isCalling || isAiThinking || !inputText.trim()}
-                className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-blue-500 text-zinc-950 rounded-lg hover:bg-blue-400 transition-colors disabled:opacity-50"
-              >
-                <Send className="w-4 h-4" />
-              </button>
-            </form>
-          </div>
         </div>
       </div>
       <footer className="p-8 text-center border-t border-zinc-900 relative z-10">
