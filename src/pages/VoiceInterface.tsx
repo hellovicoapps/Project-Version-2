@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { formatInTimeZone } from "date-fns-tz";
+import { formatInTimeZone, fromZonedTime } from "date-fns-tz";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Phone, 
@@ -275,7 +275,8 @@ export default function VoiceInterface() {
         try {
           const businessDoc = await getDoc(doc(db, "businesses", businessId));
           const businessTimezone = businessDoc.exists() ? (businessDoc.data().timezone || "UTC") : "UTC";
-          const bookingDate = new Date(bookingTime);
+          const hasOffset = /(Z|[+-]\d{2}:\d{2})$/.test(bookingTime);
+          const bookingDate = hasOffset ? new Date(bookingTime) : fromZonedTime(bookingTime, businessTimezone);
           const formattedTime = formatInTimeZone(bookingDate, businessTimezone, "MMMM d, yyyy 'at' h:mm a");
           const idToken = await auth.currentUser?.getIdToken();
           await fetch("/api/send-email", {

@@ -10,7 +10,7 @@ import { getFirestore } from "firebase-admin/firestore";
 import fs from "fs";
 import { GoogleGenAI, Type } from "@google/genai";
 import nodemailer from "nodemailer";
-import { formatInTimeZone } from "date-fns-tz";
+import { formatInTimeZone, fromZonedTime } from "date-fns-tz";
 
 const firebaseConfig = JSON.parse(fs.readFileSync("./firebase-applet-config.json", "utf-8"));
 
@@ -376,7 +376,7 @@ async function startBookingProcessor() {
                 
                 2. BOOKING DETAILS:
                    - Extract name, phone, email, dateTime, and purpose.
-                   - CRITICAL: The dateTime MUST be in ISO 8601 format (e.g., 2026-03-23T15:00:00). 
+                   - CRITICAL: The dateTime MUST be in ISO 8601 format WITH the correct timezone offset for ${timezone} (e.g., 2026-03-23T15:00:00+08:00). 
                    - If the user specifies a time without a date, assume the current date (${new Date().toISOString().split('T')[0]}).
                    - If no specific time is mentioned, leave dateTime as null.
                 
@@ -451,7 +451,8 @@ async function startBookingProcessor() {
                       },
                     });
                     
-                    const bookingDate = new Date(updateData.bookingTime);
+                    const hasOffset = /(Z|[+-]\d{2}:\d{2})$/.test(updateData.bookingTime);
+                    const bookingDate = hasOffset ? new Date(updateData.bookingTime) : fromZonedTime(updateData.bookingTime, timezone);
                     const formattedTime = formatInTimeZone(bookingDate, timezone, "MMMM d, yyyy 'at' h:mm a");
                     const callerName = updateData.callerName || "there";
                     
@@ -560,7 +561,7 @@ app.post("/api/gemini/process-transcript", async (req, res) => {
          - Set to "DROPPED" if the call ended abruptly.
       
       2. BOOKING DETAILS:
-         - Extract name, phone, email, dateTime (ISO 8601), and purpose.
+         - Extract name, phone, email, dateTime (ISO 8601 with timezone offset for ${timezone}), and purpose.
       
       3. SUMMARY:
          - Provide a 1-2 sentence summary.

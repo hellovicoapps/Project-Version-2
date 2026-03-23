@@ -9,7 +9,7 @@ interface PayPalButtonProps {
 
 export const PayPalButton: React.FC<PayPalButtonProps> = ({ amount, onSuccess, onError }) => {
   const [{ isPending, isRejected }] = usePayPalScriptReducer();
-  const clientId = import.meta.env.VITE_PAYPAL_CLIENT_ID || "";
+  const clientId = import.meta.env.VITE_PAYPAL_CLIENT_ID || process.env.PAYPAL_CLIENT_ID || "";
 
   if (isRejected || (!clientId && !isPending)) {
     return (

@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { formatInTimeZone } from "date-fns-tz";
+import { formatInTimeZone, fromZonedTime } from "date-fns-tz";
 import { 
   collection, 
   query, 
@@ -136,7 +136,8 @@ export const BookingProcessor = () => {
             // Send confirmation email if booked
             if (updateData.status === CallStatus.BOOKED && callerEmail && updateData.bookingTime) {
               try {
-                const bookingDate = new Date(updateData.bookingTime);
+                const hasOffset = /(Z|[+-]\d{2}:\d{2})$/.test(updateData.bookingTime);
+                const bookingDate = hasOffset ? new Date(updateData.bookingTime) : fromZonedTime(updateData.bookingTime, timezone);
                 const formattedTime = formatInTimeZone(bookingDate, timezone, "MMMM d, yyyy 'at' h:mm a");
                 const idToken = await auth.currentUser?.getIdToken();
                 await fetch("/api/send-email", {

@@ -53,7 +53,7 @@ export class GeminiService {
                  - Extract the caller's name, phone number, and email if mentioned.
                  - Extract the date and time of the appointment. 
                  - IMPORTANT: Resolve relative times (like "tomorrow at 3pm") based on the Current Date/Time provided above and the Business Timezone.
-                 - Return the dateTime in ISO 8601 format including the offset for the Business Timezone if possible.
+                 - CRITICAL: The dateTime MUST be in ISO 8601 format WITH the correct timezone offset for ${timezone} (e.g., 2026-03-23T15:00:00+08:00).
                  - Extract the purpose of the appointment (e.g., "Dental checkup", "Haircut", "Sales demo").
               
               3. SUMMARY:

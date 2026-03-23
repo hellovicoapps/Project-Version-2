@@ -98,7 +98,7 @@ export class ElevenLabsService {
                 {
                   name: "bookingTime",
                   type: "string",
-                  description: "The requested date and time for the appointment"
+                  description: "The requested date and time for the appointment. MUST be in ISO 8601 format WITH the correct timezone offset (e.g., 2026-03-23T15:00:00+08:00)"
                 },
                 {
                   name: "bookingPurpose",
@@ -168,7 +168,7 @@ export class ElevenLabsService {
                 {
                   name: "bookingTime",
                   type: "string",
-                  description: "The requested date and time for the appointment"
+                  description: "The requested date and time for the appointment. MUST be in ISO 8601 format WITH the correct timezone offset (e.g., 2026-03-23T15:00:00+08:00)"
                 },
                 {
                   name: "bookingPurpose",
