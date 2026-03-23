@@ -36,20 +36,48 @@ import { ErrorBoundary } from "./components/ErrorBoundary";
 import { ThemeProvider, useTheme } from "./context/ThemeContext";
 import { PayPalScriptProvider } from "@paypal/react-paypal-js";
 
-const PAYPAL_CLIENT_ID = import.meta.env.VITE_PAYPAL_CLIENT_ID || process.env.PAYPAL_CLIENT_ID || "";
-
 export default function App() {
+  const [clientId, setClientId] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Check static env vars first
+    const staticClientId = import.meta.env.VITE_PAYPAL_CLIENT_ID || process.env.PAYPAL_CLIENT_ID;
+    if (staticClientId) {
+      setClientId(staticClientId);
+      return;
+    }
+
+    // Fallback to fetching from server
+    fetch("/api/config")
+      .then(res => res.json())
+      .then(data => {
+        setClientId(data.PAYPAL_CLIENT_ID || "test");
+      })
+      .catch(err => {
+        console.error("Failed to load config:", err);
+        setClientId("test");
+      });
+  }, []);
+
   const content = (
     <ThemeProvider>
       <AppContent />
     </ThemeProvider>
   );
 
+  if (clientId === null) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-[var(--bg-main)]">
+        <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
   // Always wrap in PayPalScriptProvider if the package is installed.
   // If PAYPAL_CLIENT_ID is missing, the script won't load, but the hook won't crash the app.
   return (
     <PayPalScriptProvider options={{ 
-      clientId: PAYPAL_CLIENT_ID || "test", // Fallback to "test" to avoid provider errors
+      clientId: clientId,
       currency: "USD",
       intent: "capture"
     }}>
