@@ -397,8 +397,10 @@ export default function OnboardingPage() {
                 });
               }
             }
-          } catch (agentErr) {
+          } catch (agentErr: any) {
             console.error("Failed to sync ElevenLabs agent:", agentErr);
+            showToast(`Failed to sync agent: ${agentErr.message || "Unknown error"}`, "error");
+            // Don't block onboarding, but let the user know
           }
         }
         

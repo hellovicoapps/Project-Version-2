@@ -106,56 +106,13 @@ export class ElevenLabsService {
                   description: "The reason or service requested for the appointment"
                 }
               ]
-            },
-            tools: [
-              {
-                type: "client",
-                name: "end_call",
-                description: "Ends the current call when the conversation is finished or the user wants to hang up. Use this ONLY when the conversation is naturally over.",
-                parameters: {
-                  type: "object",
-                  properties: {}
-                }
-              }
-            ]
+            }
           },
           tts: { 
             voice_id: voiceId,
-            model_id: "eleven_turbo_v2_5",
+            model_id: "eleven_turbo_v2",
             voice_settings: voiceSettings 
           }
-        },
-        data_collection: {
-          fields: [
-            {
-              name: "name",
-              type: "string",
-              description: "The caller's full name"
-            },
-            {
-              name: "email",
-              type: "string",
-              description: "The caller's email address"
-            },
-            {
-              name: "phone",
-              type: "string",
-              description: "The caller's phone number"
-            },
-            {
-              name: "bookingTime",
-              type: "string",
-              description: "The requested date and time for the appointment"
-            },
-            {
-              name: "bookingPurpose",
-              type: "string",
-              description: "The reason or service requested for the appointment"
-            }
-          ]
-        },
-        analysis_config: {
-          transcript_summary_config: { enabled: true }
         }
       })
     });
@@ -219,56 +176,13 @@ export class ElevenLabsService {
                   description: "The reason or service requested for the appointment"
                 }
               ]
-            },
-            tools: [
-              {
-                type: "client",
-                name: "end_call",
-                description: "Ends the current call when the conversation is finished or the user wants to hang up. Use this ONLY when the conversation is naturally over.",
-                parameters: {
-                  type: "object",
-                  properties: {}
-                }
-              }
-            ]
+            }
           },
           tts: { 
             voice_id: voiceId,
-            model_id: "eleven_turbo_v2_5",
+            model_id: "eleven_turbo_v2",
             voice_settings: voiceSettings 
           }
-        },
-        data_collection: {
-          fields: [
-            {
-              name: "name",
-              type: "string",
-              description: "The caller's full name"
-            },
-            {
-              name: "email",
-              type: "string",
-              description: "The caller's email address"
-            },
-            {
-              name: "phone",
-              type: "string",
-              description: "The caller's phone number"
-            },
-            {
-              name: "bookingTime",
-              type: "string",
-              description: "The requested date and time for the appointment"
-            },
-            {
-              name: "bookingPurpose",
-              type: "string",
-              description: "The reason or service requested for the appointment"
-            }
-          ]
-        },
-        analysis_config: {
-          transcript_summary_config: { enabled: true }
         }
       })
     });

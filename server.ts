@@ -433,12 +433,19 @@ async function startBookingProcessor() {
 
               // Send confirmation email if booked
               if (updateData.status === "BOOKED" && updateData.callerEmail && updateData.bookingTime) {
-                if (process.env.SMTP_USER && process.env.SMTP_PASS) {
+                if (process.env.SMTP_PASS) {
                   try {
+                    const businessData = businessDoc.data() || {};
+                    const businessName = businessData.name || "Vico";
+                    const businessEmail = businessData.email || process.env.SMTP_USER;
+                    const fromEmail = process.env.SMTP_FROM_EMAIL || "notifications@vicoapps.com";
+
                     const transporter = nodemailer.createTransport({
-                      service: 'gmail',
+                      host: "smtp.resend.com",
+                      port: 465,
+                      secure: true,
                       auth: {
-                        user: process.env.SMTP_USER,
+                        user: "resend",
                         pass: process.env.SMTP_PASS,
                       },
                     });
@@ -448,7 +455,8 @@ async function startBookingProcessor() {
                     const callerName = updateData.callerName || "there";
                     
                     await transporter.sendMail({
-                      from: process.env.SMTP_USER,
+                      from: `"${businessName}" <${fromEmail}>`,
+                      replyTo: businessEmail,
                       to: updateData.callerEmail,
                       subject: "Appointment Confirmation",
                       text: `Hi ${callerName},\n\nYour appointment has been confirmed for ${formattedTime} (${timezone}).\n\nPurpose: ${updateData.bookingPurpose || "Appointment"}\n\nThank you!`,
@@ -773,28 +781,6 @@ app.post("/api/elevenlabs/agents", async (req, res) => {
   
   try {
     const body = { ...req.body };
-    // Inject webhook URL and tools if not present
-    if (process.env.APP_URL) {
-      if (!body.conversation_config) body.conversation_config = {};
-      body.conversation_config.webhook_url = `${process.env.APP_URL}/api/webhooks/elevenlabs`;
-      
-      // Inject tool for fetching business info
-      if (!body.conversation_config.agent) body.conversation_config.agent = {};
-      if (!body.conversation_config.agent.tools) body.conversation_config.agent.tools = [];
-      
-      const hasBusinessInfoTool = body.conversation_config.agent.tools.some((t: any) => t.name === "get_business_info");
-      if (!hasBusinessInfoTool) {
-        body.conversation_config.agent.tools.push({
-          type: "webhook",
-          name: "get_business_info",
-          description: "Get information about the business like hours, address, and services.",
-          url: `${process.env.APP_URL}/api/webhooks/elevenlabs/tools`,
-          method: "POST"
-        });
-      }
-    } else {
-      console.warn("Server: APP_URL environment variable is missing. ElevenLabs webhook and tools will NOT be configured.");
-    }
 
     const r = await fetch("https://api.elevenlabs.io/v1/convai/agents/create", {
       method: "POST",
@@ -804,7 +790,11 @@ app.post("/api/elevenlabs/agents", async (req, res) => {
       },
       body: JSON.stringify(body)
     });
-    res.status(r.status).send(await r.text());
+    const text = await r.text();
+    if (!r.ok) {
+      console.error("ElevenLabs Create Agent Error:", text);
+    }
+    res.status(r.status).send(text);
   } catch (e: any) {
     res.status(500).json({ error: e.message });
   }
@@ -817,28 +807,6 @@ app.patch("/api/elevenlabs/agents/:id", async (req, res) => {
   
   try {
     const body = { ...req.body };
-    // Inject webhook URL and tools if not present
-    if (process.env.APP_URL) {
-      if (!body.conversation_config) body.conversation_config = {};
-      body.conversation_config.webhook_url = `${process.env.APP_URL}/api/webhooks/elevenlabs`;
-      
-      // Inject tool for fetching business info
-      if (!body.conversation_config.agent) body.conversation_config.agent = {};
-      if (!body.conversation_config.agent.tools) body.conversation_config.agent.tools = [];
-      
-      const hasBusinessInfoTool = body.conversation_config.agent.tools.some((t: any) => t.name === "get_business_info");
-      if (!hasBusinessInfoTool) {
-        body.conversation_config.agent.tools.push({
-          type: "webhook",
-          name: "get_business_info",
-          description: "Get information about the business like hours, address, and services.",
-          url: `${process.env.APP_URL}/api/webhooks/elevenlabs/tools`,
-          method: "POST"
-        });
-      }
-    } else {
-      console.warn("Server: APP_URL environment variable is missing. ElevenLabs webhook and tools will NOT be configured.");
-    }
 
     const r = await fetch(`https://api.elevenlabs.io/v1/convai/agents/${agentId}`, {
       method: "PATCH",
@@ -1081,24 +1049,34 @@ app.get("/api/elevenlabs/conversations/:id", async (req, res) => {
 });
 
 // Email Integration
-app.post("/api/send-email", verifyUser, async (req, res) => {
+app.post("/api/send-email", verifyUser, async (req: any, res) => {
   const { to, subject, text, html } = req.body;
   
-  if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
-    return res.status(500).json({ error: "Email credentials not configured on server. Please set SMTP_USER and SMTP_PASS in Settings > Secrets." });
+  if (!process.env.SMTP_PASS) {
+    return res.status(500).json({ error: "Email credentials not configured on server. Please set SMTP_PASS in Settings > Secrets." });
   }
 
   try {
+    // Fetch business details for Reply-To and From Name
+    const businessDoc = await database.collection("businesses").doc(req.userUid).get();
+    const businessData = businessDoc.data() || {};
+    const businessName = businessData.name || "Vico";
+    const businessEmail = businessData.email || process.env.SMTP_USER;
+    const fromEmail = process.env.SMTP_FROM_EMAIL || "notifications@vicoapps.com";
+
     const transporter = nodemailer.createTransport({
-      service: 'gmail',
+      host: "smtp.resend.com",
+      port: 465,
+      secure: true,
       auth: {
-        user: process.env.SMTP_USER,
+        user: "resend",
         pass: process.env.SMTP_PASS,
       },
     });
 
     const mailOptions = {
-      from: process.env.SMTP_USER,
+      from: `"${businessName}" <${fromEmail}>`,
+      replyTo: businessEmail,
       to,
       subject,
       text,
