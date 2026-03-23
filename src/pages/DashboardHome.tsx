@@ -323,6 +323,11 @@ export default function DashboardHome() {
     all: "All Time"
   };
 
+  const [isMounted, setIsMounted] = useState(false);
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   return (
     <div className="space-y-8 max-w-7xl mx-auto">
       {business && (business.usedMinutes || 0) >= (business.totalMinutes || PLAN_DETAILS[business.plan as SubscriptionPlan]?.minutes || 30) && (
@@ -458,48 +463,50 @@ export default function DashboardHome() {
             </div>
           </div>
           <div className="h-[300px] w-full relative min-h-[300px]">
-            <ResponsiveContainer width="100%" height="100%" minHeight={300}>
-              <AreaChart data={chartData.length > 0 ? chartData : data}>
-                <defs>
-                  <linearGradient id="colorCalls" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="var(--brand-primary)" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="var(--brand-primary)" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--border-main)" vertical={false} />
-                <XAxis 
-                  dataKey="name" 
-                  stroke="var(--text-muted)" 
-                  fontSize={12} 
-                  tickLine={false} 
-                  axisLine={false} 
-                />
-                <YAxis 
-                  stroke="var(--text-muted)" 
-                  fontSize={12} 
-                  tickLine={false} 
-                  axisLine={false} 
-                />
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: "var(--bg-card)", 
-                    borderColor: "var(--border-main)",
-                    borderRadius: "12px",
-                    color: "var(--text-main)"
-                  }} 
-                  itemStyle={{ color: "var(--text-main)" }}
-                  labelStyle={{ color: "var(--text-muted)" }}
-                />
-                <Area 
-                  type="monotone" 
-                  dataKey="calls" 
-                  stroke="var(--brand-primary)" 
-                  fillOpacity={1} 
-                  fill="url(#colorCalls)" 
-                  strokeWidth={2}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+            {isMounted && (
+              <ResponsiveContainer width="100%" height="100%" minHeight={300}>
+                <AreaChart data={chartData.length > 0 ? chartData : data}>
+                  <defs>
+                    <linearGradient id="colorCalls" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="var(--brand-primary)" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="var(--brand-primary)" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border-main)" vertical={false} />
+                  <XAxis 
+                    dataKey="name" 
+                    stroke="var(--text-muted)" 
+                    fontSize={12} 
+                    tickLine={false} 
+                    axisLine={false} 
+                  />
+                  <YAxis 
+                    stroke="var(--text-muted)" 
+                    fontSize={12} 
+                    tickLine={false} 
+                    axisLine={false} 
+                  />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: "var(--bg-card)", 
+                      borderColor: "var(--border-main)",
+                      borderRadius: "12px",
+                      color: "var(--text-main)"
+                    }} 
+                    itemStyle={{ color: "var(--text-main)" }}
+                    labelStyle={{ color: "var(--text-muted)" }}
+                  />
+                  <Area 
+                    type="monotone" 
+                    dataKey="calls" 
+                    stroke="var(--brand-primary)" 
+                    fillOpacity={1} 
+                    fill="url(#colorCalls)" 
+                    strokeWidth={2}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            )}
           </div>
         </div>
 

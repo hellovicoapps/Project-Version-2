@@ -32,7 +32,6 @@ import Navbar from "./components/Navbar";
 import Sidebar from "./components/Sidebar";
 import { ToastProvider } from "./components/Toast";
 import { ErrorBoundary } from "./components/ErrorBoundary";
-import { BookingProcessor } from "./components/BookingProcessor";
 
 import { ThemeProvider, useTheme } from "./context/ThemeContext";
 import { PayPalScriptProvider } from "@paypal/react-paypal-js";
@@ -91,7 +90,6 @@ function AppContent() {
 
   return (
     <ToastProvider>
-      <BookingProcessor />
       <div className="flex flex-col min-h-screen bg-[var(--bg-main)] text-[var(--text-main)] transition-colors duration-300">
         {authState.isAuthenticated && !isPublicCallPage && location.pathname !== ROUTES.ONBOARDING && <Navbar user={authState.user} />}
         <div className="flex flex-1">

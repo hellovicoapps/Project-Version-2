@@ -10,6 +10,22 @@ export class GeminiService {
 
   async processTranscript(transcript: string, timezone: string = "UTC", currentDate: string = new Date().toISOString()) {
     try {
+      // If API key is missing on client, use server proxy
+      const apiKey = process.env.GEMINI_API_KEY;
+      if (!apiKey || apiKey === "MY_GEMINI_API_KEY" || apiKey === "") {
+        console.log("GeminiService: Using server proxy for transcript processing");
+        const response = await fetch("/api/gemini/process-transcript", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ transcript, timezone })
+        });
+        if (!response.ok) {
+          const err = await response.json();
+          throw new Error(err.error || "Server proxy failed");
+        }
+        return await response.json();
+      }
+
       const response = await this.ai.models.generateContent({
         model: "gemini-3-flash-preview",
         contents: [{
@@ -136,10 +152,5 @@ export class GeminiService {
 }
 
 export const getGeminiService = async () => {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey || apiKey === "MY_GEMINI_API_KEY" || apiKey === "") {
-    console.warn("Gemini API key is missing or placeholder");
-    return null;
-  }
   return new GeminiService();
 };

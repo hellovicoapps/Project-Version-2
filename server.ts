@@ -85,7 +85,262 @@ app.post("/api/auth/update-password", async (req, res) => {
   }
 });
 
+// Gemini API
+let genAI: GoogleGenAI | null = null;
+const getGenAI = () => {
+  if (!genAI) {
+    const apiKey = process.env.GEMINI_API_KEY || process.env.API_KEY;
+    if (apiKey && apiKey !== "MY_GEMINI_API_KEY") {
+      genAI = new GoogleGenAI({ apiKey });
+    }
+  }
+  return genAI;
+};
+
+// Server-side Booking Processor
+async function startBookingProcessor() {
+  console.log("[Server] Starting BookingProcessor...");
+  const db = firebaseConfig.firestoreDatabaseId && firebaseConfig.firestoreDatabaseId !== "(default)" 
+    ? getFirestore(admin.app(), firebaseConfig.firestoreDatabaseId) 
+    : getFirestore();
+
+  // Listen for all calls across all businesses that need processing
+  db.collectionGroup("calls")
+    .where("status", "==", "PENDING_PROCESSING")
+    .onSnapshot(async (snapshot) => {
+      if (snapshot.empty) return;
+
+      const ai = getGenAI();
+      if (!ai) {
+        console.error("[Server] BookingProcessor: Gemini API key missing. Cannot process calls.");
+        return;
+      }
+
+      for (const change of snapshot.docChanges()) {
+        if (change.type === "added" || change.type === "modified") {
+          const callDoc = change.doc;
+          const callData = callDoc.data();
+          const callId = callDoc.id;
+
+          if (callData.status !== "PENDING_PROCESSING" || callData.processed || callData.processingStarted) continue;
+
+          try {
+            // Get business ID from path: businesses/{businessId}/calls/{callId}
+            const businessId = callDoc.ref.parent.parent?.id;
+            if (!businessId) continue;
+
+            // Lock the document
+            await callDoc.ref.update({
+              processingStarted: true,
+              processingStartedAt: admin.firestore.FieldValue.serverTimestamp()
+            });
+
+            console.log(`[Server] Processing call ${callId} for business ${businessId}...`);
+
+            if (!callData.transcript || callData.transcript.trim().length < 10) {
+              await callDoc.ref.update({
+                status: "COMPLETED",
+                processed: true,
+                processedAt: admin.firestore.FieldValue.serverTimestamp(),
+                summary: "Transcript too short or missing"
+              });
+              continue;
+            }
+
+            // Get business timezone
+            const businessDoc = await db.collection("businesses").doc(businessId).get();
+            const timezone = businessDoc.data()?.timezone || "UTC";
+
+            // Process with Gemini
+            const prompt = `Analyze the following call transcript between an AI Agent and a User.
+              
+              Current Date/Time: ${new Date().toISOString()}
+              Business Timezone: ${timezone}
+              
+              Transcript:
+              ${callData.transcript}
+              
+              Your goal is to extract key information and determine if a booking/appointment was made.
+              
+              Instructions:
+              1. STATUS: 
+                 - Set to "BOOKED" if the user explicitly agreed to a date/time for an appointment.
+                 - Set to "INQUIRY" if the user was just asking questions.
+                 - Set to "COMPLAINT" if the user expressed dissatisfaction.
+                 - Set to "FOLLOW_UP" if a follow-up is needed.
+                 - Set to "DROPPED" if the call ended abruptly.
+              
+              2. BOOKING DETAILS:
+                 - Extract name, phone, email, dateTime (ISO 8601), and purpose.
+              
+              3. SUMMARY:
+                 - Provide a 1-2 sentence summary.
+              
+              Return ONLY a JSON object with keys: summary, status, bookingDetails (name, phone, email, dateTime, purpose).`;
+
+            const resultResponse = await ai.models.generateContent({
+              model: "gemini-3-flash-preview",
+              contents: [{ role: "user", parts: [{ text: prompt }] }],
+              config: {
+                responseMimeType: "application/json",
+                responseSchema: {
+                  type: Type.OBJECT,
+                  properties: {
+                    summary: { type: Type.STRING },
+                    status: { type: Type.STRING, enum: ["BOOKED", "INQUIRY", "COMPLAINT", "FOLLOW_UP", "DROPPED"] },
+                    bookingDetails: {
+                      type: Type.OBJECT,
+                      properties: {
+                        name: { type: Type.STRING },
+                        phone: { type: Type.STRING },
+                        email: { type: Type.STRING },
+                        dateTime: { type: Type.STRING },
+                        purpose: { type: Type.STRING }
+                      }
+                    }
+                  },
+                  required: ["summary", "status"]
+                }
+              }
+            });
+
+            const result = JSON.parse(resultResponse.text || "{}");
+            
+            // Update call record
+            const updateData: any = {
+              summary: result.summary,
+              status: result.status || "COMPLETED",
+              processedAt: admin.firestore.FieldValue.serverTimestamp(),
+              processed: true,
+            };
+
+            if (result.bookingDetails) {
+              if (result.bookingDetails.name) updateData.callerName = result.bookingDetails.name;
+              if (result.bookingDetails.phone) updateData.phoneNumber = result.bookingDetails.phone;
+              if (result.bookingDetails.email) updateData.callerEmail = result.bookingDetails.email;
+              if (result.bookingDetails.dateTime) updateData.bookingTime = result.bookingDetails.dateTime;
+              if (result.bookingDetails.purpose) updateData.bookingPurpose = result.bookingDetails.purpose;
+            }
+
+            await callDoc.ref.update(updateData);
+
+            // CRM Integration
+            const phoneNumber = updateData.phoneNumber || callData.phoneNumber;
+            if (phoneNumber && phoneNumber !== "Unknown") {
+              const contactsRef = db.collection("businesses").doc(businessId).collection("contacts");
+              const contactQuery = await contactsRef.where("phone", "==", phoneNumber).limit(1).get();
+              
+              const contactData: any = {
+                name: updateData.callerName || callData.callerName || "Unknown",
+                phone: phoneNumber,
+                email: updateData.callerEmail || callData.callerEmail || "",
+                status: result.status === "BOOKED" ? "BOOKED" : "INQUIRED",
+                businessId: businessId,
+                lastCallId: callId,
+                lastCallSummary: result.summary,
+                updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+              };
+
+              if (!contactQuery.empty) {
+                await contactQuery.docs[0].ref.update(contactData);
+              } else {
+                contactData.createdAt = admin.firestore.FieldValue.serverTimestamp();
+                await contactsRef.add(contactData);
+              }
+            }
+
+            // Deduct credits
+            const minutesUsed = Math.max(0.1, (callData.duration || 0) / 60);
+            await db.collection("businesses").doc(businessId).update({
+              usedMinutes: admin.firestore.FieldValue.increment(minutesUsed)
+            });
+
+            console.log(`[Server] Successfully processed call ${callId}`);
+          } catch (error) {
+            console.error(`[Server] Error processing call ${callId}:`, error);
+            await callDoc.ref.update({
+              status: "PROCESSING_ERROR",
+              processed: true,
+              processingError: String(error)
+            });
+          }
+        }
+      }
+    }, (error) => {
+      console.error("[Server] BookingProcessor Snapshot Error:", error);
+    });
+}
+
 // API Routes
+app.post("/api/gemini/process-transcript", async (req, res) => {
+  const { transcript, timezone } = req.body;
+  const ai = getGenAI();
+  
+  if (!ai) {
+    return res.status(500).json({ error: "Gemini API key not configured on server" });
+  }
+
+  try {
+    const prompt = `Analyze the following call transcript between an AI Agent and a User.
+      
+      Current Date/Time: ${new Date().toISOString()}
+      Business Timezone: ${timezone}
+      
+      Transcript:
+      ${transcript}
+      
+      Your goal is to extract key information and determine if a booking/appointment was made.
+      
+      Instructions:
+      1. STATUS: 
+         - Set to "BOOKED" if the user explicitly agreed to a date/time for an appointment.
+         - Set to "INQUIRY" if the user was just asking questions.
+         - Set to "COMPLAINT" if the user expressed dissatisfaction.
+         - Set to "FOLLOW_UP" if a follow-up is needed.
+         - Set to "DROPPED" if the call ended abruptly.
+      
+      2. BOOKING DETAILS:
+         - Extract name, phone, email, dateTime (ISO 8601), and purpose.
+      
+      3. SUMMARY:
+         - Provide a 1-2 sentence summary.
+      
+      Return ONLY a JSON object with keys: summary, status, bookingDetails (name, phone, email, dateTime, purpose).`;
+
+    const resultResponse = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            summary: { type: Type.STRING },
+            status: { type: Type.STRING, enum: ["BOOKED", "INQUIRY", "COMPLAINT", "FOLLOW_UP", "DROPPED"] },
+            bookingDetails: {
+              type: Type.OBJECT,
+              properties: {
+                name: { type: Type.STRING },
+                phone: { type: Type.STRING },
+                email: { type: Type.STRING },
+                dateTime: { type: Type.STRING },
+                purpose: { type: Type.STRING }
+              }
+            }
+          },
+          required: ["summary", "status"]
+        }
+      }
+    });
+
+    const result = JSON.parse(resultResponse.text || "{}");
+    res.json(result);
+  } catch (error: any) {
+    console.error("Server Gemini Error:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.get("/api/config", (req, res) => {
   // We only send non-sensitive configuration to the frontend.
   // Sensitive keys like ELEVENLABS_API_KEY and PAYPAL_CLIENT_SECRET
@@ -697,4 +952,7 @@ if (process.env.NODE_ENV !== "production") {
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`[Server] API is live at http://0.0.0.0:${PORT}`);
   console.log(`[Server] Upload endpoint: http://0.0.0.0:${PORT}/api/upload`);
+  
+  // Start background processor
+  startBookingProcessor().catch(err => console.error("Failed to start BookingProcessor:", err));
 });
