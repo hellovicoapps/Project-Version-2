@@ -39,10 +39,25 @@ if (process.env.API_KEY) {
 
 // Initialize Firebase Admin
 if (!admin.apps.length) {
-  console.log("Server: Initializing Firebase Admin with Project ID:", firebaseConfig.projectId);
-  admin.initializeApp({
-    projectId: firebaseConfig.projectId,
-  });
+  console.log("Server: Config Project ID:", firebaseConfig.projectId);
+  
+  try {
+    // Initialize with the projectId from config to ensure ID token verification works
+    // (audience claim must match the project ID that issued the token)
+    admin.initializeApp({
+      projectId: firebaseConfig.projectId,
+    });
+    console.log("Server: Firebase Admin initialized with projectId:", firebaseConfig.projectId);
+  } catch (error) {
+    console.warn("Server: Firebase Admin initialization with config projectId failed, trying default:", error);
+    try {
+      admin.initializeApp();
+      console.log("Server: Firebase Admin initialized with default credentials");
+    } catch (e) {
+      console.error("Server: All Firebase Admin initialization attempts failed:", e);
+    }
+  }
+  console.log("Server: Firebase Admin Project ID from options:", admin.app()?.options?.projectId || "default");
 }
 
 const __filename = fileURLToPath(import.meta.url);
@@ -90,35 +105,89 @@ app.post("/api/auth/update-password", async (req, res) => {
   }
 });
 
+// Helper to get Firestore with fallback
+const getDb = () => {
+  try {
+    const dbId = firebaseConfig.firestoreDatabaseId && firebaseConfig.firestoreDatabaseId !== "(default)" 
+      ? firebaseConfig.firestoreDatabaseId 
+      : undefined;
+    
+    if (dbId) {
+      try {
+        return getFirestore(admin.app(), dbId);
+      } catch (e) {
+        console.warn(`[Server] getDb: Failed to initialize named database ${dbId}, falling back to (default). Error:`, e);
+      }
+    }
+    return getFirestore();
+  } catch (error) {
+    console.error("[Server] getDb: Fatal error getting Firestore instance:", error);
+    return getFirestore();
+  }
+};
+
+/**
+ * Helper to run Firestore operations with a retry on PERMISSION_DENIED
+ * by falling back to the default database.
+ */
+async function runWithDbRetry<T>(operation: (db: admin.firestore.Firestore) => Promise<T>): Promise<T> {
+  const db = getDb();
+  try {
+    return await operation(db);
+  } catch (e: any) {
+    if (e.message?.includes("PERMISSION_DENIED")) {
+      console.warn("[Server] runWithDbRetry: Permission denied on Firestore. Retrying with default DB...");
+      return await operation(getFirestore());
+    }
+    throw e;
+  }
+}
+
 // Admin Middleware
 const verifyAdmin = async (req: any, res: any, next: any) => {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    console.log("[Server] verifyAdmin: Missing or invalid Authorization header");
     return res.status(401).json({ message: "Unauthorized" });
   }
 
   const idToken = authHeader.split("Bearer ")[1];
   try {
+    console.log("[Server] verifyAdmin: Verifying ID token...");
     const decodedToken = await admin.auth().verifyIdToken(idToken);
     const uid = decodedToken.uid;
+    const email = decodedToken.email;
     
-    const db = firebaseConfig.firestoreDatabaseId && firebaseConfig.firestoreDatabaseId !== "(default)" 
-      ? getFirestore(admin.app(), firebaseConfig.firestoreDatabaseId) 
-      : getFirestore();
-      
-    const userDoc = await db.collection("users").doc(uid).get();
+    console.log(`[Server] verifyAdmin: Token verified for UID: ${uid}, Email: ${email}`);
+
+    // Check if admin by email first (bypass DB check for main admin)
+    if (email === "hello.vicoapps@gmail.com") {
+      console.log(`[Server] verifyAdmin: Main admin recognized by email: ${email}`);
+      req.adminUid = uid;
+      return next();
+    }
+
+    console.log("[Server] verifyAdmin: Fetching user doc from Firestore...");
+    const userDoc = await runWithDbRetry(db => db.collection("users").doc(uid).get());
     const userData = userDoc.data();
     
-    // Check if admin by email or role
-    if (decodedToken.email === "hello.vicoapps@gmail.com" || userData?.role === "admin") {
+    console.log(`[Server] verifyAdmin: User data role: ${userData?.role}`);
+
+    // Check if admin by role
+    if (userData?.role === "admin") {
       req.adminUid = uid;
       next();
     } else {
+      console.log(`[Server] verifyAdmin: User ${email} is not an admin`);
       res.status(403).json({ message: "Forbidden: Admin access required" });
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error("Verify Admin Error:", error);
-    res.status(401).json({ message: "Unauthorized" });
+    // Log more details if available
+    if (error.code) console.error("Error Code:", error.code);
+    if (error.stack) console.error("Error Stack:", error.stack);
+    
+    res.status(401).json({ message: "Unauthorized", details: error.message });
   }
 };
 
@@ -128,15 +197,11 @@ app.post("/api/admin/update-user", verifyAdmin, async (req, res) => {
   if (!userId || !updates) return res.status(400).json({ message: "Missing parameters" });
 
   try {
-    const db = firebaseConfig.firestoreDatabaseId && firebaseConfig.firestoreDatabaseId !== "(default)" 
-      ? getFirestore(admin.app(), firebaseConfig.firestoreDatabaseId) 
-      : getFirestore();
-
     // Update business doc
-    await db.collection("businesses").doc(userId).update({
+    await runWithDbRetry(db => db.collection("businesses").doc(userId).set({
       ...updates,
       updatedAt: admin.firestore.FieldValue.serverTimestamp()
-    });
+    }, { merge: true }));
 
     res.json({ success: true });
   } catch (error: any) {
@@ -160,19 +225,15 @@ app.post("/api/admin/change-password", verifyAdmin, async (req, res) => {
 
 app.post("/api/admin/toggle-status", verifyAdmin, async (req, res) => {
   const { userId, disabled } = req.body;
-  if (!userId === undefined) return res.status(400).json({ message: "Missing parameters" });
+  if (userId === undefined || disabled === undefined) return res.status(400).json({ message: "Missing parameters" });
 
   try {
     await admin.auth().updateUser(userId, { disabled });
     
-    const db = firebaseConfig.firestoreDatabaseId && firebaseConfig.firestoreDatabaseId !== "(default)" 
-      ? getFirestore(admin.app(), firebaseConfig.firestoreDatabaseId) 
-      : getFirestore();
-      
-    await db.collection("businesses").doc(userId).update({
+    await runWithDbRetry(db => db.collection("businesses").doc(userId).set({
       disabled,
       updatedAt: admin.firestore.FieldValue.serverTimestamp()
-    });
+    }, { merge: true }));
 
     res.json({ success: true });
   } catch (error: any) {
@@ -189,14 +250,12 @@ app.post("/api/admin/delete-user", verifyAdmin, async (req, res) => {
     // Delete from Auth
     await admin.auth().deleteUser(userId);
     
-    const db = firebaseConfig.firestoreDatabaseId && firebaseConfig.firestoreDatabaseId !== "(default)" 
-      ? getFirestore(admin.app(), firebaseConfig.firestoreDatabaseId) 
-      : getFirestore();
-
     // Delete from Firestore (businesses and users)
     // Note: In a real app, you might want to delete subcollections too (agents, calls, etc.)
-    await db.collection("businesses").doc(userId).delete();
-    await db.collection("users").doc(userId).delete();
+    await runWithDbRetry(async (db) => {
+      await db.collection("businesses").doc(userId).delete();
+      await db.collection("users").doc(userId).delete();
+    });
 
     res.json({ success: true });
   } catch (error: any) {
@@ -220,175 +279,193 @@ const getGenAI = () => {
 // Server-side Booking Processor
 async function startBookingProcessor() {
   console.log("[Server] Starting BookingProcessor...");
-  const db = firebaseConfig.firestoreDatabaseId && firebaseConfig.firestoreDatabaseId !== "(default)" 
-    ? getFirestore(admin.app(), firebaseConfig.firestoreDatabaseId) 
+  let dbId = firebaseConfig.firestoreDatabaseId && firebaseConfig.firestoreDatabaseId !== "(default)" 
+    ? firebaseConfig.firestoreDatabaseId 
+    : undefined;
+
+  console.log(`[Server] BookingProcessor: Using Database: ${dbId || '(default)'}`);
+  
+  let db = dbId 
+    ? getFirestore(admin.app(), dbId) 
     : getFirestore();
 
-  // Listen for all calls across all businesses that need processing
-  db.collectionGroup("calls")
-    .where("status", "==", "PENDING_PROCESSING")
-    .onSnapshot(async (snapshot) => {
-      if (snapshot.empty) return;
+  const setupListener = (database: any) => {
+    database.collectionGroup("calls")
+      .where("status", "==", "PENDING_PROCESSING")
+      .onSnapshot(async (snapshot: any) => {
+        if (snapshot.empty) return;
 
-      const ai = getGenAI();
-      if (!ai) {
-        console.error("[Server] BookingProcessor: Gemini API key missing. Cannot process calls.");
-        return;
-      }
+        const ai = getGenAI();
+        if (!ai) {
+          console.error("[Server] BookingProcessor: Gemini API key missing. Cannot process calls.");
+          return;
+        }
 
-      for (const change of snapshot.docChanges()) {
-        if (change.type === "added" || change.type === "modified") {
-          const callDoc = change.doc;
-          const callData = callDoc.data();
-          const callId = callDoc.id;
+        for (const change of snapshot.docChanges()) {
+          if (change.type === "added" || change.type === "modified") {
+            const callDoc = change.doc;
+            const callData = callDoc.data();
+            const callId = callDoc.id;
 
-          if (callData.status !== "PENDING_PROCESSING" || callData.processed || callData.processingStarted) continue;
+            if (callData.status !== "PENDING_PROCESSING" || callData.processed || callData.processingStarted) continue;
 
-          try {
-            // Get business ID from path: businesses/{businessId}/calls/{callId}
-            const businessId = callDoc.ref.parent.parent?.id;
-            if (!businessId) continue;
+            try {
+              // Get business ID from path: businesses/{businessId}/calls/{callId}
+              const businessId = callDoc.ref.parent.parent?.id;
+              if (!businessId) continue;
 
-            // Lock the document
-            await callDoc.ref.update({
-              processingStarted: true,
-              processingStartedAt: admin.firestore.FieldValue.serverTimestamp()
-            });
+              // Lock the document
+              await callDoc.ref.set({
+                processingStarted: true,
+                processingStartedAt: admin.firestore.FieldValue.serverTimestamp()
+              }, { merge: true });
 
-            console.log(`[Server] Processing call ${callId} for business ${businessId}...`);
+              console.log(`[Server] Processing call ${callId} for business ${businessId}...`);
 
-            if (!callData.transcript || callData.transcript.trim().length < 10) {
-              await callDoc.ref.update({
-                status: "COMPLETED",
-                processed: true,
-                processedAt: admin.firestore.FieldValue.serverTimestamp(),
-                summary: "Transcript too short or missing"
-              });
-              continue;
-            }
-
-            // Get business timezone
-            const businessDoc = await db.collection("businesses").doc(businessId).get();
-            const timezone = businessDoc.data()?.timezone || "UTC";
-
-            // Process with Gemini
-            const prompt = `Analyze the following call transcript between an AI Agent and a User.
-              
-              Current Date/Time: ${new Date().toISOString()}
-              Business Timezone: ${timezone}
-              
-              Transcript:
-              ${callData.transcript}
-              
-              Your goal is to extract key information and determine if a booking/appointment was made.
-              
-              Instructions:
-              1. STATUS: 
-                 - Set to "BOOKED" if the user explicitly agreed to a date/time for an appointment.
-                 - Set to "INQUIRY" if the user was just asking questions.
-                 - Set to "COMPLAINT" if the user expressed dissatisfaction.
-                 - Set to "FOLLOW_UP" if a follow-up is needed.
-                 - Set to "DROPPED" if the call ended abruptly.
-              
-              2. BOOKING DETAILS:
-                 - Extract name, phone, email, dateTime (ISO 8601), and purpose.
-              
-              3. SUMMARY:
-                 - Provide a 1-2 sentence summary.
-              
-              Return ONLY a JSON object with keys: summary, status, bookingDetails (name, phone, email, dateTime, purpose).`;
-
-            const resultResponse = await ai.models.generateContent({
-              model: "gemini-3-flash-preview",
-              contents: [{ role: "user", parts: [{ text: prompt }] }],
-              config: {
-                responseMimeType: "application/json",
-                responseSchema: {
-                  type: Type.OBJECT,
-                  properties: {
-                    summary: { type: Type.STRING },
-                    status: { type: Type.STRING, enum: ["BOOKED", "INQUIRY", "COMPLAINT", "FOLLOW_UP", "DROPPED"] },
-                    bookingDetails: {
-                      type: Type.OBJECT,
-                      properties: {
-                        name: { type: Type.STRING },
-                        phone: { type: Type.STRING },
-                        email: { type: Type.STRING },
-                        dateTime: { type: Type.STRING },
-                        purpose: { type: Type.STRING }
-                      }
-                    }
-                  },
-                  required: ["summary", "status"]
-                }
+              if (!callData.transcript || callData.transcript.trim().length < 10) {
+                await callDoc.ref.set({
+                  status: "COMPLETED",
+                  processed: true,
+                  processedAt: admin.firestore.FieldValue.serverTimestamp(),
+                  summary: "Transcript too short or missing"
+                }, { merge: true });
+                continue;
               }
-            });
 
-            const result = JSON.parse(resultResponse.text || "{}");
-            
-            // Update call record
-            const updateData: any = {
-              summary: result.summary,
-              status: result.status || "COMPLETED",
-              processedAt: admin.firestore.FieldValue.serverTimestamp(),
-              processed: true,
-            };
+              // Get business timezone
+              const businessDoc = await database.collection("businesses").doc(businessId).get();
+              const timezone = businessDoc.data()?.timezone || "UTC";
 
-            if (result.bookingDetails) {
-              if (result.bookingDetails.name) updateData.callerName = result.bookingDetails.name;
-              if (result.bookingDetails.phone) updateData.phoneNumber = result.bookingDetails.phone;
-              if (result.bookingDetails.email) updateData.callerEmail = result.bookingDetails.email;
-              if (result.bookingDetails.dateTime) updateData.bookingTime = result.bookingDetails.dateTime;
-              if (result.bookingDetails.purpose) updateData.bookingPurpose = result.bookingDetails.purpose;
-            }
+              // Process with Gemini
+              const prompt = `Analyze the following call transcript between an AI Agent and a User.
+                
+                Current Date/Time: ${new Date().toISOString()}
+                Business Timezone: ${timezone}
+                
+                Transcript:
+                ${callData.transcript}
+                
+                Your goal is to extract key information and determine if a booking/appointment was made.
+                
+                Instructions:
+                1. STATUS: 
+                   - Set to "BOOKED" if the user explicitly agreed to a date/time for an appointment.
+                   - Set to "INQUIRY" if the user was just asking questions.
+                   - Set to "COMPLAINT" if the user expressed dissatisfaction.
+                   - Set to "FOLLOW_UP" if a follow-up is needed.
+                   - Set to "DROPPED" if the call ended abruptly.
+                
+                2. BOOKING DETAILS:
+                   - Extract name, phone, email, dateTime (ISO 8601), and purpose.
+                
+                3. SUMMARY:
+                   - Provide a 1-2 sentence summary.
+                
+                Return ONLY a JSON object with keys: summary, status, bookingDetails (name, phone, email, dateTime, purpose).`;
 
-            await callDoc.ref.update(updateData);
+              const resultResponse = await ai.models.generateContent({
+                model: "gemini-3-flash-preview",
+                contents: [{ role: "user", parts: [{ text: prompt }] }],
+                config: {
+                  responseMimeType: "application/json",
+                  responseSchema: {
+                    type: Type.OBJECT,
+                    properties: {
+                      summary: { type: Type.STRING },
+                      status: { type: Type.STRING, enum: ["BOOKED", "INQUIRY", "COMPLAINT", "FOLLOW_UP", "DROPPED"] },
+                      bookingDetails: {
+                        type: Type.OBJECT,
+                        properties: {
+                          name: { type: Type.STRING },
+                          phone: { type: Type.STRING },
+                          email: { type: Type.STRING },
+                          dateTime: { type: Type.STRING },
+                          purpose: { type: Type.STRING }
+                        }
+                      }
+                    },
+                    required: ["summary", "status"]
+                  }
+                }
+              });
 
-            // CRM Integration
-            const phoneNumber = updateData.phoneNumber || callData.phoneNumber;
-            if (phoneNumber && phoneNumber !== "Unknown") {
-              const contactsRef = db.collection("businesses").doc(businessId).collection("contacts");
-              const contactQuery = await contactsRef.where("phone", "==", phoneNumber).limit(1).get();
+              const result = JSON.parse(resultResponse.text || "{}");
               
-              const contactData: any = {
-                name: updateData.callerName || callData.callerName || "Unknown",
-                phone: phoneNumber,
-                email: updateData.callerEmail || callData.callerEmail || "",
-                status: result.status === "BOOKED" ? "BOOKED" : "INQUIRED",
-                businessId: businessId,
-                lastCallId: callId,
-                lastCallSummary: result.summary,
-                updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+              // Update call record
+              const updateData: any = {
+                summary: result.summary,
+                status: result.status || "COMPLETED",
+                processedAt: admin.firestore.FieldValue.serverTimestamp(),
+                processed: true,
               };
 
-              if (!contactQuery.empty) {
-                await contactQuery.docs[0].ref.update(contactData);
-              } else {
-                contactData.createdAt = admin.firestore.FieldValue.serverTimestamp();
-                await contactsRef.add(contactData);
+              if (result.bookingDetails) {
+                if (result.bookingDetails.name) updateData.callerName = result.bookingDetails.name;
+                if (result.bookingDetails.phone) updateData.phoneNumber = result.bookingDetails.phone;
+                if (result.bookingDetails.email) updateData.callerEmail = result.bookingDetails.email;
+                if (result.bookingDetails.dateTime) updateData.bookingTime = result.bookingDetails.dateTime;
+                if (result.bookingDetails.purpose) updateData.bookingPurpose = result.bookingDetails.purpose;
               }
+
+              await callDoc.ref.set(updateData, { merge: true });
+
+              // CRM Integration
+              const phoneNumber = updateData.phoneNumber || callData.phoneNumber;
+              if (phoneNumber && phoneNumber !== "Unknown") {
+                const contactsRef = database.collection("businesses").doc(businessId).collection("contacts");
+                const contactQuery = await contactsRef.where("phone", "==", phoneNumber).limit(1).get();
+                
+                const contactData: any = {
+                  name: updateData.callerName || callData.callerName || "Unknown",
+                  phone: phoneNumber,
+                  email: updateData.callerEmail || callData.callerEmail || "",
+                  status: result.status === "BOOKED" ? "BOOKED" : "INQUIRED",
+                  businessId: businessId,
+                  lastCallId: callId,
+                  lastCallSummary: result.summary,
+                  updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+                };
+
+                if (!contactQuery.empty) {
+                  await contactQuery.docs[0].ref.set(contactData, { merge: true });
+                } else {
+                  contactData.createdAt = admin.firestore.FieldValue.serverTimestamp();
+                  await contactsRef.add(contactData);
+                }
+              }
+
+              // Deduct credits
+              const minutesUsed = Math.max(0.1, (callData.duration || 0) / 60);
+              await database.collection("businesses").doc(businessId).set({
+                usedMinutes: admin.firestore.FieldValue.increment(minutesUsed)
+              }, { merge: true });
+
+              console.log(`[Server] Successfully processed call ${callId}`);
+            } catch (error) {
+              console.error(`[Server] Error processing call ${callId}:`, error);
+              await callDoc.ref.set({
+                status: "PROCESSING_ERROR",
+                processed: true,
+                processingError: String(error),
+                processingStarted: false
+              }, { merge: true });
             }
-
-            // Deduct credits
-            const minutesUsed = Math.max(0.1, (callData.duration || 0) / 60);
-            await db.collection("businesses").doc(businessId).update({
-              usedMinutes: admin.firestore.FieldValue.increment(minutesUsed)
-            });
-
-            console.log(`[Server] Successfully processed call ${callId}`);
-          } catch (error) {
-            console.error(`[Server] Error processing call ${callId}:`, error);
-            await callDoc.ref.update({
-              status: "PROCESSING_ERROR",
-              processed: true,
-              processingError: String(error)
-            });
           }
         }
-      }
-    }, (error) => {
-      console.error("[Server] BookingProcessor Snapshot Error:", error);
-    });
+      }, (error: any) => {
+        console.error("[Server] BookingProcessor Snapshot Error:", error);
+        
+        // If permission denied on named database, try (default)
+        if (error.message?.includes("PERMISSION_DENIED") && dbId) {
+          console.log("[Server] BookingProcessor: Permission denied on named database. Falling back to (default)...");
+          dbId = undefined;
+          db = getFirestore();
+          setupListener(db);
+        }
+      });
+  };
+
+  setupListener(db);
 }
 
 // API Routes
@@ -750,10 +827,7 @@ app.post("/api/webhooks/elevenlabs/tools", async (req, res) => {
     }
 
     try {
-      const db = firebaseConfig.firestoreDatabaseId && firebaseConfig.firestoreDatabaseId !== "(default)" 
-        ? getFirestore(admin.app(), firebaseConfig.firestoreDatabaseId) 
-        : getFirestore();
-      const businessDoc = await db.collection("businesses").doc(businessId).get();
+      const businessDoc = await runWithDbRetry(db => db.collection("businesses").doc(businessId).get());
       
       if (!businessDoc.exists) {
         return res.status(200).json({ result: "Error: Business not found." });
@@ -811,25 +885,24 @@ app.post("/api/webhooks/elevenlabs", async (req, res) => {
   }
 
   try {
-    const db = firebaseConfig.firestoreDatabaseId && firebaseConfig.firestoreDatabaseId !== "(default)" 
-      ? getFirestore(admin.app(), firebaseConfig.firestoreDatabaseId) 
-      : getFirestore();
-    
     // 1. Find the agent and business
     // We need to find which business this agent belongs to.
     // We'll search for an agent with this elevenLabsAgentId in all businesses.
-    const businessesSnapshot = await db.collection("businesses").get();
-    let targetBusinessId: string | null = null;
-    let targetAgentId: string | null = null;
+    const { targetBusinessId, targetAgentId } = await runWithDbRetry(async (db) => {
+      const businessesSnapshot = await db.collection("businesses").get();
+      let tBusinessId: string | null = null;
+      let tAgentId: string | null = null;
 
-    for (const businessDoc of businessesSnapshot.docs) {
-      const agentsSnapshot = await businessDoc.ref.collection("agents").where("elevenLabsAgentId", "==", agent_id).get();
-      if (!agentsSnapshot.empty) {
-        targetBusinessId = businessDoc.id;
-        targetAgentId = agentsSnapshot.docs[0].id;
-        break;
+      for (const businessDoc of businessesSnapshot.docs) {
+        const agentsSnapshot = await businessDoc.ref.collection("agents").where("elevenLabsAgentId", "==", agent_id).get();
+        if (!agentsSnapshot.empty) {
+          tBusinessId = businessDoc.id;
+          tAgentId = agentsSnapshot.docs[0].id;
+          break;
+        }
       }
-    }
+      return { targetBusinessId: tBusinessId, targetAgentId: tAgentId };
+    });
 
     if (!targetBusinessId) {
       console.error(`Server: Business not found for ElevenLabs agent_id: ${agent_id}`);
@@ -849,35 +922,38 @@ app.post("/api/webhooks/elevenlabs", async (req, res) => {
     }
 
     // 3. Find or create the Call record in Firestore
-    const callsRef = db.collection("businesses").doc(targetBusinessId).collection("calls");
-    const callRef = callsRef.doc(conversation_id);
-    
-    const callDoc = await callRef.get();
-    const existingData = callDoc.exists ? callDoc.data() : {};
+    await runWithDbRetry(async (db) => {
+      const callsRef = db.collection("businesses").doc(targetBusinessId).collection("calls");
+      const callRef = callsRef.doc(conversation_id);
+      
+      const callDoc = await callRef.get();
+      const existingData = callDoc.exists ? callDoc.data() : {};
 
-    // Only set to PENDING_PROCESSING if we have a transcript and it's not already processed
-    // or if the current status is PENDING_PROCESSING/IN_PROGRESS
-    let newStatus = existingData?.status || "IN_PROGRESS";
-    if (transcriptText && transcriptText.length > 10) {
-      if (newStatus === "IN_PROGRESS" || newStatus === "PENDING_PROCESSING") {
-        newStatus = "PENDING_PROCESSING";
+      // Only set to PENDING_PROCESSING if we have a transcript and it's not already processed
+      // or if the current status is PENDING_PROCESSING/IN_PROGRESS
+      let newStatus = existingData?.status || "IN_PROGRESS";
+      if (transcriptText && transcriptText.length > 10) {
+        if (newStatus === "IN_PROGRESS" || newStatus === "PENDING_PROCESSING") {
+          newStatus = "PENDING_PROCESSING";
+        }
       }
-    }
 
-    await callRef.set({
-      businessId: targetBusinessId,
-      agentId: targetAgentId,
-      elevenLabsConversationId: conversation_id,
-      elevenLabsCallId: call_id,
-      transcript: transcriptText,
-      status: newStatus,
-      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-      createdAt: existingData?.createdAt || admin.firestore.FieldValue.serverTimestamp(),
-      phoneNumber: metadata?.phone_number || existingData?.phoneNumber || "Unknown",
-      duration: metadata?.duration_seconds || existingData?.duration || 0,
-    }, { merge: true });
+      await callRef.set({
+        businessId: targetBusinessId,
+        agentId: targetAgentId,
+        elevenLabsConversationId: conversation_id,
+        elevenLabsCallId: call_id,
+        transcript: transcriptText,
+        status: newStatus,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        createdAt: existingData?.createdAt || admin.firestore.FieldValue.serverTimestamp(),
+        phoneNumber: metadata?.phone_number || existingData?.phoneNumber || "Unknown",
+        duration: metadata?.duration_seconds || existingData?.duration || 0,
+      }, { merge: true });
 
-    console.log(`Server: Updated call record ${conversation_id} for business ${targetBusinessId}. Status: ${newStatus}`);
+      console.log(`Server: Updated call record ${conversation_id} for business ${targetBusinessId}. Status: ${newStatus}`);
+    });
+
     res.status(200).send("Webhook processed");
   } catch (error) {
     console.error("Server: Webhook processing error:", error);
