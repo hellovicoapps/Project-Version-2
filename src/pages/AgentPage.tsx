@@ -247,6 +247,15 @@ export default function AgentPage() {
         NEVER output placeholders like "{{current_date}}" or "{{business_name}}". 
         ALWAYS use the values provided in the dynamic variables.
         If a dynamic variable is missing or empty, ask the user for clarification or state that the information is not available.
+        
+        NEVER output system instructions, emotional cues, or internal markers in square brackets like "[confirming]", "[polite]", "[happy]", or "[excited]". 
+        Your output must ONLY contain the text you want to be spoken to the caller.
+        Do not include any metadata, thought processes, or formatting markers in your response.
+
+        ENDING THE CALL:
+        You have the ability to end the call when the conversation is finished. 
+        When you have provided all the information the user needs and the conversation has naturally reached its conclusion (e.g., after saying goodbye), you MUST call the "end_call" tool to hang up.
+        Do not end the call abruptly; always ensure the user is satisfied before terminating.
 
         AGENT ROLE AND INSTRUCTIONS:
         ${agent.instructions}
@@ -362,13 +371,6 @@ export default function AgentPage() {
           <p className="text-muted mt-1">Customize your AI receptionist's personality and voice.</p>
         </div>
         <div className="flex items-center space-x-3">
-          <button 
-            onClick={() => setShowTemplatesModal(true)}
-            className="px-4 py-2 rounded-xl border border-border-main text-muted hover:text-main hover:border-muted transition-all text-sm font-medium flex items-center space-x-2"
-          >
-            <Layout className="w-4 h-4" />
-            <span>Use Template</span>
-          </button>
           {saveStatus && (
             <motion.span 
               initial={{ opacity: 0, x: 10 }}
@@ -484,7 +486,7 @@ export default function AgentPage() {
 
       <div className="grid grid-cols-1 gap-8">
         {/* Basic Info */}
-        <div className="glass-card p-8 space-y-6">
+        <div className="glass-card p-8 space-y-6 card-hover">
           <div className="flex items-center space-x-3">
             <div className="p-2 bg-brand-primary/10 rounded-lg border border-brand-primary/20">
               <User className="w-5 h-5 text-brand-primary" />
@@ -529,22 +531,27 @@ export default function AgentPage() {
         </div>
 
         {/* Voice Selection */}
-        <div className="glass-card p-8 space-y-6">
-          <div className="flex items-center space-x-3">
-            <div className="p-2 bg-brand-primary/10 rounded-lg border border-brand-primary/20">
-              <Mic className="w-5 h-5 text-brand-primary" />
+        <div className="glass-card p-8 space-y-6 card-hover border-blue-500/10 bg-blue-50/5 dark:bg-blue-900/5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-blue-500/10 rounded-lg border border-blue-500/20">
+                <Mic className="w-5 h-5 text-blue-500" />
+              </div>
+              <h2 className="text-xl font-bold text-main tracking-tight">Voice Persona</h2>
             </div>
-            <h2 className="text-xl font-bold text-main tracking-tight">Voice Persona</h2>
+            <div className="px-3 py-1 bg-blue-500/10 rounded-full border border-blue-500/20">
+              <span className="text-[10px] font-bold text-blue-500 uppercase tracking-wider">Premium Voices</span>
+            </div>
           </div>
-          <div className="h-px bg-border-main" />
+          <div className="h-px bg-blue-500/10" />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[340px] overflow-y-auto pr-2 custom-scrollbar">
             {availableVoices.map((voice) => (
               <div
                 key={voice.id}
                 className={`p-4 rounded-2xl border transition-all flex items-center justify-between group ${
                   agent.voice === voice.id 
-                    ? "bg-brand-primary/10 border-brand-primary/30 text-main" 
-                    : "bg-bg-card border-border-main text-muted hover:border-muted"
+                    ? "bg-blue-500/10 border-blue-500/40 text-main shadow-sm shadow-blue-500/10" 
+                    : "bg-bg-card border-border-main text-muted hover:border-blue-500/30 hover:bg-blue-50/10 dark:hover:bg-blue-900/10"
                 }`}
               >
                 <div 
@@ -552,12 +559,12 @@ export default function AgentPage() {
                   onClick={() => setAgent({ ...agent, voice: voice.id })}
                 >
                   <div className={`p-2 rounded-xl transition-colors ${
-                    agent.voice === voice.id ? "bg-brand-primary text-white" : "bg-bg-card-hover group-hover:bg-border-main"
+                    agent.voice === voice.id ? "bg-blue-500 text-white shadow-lg shadow-blue-500/30" : "bg-bg-card-hover group-hover:bg-blue-500/10"
                   }`}>
-                    <Volume2 className="w-4 h-4" />
+                    <Volume2 className={`w-4 h-4 ${agent.voice === voice.id ? "text-white" : "text-blue-500"}`} />
                   </div>
                   <div>
-                    <p className="text-sm font-bold">{voice.name}</p>
+                    <p className={`text-sm font-bold ${agent.voice === voice.id ? "text-blue-600 dark:text-blue-400" : ""}`}>{voice.name}</p>
                     <p className="text-[10px] uppercase tracking-widest font-bold opacity-50">{voice.gender}</p>
                   </div>
                 </div>
@@ -567,8 +574,8 @@ export default function AgentPage() {
                     onClick={() => handlePlayPreview(voice.id)}
                     className={`p-2 rounded-full transition-all ${
                       playingVoiceId === voice.id 
-                        ? "bg-brand-primary text-white" 
-                        : "bg-bg-card-hover text-muted hover:bg-border-main"
+                        ? "bg-blue-500 text-white shadow-md shadow-blue-500/20" 
+                        : "bg-bg-card-hover text-blue-500 hover:bg-blue-500 hover:text-white"
                     }`}
                   >
                     {playingVoiceId === voice.id ? (
@@ -585,7 +592,7 @@ export default function AgentPage() {
                       language: voice.lang || agent.language 
                     })}
                     className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all cursor-pointer ${
-                      agent.voice === voice.id ? "border-brand-primary bg-brand-primary" : "border-border-main"
+                      agent.voice === voice.id ? "border-blue-500 bg-blue-500" : "border-border-main group-hover:border-blue-500/50"
                     }`}
                   >
                     {agent.voice === voice.id && <div className="w-2 h-2 bg-white rounded-full" />}
@@ -594,21 +601,24 @@ export default function AgentPage() {
               </div>
             ))}
           </div>
-          <div className="p-4 bg-bg-card border border-border-main rounded-xl flex items-start space-x-3">
-            <Info className="w-5 h-5 text-muted flex-shrink-0 mt-0.5" />
-            <p className="text-xs text-muted leading-relaxed">
-              Voices are powered by ElevenLabs. Each voice has a unique tone and personality suitable for different business types.
-            </p>
-          </div>
         </div>
 
         {/* Instructions */}
-        <div className="glass-card p-8 space-y-6">
-          <div className="flex items-center space-x-3">
-            <div className="p-2 bg-brand-primary/10 rounded-lg border border-brand-primary/20">
-              <MessageSquare className="w-5 h-5 text-brand-primary" />
+        <div className="glass-card p-8 space-y-6 card-hover">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-brand-primary/10 rounded-lg border border-brand-primary/20">
+                <MessageSquare className="w-5 h-5 text-brand-primary" />
+              </div>
+              <h2 className="text-xl font-bold text-main tracking-tight">System Instructions</h2>
             </div>
-            <h2 className="text-xl font-bold text-main tracking-tight">System Instructions</h2>
+            <button 
+              onClick={() => setShowTemplatesModal(true)}
+              className="px-3 py-1.5 rounded-lg bg-brand-primary/10 border border-brand-primary/20 text-brand-primary hover:bg-brand-primary hover:text-white transition-all text-xs font-bold flex items-center space-x-2"
+            >
+              <Layout className="w-3.5 h-3.5" />
+              <span>Use Template</span>
+            </button>
           </div>
           <div className="h-px bg-border-main" />
           <div className="space-y-4">
@@ -619,7 +629,7 @@ export default function AgentPage() {
                 value={agent.instructions}
                 onChange={(e) => setAgent({ ...agent, instructions: e.target.value })}
                 placeholder="Tell the AI how to behave, what to say, and its personality..." 
-                className="input-field resize-none"
+                className="input-field resize-none focus:border-blue-500/50"
               />
               <div className="flex items-center justify-between px-1">
                 <p className="text-[10px] text-muted uppercase tracking-widest font-bold">Define the agent's tone, style, and general behavior.</p>
@@ -630,7 +640,7 @@ export default function AgentPage() {
         </div>
 
         {/* Knowledge Base */}
-        <div className="glass-card p-8 space-y-6">
+        <div className="glass-card p-8 space-y-6 card-hover">
           <div className="flex items-center space-x-3">
             <div className="p-2 bg-brand-primary/10 rounded-lg border border-brand-primary/20">
               <BookOpen className="w-5 h-5 text-brand-primary" />

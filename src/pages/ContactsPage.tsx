@@ -37,7 +37,7 @@ import { useNavigate } from "react-router-dom";
 
 const StatusBadge = ({ status }: { status: string }) => {
   const styles: any = {
-    BOOKED: "bg-[var(--brand-primary)]/10 text-[var(--brand-primary)] border-[var(--brand-primary)]/20",
+    BOOKED: "bg-[var(--color-success)]/10 text-[var(--color-success)] border-[var(--color-success)]/20",
     INQUIRED: "bg-[var(--color-warning)]/10 text-[var(--color-warning)] border-[var(--color-warning)]/20",
   };
 
@@ -205,7 +205,7 @@ export default function ContactsPage() {
         </div>
       </div>
 
-      <div className="glass-card overflow-hidden">
+      <div className="glass-card overflow-hidden card-hover">
         <div className="p-6 border-b border-[var(--border-main)] flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center space-x-4">
             {["all", "booked", "inquired"].map((t) => (

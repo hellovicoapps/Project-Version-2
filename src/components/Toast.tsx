@@ -1,8 +1,8 @@
 import React, { createContext, useContext, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { CheckCircle2, AlertCircle, Info, X } from "lucide-react";
+import { CheckCircle2, AlertCircle, Info, X, AlertTriangle } from "lucide-react";
 
-type ToastType = "success" | "error" | "info";
+type ToastType = "success" | "error" | "info" | "warning";
 
 interface Toast {
   id: string;
@@ -55,12 +55,15 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                   ? "bg-[var(--bg-card)] border-[var(--color-success)]/20 text-[var(--color-success)]"
                   : toast.type === "error"
                   ? "bg-[var(--bg-card)] border-[var(--color-danger)]/20 text-[var(--color-danger)]"
+                  : toast.type === "warning"
+                  ? "bg-[var(--bg-card)] border-yellow-500/20 text-yellow-500"
                   : "bg-[var(--bg-card)] border-[var(--color-info)]/20 text-[var(--color-info)]"
               }`}
             >
               <div className="flex-shrink-0">
                 {toast.type === "success" && <CheckCircle2 className="w-5 h-5" />}
                 {toast.type === "error" && <AlertCircle className="w-5 h-5" />}
+                {toast.type === "warning" && <AlertTriangle className="w-5 h-5" />}
                 {toast.type === "info" && <Info className="w-5 h-5" />}
               </div>
               <p className="flex-1 text-sm font-medium">{toast.message}</p>

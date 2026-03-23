@@ -28,7 +28,8 @@ import {
   CheckCircle2,
   XCircle,
   Mic,
-  RefreshCw
+  RefreshCw,
+  Inbox
 } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { CallStatus } from "../types";
@@ -39,7 +40,7 @@ import { updateDoc, doc, serverTimestamp } from "firebase/firestore";
 
 const StatusBadge = ({ status }: { status: CallStatus }) => {
   const styles: any = {
-    [CallStatus.BOOKED]: "bg-[var(--color-accent)]/10 text-[var(--color-accent)] border-[var(--color-accent)]/20",
+    [CallStatus.BOOKED]: "bg-[var(--color-success)]/10 text-[var(--color-success)] border-[var(--color-success)]/20",
     [CallStatus.INQUIRY]: "bg-[var(--color-warning)]/10 text-[var(--color-warning)] border-[var(--color-warning)]/20",
     [CallStatus.IN_PROGRESS]: "bg-[var(--brand-primary)]/10 text-[var(--brand-primary)] border-[var(--brand-primary)]/20 animate-pulse",
     [CallStatus.COMPLAINT]: "bg-[var(--color-danger)]/10 text-[var(--color-danger)] border-[var(--color-danger)]/20",
@@ -126,6 +127,8 @@ export default function InboxPage() {
       const callRef = doc(db, `businesses/${businessId}/calls`, callId);
       await updateDoc(callRef, {
         status: "PENDING_PROCESSING",
+        processed: false,
+        processingStarted: false,
         updatedAt: serverTimestamp()
       });
     } catch (error) {
@@ -152,7 +155,7 @@ export default function InboxPage() {
         </div>
       </div>
 
-      <div className="glass-card overflow-hidden">
+      <div className="glass-card overflow-hidden card-hover">
         <div className="p-6 border-b border-[var(--border-main)] flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center space-x-4 overflow-x-auto pb-2 scrollbar-none">
             {["all", "booked", "inquiry", "complaint", "follow up", "dropped"].map((f) => (
@@ -203,6 +206,9 @@ export default function InboxPage() {
               ) : filteredCalls.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="px-6 py-20 text-center">
+                    <div className="w-16 h-16 bg-[var(--bg-main)] rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Inbox className="w-8 h-8 text-[var(--text-muted)]" />
+                    </div>
                     <p className="text-[var(--text-muted)]">No calls found matching your criteria.</p>
                   </td>
                 </tr>
@@ -220,7 +226,9 @@ export default function InboxPage() {
                             <PhoneIncoming className="w-4 h-4" />
                           </div>
                           <div>
-                            <p className="text-sm font-semibold text-[var(--text-main)]">{call.callerName || "Unknown Caller"}</p>
+                            <p className="text-sm font-semibold text-[var(--text-main)]">
+                              {(call.callerName && call.callerName !== "null") ? call.callerName : "Unknown Caller"}
+                            </p>
                             <div className="flex items-center space-x-2">
                               <p className="text-xs text-[var(--text-muted)]">{call.phoneNumber}</p>
                               {call.summary && <span className="text-[var(--border-main)]">•</span>}

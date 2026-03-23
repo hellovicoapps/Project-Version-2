@@ -305,18 +305,22 @@ export default function VoiceInterface() {
     clientReferenceId: businessId || "anonymous",
     dynamicVariables,
     onTranscript: (text, role, isFinal) => {
-      console.log(`VoiceInterface: Transcript [${role}] (final: ${isFinal}): ${text}`);
+      // Filter out bracketed instructions like [confirming], [polite], etc.
+      const cleanText = text.replace(/\[.*?\]/g, '').trim();
+      if (!cleanText && role === 'ai') return; // Don't add empty AI messages
+
+      console.log(`VoiceInterface: Transcript [${role}] (final: ${isFinal}): ${cleanText}`);
       setTranscript(prev => {
         const newTranscript = [...prev];
         const lastMsg = newTranscript[newTranscript.length - 1];
         
         // If the last message is from the same role and was NOT final, update it
         if (lastMsg && lastMsg.role === role && !lastMsg.isFinal) {
-          lastMsg.text = text;
+          lastMsg.text = cleanText;
           lastMsg.isFinal = isFinal;
         } else {
           // Otherwise, push a new message
-          newTranscript.push({ role, text, isFinal });
+          newTranscript.push({ role, text: cleanText, isFinal });
         }
         
         // Keep ref in sync
@@ -341,6 +345,10 @@ export default function VoiceInterface() {
     },
     onStatusChange: (newStatus) => {
       setStatus(newStatus);
+    },
+    onCallEnd: () => {
+      console.log("VoiceInterface: AI requested call end");
+      endCall();
     }
   });
 
@@ -558,7 +566,7 @@ export default function VoiceInterface() {
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-6 min-h-0">
         {/* Call Controls & Visualizer */}
         <div className="lg:col-span-2 flex flex-col space-y-6 min-h-[500px] lg:min-h-0">
-          <div className="flex-1 glass-card relative overflow-hidden flex flex-col items-center justify-center p-6 md:p-12">
+          <div className="flex-1 glass-card relative overflow-hidden flex flex-col items-center justify-center p-6 md:p-12 card-hover">
             <AnimatePresence>
               {isCalling && (
                 <motion.div 
@@ -686,7 +694,7 @@ export default function VoiceInterface() {
         </div>
 
         {/* Real-time Transcript */}
-        <div className="glass-card flex flex-col overflow-hidden h-[600px]">
+        <div className="glass-card flex flex-col overflow-hidden h-[600px] card-hover">
           <div className="p-6 border-b border-zinc-900 flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <MessageSquare className="w-5 h-5 text-blue-400" />

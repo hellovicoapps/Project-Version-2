@@ -8,6 +8,7 @@ interface UseElevenLabsAgentProps {
   onStatusChange?: (status: string) => void;
   onError?: (error: any) => void;
   onDataExtracted?: (data: any) => void;
+  onCallEnd?: () => void;
   clientReferenceId?: string;
   dynamicVariables?: Record<string, any>;
 }
@@ -18,6 +19,7 @@ export const useElevenLabsAgent = ({
   onStatusChange,
   onError,
   onDataExtracted,
+  onCallEnd,
   clientReferenceId,
   dynamicVariables: defaultDynamicVariables
 }: UseElevenLabsAgentProps) => {
@@ -45,6 +47,16 @@ export const useElevenLabsAgent = ({
         onTranscript?.(message.message, message.source, isFinal);
       }
       
+      // Handle client tool calls
+      if ((message as any).type === "client_tool_call") {
+        const toolCall = message as any;
+        console.log("ElevenLabs Client Tool Call:", toolCall);
+        if (toolCall.tool_name === "end_call") {
+          console.log("AI requested to end the call");
+          onCallEnd?.();
+        }
+      }
+
       // Handle data extraction if supported by the message format
       if ((message as any).type === "data_extraction" || (message as any).data) {
         onDataExtracted?.((message as any).data || message);
@@ -76,7 +88,7 @@ export const useElevenLabsAgent = ({
       // Get a signed URL for secure connection
       const signedUrl = await elevenlabsService.getSignedUrl(agentId);
       
-      await conversation.startSession({
+      await (conversation as any).startSession({
         signedUrl,
         clientReferenceId,
         dynamicVariables: { ...defaultDynamicVariables, ...dynamicVariables }

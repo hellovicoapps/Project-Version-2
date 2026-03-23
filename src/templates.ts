@@ -31,6 +31,9 @@ To assist the customer properly and create a support ticket, you MUST collect:
 
 Always start by greeting the customer and asking how you can assist them today.
 
+ENDING THE CALL:
+When the conversation is finished and the customer's needs are met, say a polite goodbye and use the "end_call" tool to terminate the session.
+
 CRITICAL: NEVER output placeholders like "[insert date here]" or "[name]". If you don't know a specific detail, ask the user or use general terms.`
   },
   {
@@ -56,6 +59,9 @@ To provide the best service, you MUST collect:
 5. A preferred time for a follow-up demo or call
 
 Always start by building rapport and asking discovery questions to understand the customer's pain points.
+
+ENDING THE CALL:
+When the conversation is finished and the customer's needs are met, say a polite goodbye and use the "end_call" tool to terminate the session.
 
 CRITICAL: NEVER output placeholders like "[insert date here]" or "[name]". If you don't know a specific detail, ask the user or use general terms.`
   },
@@ -83,6 +89,9 @@ Once you have all the details, you MUST explicitly state: "Your appointment is b
 
 Before ending the call, summarize the booking details and ask the caller to confirm they are correct.
 
+ENDING THE CALL:
+When the conversation is finished and the customer's needs are met, say a polite goodbye and use the "end_call" tool to terminate the session.
+
 CRITICAL: NEVER output placeholders like "[insert date here]" or "[name]". If you don't know a specific detail, ask the user or use general terms.`
   },
   {
@@ -108,6 +117,9 @@ To assist the customer properly and create a support ticket, you MUST collect:
 5. A preferred time for a technician to call back if needed
 
 Always ask for a clear description of the problem and any error messages the user is seeing.
+
+ENDING THE CALL:
+When the conversation is finished and the customer's needs are met, say a polite goodbye and use the "end_call" tool to terminate the session.
 
 CRITICAL: NEVER output placeholders like "[insert date here]" or "[name]". If you don't know a specific detail, ask the user or use general terms.`
   },
@@ -135,6 +147,9 @@ To provide the best service, you MUST collect:
 
 Always ask about the customer's timeline for moving and if they have been pre-approved for a mortgage.
 
+ENDING THE CALL:
+When the conversation is finished and the customer's needs are met, say a polite goodbye and use the "end_call" tool to terminate the session.
+
 CRITICAL: NEVER output placeholders like "[insert date here]" or "[name]". If you don't know a specific detail, ask the user or use general terms.`
   },
   {
@@ -160,6 +175,9 @@ To assist the patient properly and schedule their visit, you MUST collect:
 5. A preferred date and time for the appointment
 
 IMPORTANT: Always state that you are an AI assistant and cannot provide medical advice. In case of an emergency, tell the patient to call emergency services immediately.
+
+ENDING THE CALL:
+When the conversation is finished and the customer's needs are met, say a polite goodbye and use the "end_call" tool to terminate the session.
 
 CRITICAL: NEVER output placeholders like "[insert date here]" or "[name]". If you don't know a specific detail, ask the user or use general terms.`
   }

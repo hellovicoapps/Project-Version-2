@@ -44,11 +44,13 @@ export const ROUTES = {
   ADMIN_DASHBOARD: "/admin",
   PUBLIC_CALL: "/call/:businessId",
   BOTCAKE_REDIRECT: "/botcake/:businessId",
+  CALL_STATUS: "/call-status/:callId",
+  NEWS: "/news",
 };
 
 export const CALL_STATUS_COLORS = {
   IN_PROGRESS: "text-blue-500",
-  BOOKED: "text-purple-500",
+  BOOKED: "text-emerald-500",
   INQUIRY: "text-yellow-500",
   COMPLAINT: "text-rose-500",
   FOLLOW_UP: "text-orange-500",

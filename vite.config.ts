@@ -11,6 +11,7 @@ export default defineConfig(({mode}) => {
       'process.env.APP_URL': JSON.stringify(env.APP_URL),
       'process.env.PAYPAL_CLIENT_ID': JSON.stringify(env.PAYPAL_CLIENT_ID || ""),
       'process.env.PAYPAL_MODE': JSON.stringify(env.PAYPAL_MODE || "sandbox"),
+      'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY || env.API_KEY || ""),
     },
     resolve: {
       alias: {

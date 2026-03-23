@@ -71,20 +71,24 @@ import { CallStatus, Business, SubscriptionPlan } from "../types";
 const StatCard = ({ title, value, icon: Icon, trend, trendValue }: any) => (
   <motion.div 
     whileHover={{ y: -5 }}
-    className="glass-card p-6 space-y-4"
+    className="glass-card p-6 space-y-4 card-hover"
   >
     <div className="flex items-center justify-between">
-      <div className="p-3 bg-[var(--brand-primary)]/10 rounded-xl border border-[var(--brand-primary)]/20">
+      <div className="p-3 bg-[var(--brand-primary)]/10 rounded-xl border border-[var(--brand-primary)]/10">
         <Icon className="w-6 h-6 text-[var(--brand-primary)]" />
       </div>
-      <div className={`flex items-center space-x-1 text-sm ${trend === "up" ? "text-[var(--color-success)]" : "text-[var(--color-danger)]"}`}>
+      <div className={`flex items-center space-x-1 text-xs font-bold px-2 py-1 rounded-full ${
+        trend === "up" 
+          ? "bg-[var(--color-success)]/10 text-[var(--color-success)]" 
+          : "bg-[var(--color-danger)]/10 text-[var(--color-danger)]"
+      }`}>
+        {trend === "up" ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
         <span>{trendValue}%</span>
-        {trend === "up" ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownRight className="w-4 h-4" />}
       </div>
     </div>
     <div>
-      <p className="text-[var(--text-muted)] text-sm font-medium">{title}</p>
-      <h3 className="text-3xl font-bold text-[var(--text-main)] mt-1">{value}</h3>
+      <p className="text-[var(--text-muted)] text-xs font-bold uppercase tracking-widest">{title}</p>
+      <h3 className="text-3xl font-bold text-[var(--text-main)] mt-1 tracking-tight">{value}</h3>
     </div>
   </motion.div>
 );
@@ -515,7 +519,7 @@ export default function DashboardHome() {
                     </div>
                     <div>
                       <p className="text-sm font-medium text-[var(--text-main)]">
-                        {call.callerName ? `Call from ${call.callerName}` : `Call from ${call.phoneNumber}`}
+                        {(call.callerName && call.callerName !== "null") ? `Call from ${call.callerName}` : `Call from ${call.phoneNumber}`}
                       </p>
                       <div className="flex items-center space-x-2">
                         {call.callerName && <p className="text-[10px] text-[var(--text-muted)]">{call.phoneNumber}</p>}
@@ -530,7 +534,11 @@ export default function DashboardHome() {
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <span className={`px-2 py-1 bg-[var(--brand-primary)]/10 text-[var(--brand-primary)] text-[10px] font-bold uppercase tracking-wider rounded-full border border-[var(--brand-primary)]/20`}>
+                    <span className={`px-2 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full border ${
+                      call.status === CallStatus.BOOKED 
+                        ? "bg-[var(--color-success)]/10 text-[var(--color-success)] border-[var(--color-success)]/20"
+                        : "bg-[var(--brand-primary)]/10 text-[var(--brand-primary)] border-[var(--brand-primary)]/20"
+                    }`}>
                       {call.status}
                     </span>
                   </div>

@@ -305,7 +305,7 @@ export default function CalendarPage() {
                       .filter(b => isSameDay(b.parsedDate, day))
                       .slice(0, 3)
                       .map(b => (
-                        <div key={b.id} className="text-[10px] p-1 bg-[var(--brand-primary)]/10 border border-[var(--brand-primary)]/20 rounded text-[var(--brand-primary)] truncate">
+                        <div key={b.id} className="text-[10px] p-1 bg-[var(--color-success)]/10 border border-[var(--color-success)]/20 rounded text-[var(--color-success)] truncate">
                           {format(b.parsedDate, "h:mm")} {b.callerName}
                         </div>
                       ))}
@@ -415,7 +415,7 @@ export default function CalendarPage() {
                             key={booking.id}
                             initial={{ opacity: 0, scale: 0.9 }}
                             animate={{ opacity: 1, scale: 1 }}
-                            className="absolute p-1 rounded-lg bg-[var(--brand-primary)]/10 border border-[var(--brand-primary)]/20 shadow-lg backdrop-blur-sm z-10 cursor-pointer hover:bg-[var(--brand-primary)]/20 transition-all group overflow-hidden"
+                            className="absolute p-1 rounded-lg bg-[var(--color-success)]/10 border border-[var(--color-success)]/20 shadow-lg backdrop-blur-sm z-10 cursor-pointer hover:bg-[var(--color-success)]/20 transition-all group overflow-hidden"
                             style={{ 
                               top: `${top}px`, 
                               height: '76px',
@@ -426,7 +426,7 @@ export default function CalendarPage() {
                             <div className="flex flex-col h-full justify-between">
                               <div>
                                 <div className="flex items-center justify-between">
-                                  <span className="text-[10px] font-bold text-[var(--brand-primary)] uppercase tracking-wider">
+                                  <span className="text-[10px] font-bold text-[var(--color-success)] uppercase tracking-wider">
                                     {format(booking.parsedDate, "h:mm a")}
                                   </span>
                                   <MoreVertical className="w-3 h-3 text-[var(--text-muted)] opacity-0 group-hover:opacity-100 transition-opacity" />

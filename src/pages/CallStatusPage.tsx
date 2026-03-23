@@ -167,7 +167,7 @@ export default function CallStatusPage() {
         className="max-w-2xl w-full space-y-6"
       >
         {/* Main Status Card */}
-        <div className="glass-card overflow-hidden">
+        <div className="glass-card overflow-hidden card-hover">
           <div className="p-8 space-y-8">
             {/* Call Status Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -269,7 +269,7 @@ export default function CallStatusPage() {
         <div className="space-y-4">
           <h3 className="text-sm font-bold text-[var(--text-main)] uppercase tracking-widest px-2">What's Next?</h3>
           <div className="grid grid-cols-1 gap-3">
-            <div className="p-4 glass-card flex items-center justify-between group cursor-pointer hover:border-[var(--brand-primary)]/30 transition-all">
+            <div className="p-4 glass-card flex items-center justify-between group cursor-pointer hover:border-[var(--brand-primary)]/30 transition-all card-hover">
               <div className="flex items-center space-x-4">
                 <div className="p-2 bg-emerald-500/10 rounded-lg">
                   <MessageSquare className="w-5 h-5 text-emerald-500" />

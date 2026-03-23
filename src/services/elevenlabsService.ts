@@ -106,7 +106,18 @@ export class ElevenLabsService {
                   description: "The reason or service requested for the appointment"
                 }
               ]
-            }
+            },
+            tools: [
+              {
+                type: "client",
+                name: "end_call",
+                description: "Ends the current call when the conversation is finished or the user wants to hang up. Use this ONLY when the conversation is naturally over.",
+                parameters: {
+                  type: "object",
+                  properties: {}
+                }
+              }
+            ]
           },
           tts: { voice_id: voiceId }
         },
@@ -204,7 +215,18 @@ export class ElevenLabsService {
                   description: "The reason or service requested for the appointment"
                 }
               ]
-            }
+            },
+            tools: [
+              {
+                type: "client",
+                name: "end_call",
+                description: "Ends the current call when the conversation is finished or the user wants to hang up. Use this ONLY when the conversation is naturally over.",
+                parameters: {
+                  type: "object",
+                  properties: {}
+                }
+              }
+            ]
           },
           tts: { voice_id: voiceId }
         },

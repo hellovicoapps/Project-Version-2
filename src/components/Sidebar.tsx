@@ -30,20 +30,29 @@ import { Business } from "../types";
 const SidebarItem = ({ to, icon: Icon, label, active, isMinimized }: any) => (
   <Link to={to}>
     <motion.div 
-      whileHover={{ x: isMinimized ? 0 : 5, scale: isMinimized ? 1.05 : 1 }}
+      whileHover={{ x: isMinimized ? 0 : 4 }}
       whileTap={{ scale: 0.98 }}
-      className={`flex items-center ${isMinimized ? 'justify-center' : 'justify-between'} px-4 py-3 rounded-xl transition-all group ${
+      className={`flex items-center ${isMinimized ? 'justify-center' : 'justify-between'} px-4 py-3 rounded-xl transition-all duration-200 group relative ${
         active 
-          ? "bg-[var(--brand-primary)] text-white shadow-lg shadow-[var(--brand-primary)]/20" 
-          : "text-[var(--text-muted)] hover:bg-[var(--bg-card)] hover:text-[var(--text-main)]"
+          ? "bg-[var(--brand-primary)] text-white shadow-lg shadow-[var(--brand-primary)]/25" 
+          : "text-[var(--text-muted)] hover:bg-[var(--bg-card-hover)] hover:text-[var(--text-main)]"
       }`}
       title={isMinimized ? label : undefined}
     >
       <div className={`flex items-center ${isMinimized ? '' : 'space-x-3'}`}>
-        <Icon className={`w-5 h-5 ${active ? "text-white" : "text-[var(--text-muted)] group-hover:text-[var(--brand-primary)]"}`} />
-        {!isMinimized && <span className="font-medium">{label}</span>}
+        <Icon className={`w-5 h-5 transition-colors duration-200 ${active ? "text-white" : "text-[var(--text-muted)] group-hover:text-[var(--brand-primary)]"}`} />
+        {!isMinimized && <span className="font-medium tracking-tight">{label}</span>}
       </div>
-      {!isMinimized && active && <ChevronRight className="w-4 h-4" />}
+      {!isMinimized && active && <ChevronRight className="w-4 h-4 opacity-70" />}
+      
+      {active && (
+        <motion.div 
+          layoutId="active-pill"
+          className="absolute left-0 w-1 h-6 bg-white rounded-r-full"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+        />
+      )}
     </motion.div>
   </Link>
 );
@@ -68,32 +77,8 @@ export default function Sidebar() {
   }, [businessId]);
 
   return (
-    <aside className={`${isMinimized ? 'w-24' : 'w-72'} border-r border-[var(--border-main)] flex flex-col h-screen sticky top-0 bg-[var(--bg-main)] transition-all duration-300 z-50 shrink-0`}>
-      <div className={`p-8 ${isMinimized ? 'px-4 flex justify-center' : ''}`}>
-        <Link to={ROUTES.HOME} className={`flex items-center ${isMinimized ? 'justify-center' : 'space-x-3'} group`}>
-          {business?.logoUrl ? (
-            <div className={`rounded-lg overflow-hidden shadow-lg shadow-[var(--brand-primary)]/10 group-hover:scale-110 transition-transform shrink-0 ${isMinimized ? 'w-10 h-10' : 'w-10 h-10'}`}>
-              <img 
-                src={business.logoUrl} 
-                alt="Logo" 
-                className="w-full h-full object-cover"
-                referrerPolicy="no-referrer"
-              />
-            </div>
-          ) : (
-            <div className="shrink-0 flex items-center justify-center">
-              <Logo iconSize={isMinimized ? 24 : 48} />
-            </div>
-          )}
-          {!isMinimized && business?.name && (
-            <span className="text-2xl font-bold tracking-tighter text-[var(--text-main)] truncate max-w-[140px] block">
-              {business.name}
-            </span>
-          )}
-        </Link>
-      </div>
-
-      <nav className={`flex-1 ${isMinimized ? 'px-2' : 'px-4'} space-y-2 overflow-y-auto custom-scrollbar`}>
+    <aside className={`${isMinimized ? 'w-24' : 'w-72'} border-r border-[var(--border-main)] flex flex-col h-[calc(100vh-5rem)] sticky top-20 bg-[var(--bg-main)] transition-all duration-300 z-40 shrink-0`}>
+      <nav className={`flex-1 ${isMinimized ? 'px-2' : 'px-4'} py-6 space-y-2 overflow-y-auto custom-scrollbar`}>
         {!isMinimized ? (
           <div className="px-4 py-2 text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest">Main Menu</div>
         ) : (

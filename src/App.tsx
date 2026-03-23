@@ -92,10 +92,10 @@ function AppContent() {
   return (
     <ToastProvider>
       <BookingProcessor />
-      <div className="flex min-h-screen bg-[var(--bg-main)] text-[var(--text-main)] transition-colors duration-300">
-        {authState.isAuthenticated && !isPublicCallPage && location.pathname !== ROUTES.ONBOARDING && <Sidebar />}
-        <div className="flex-1 flex flex-col min-h-screen">
-          {authState.isAuthenticated && !isPublicCallPage && location.pathname !== ROUTES.ONBOARDING && <Navbar user={authState.user} />}
+      <div className="flex flex-col min-h-screen bg-[var(--bg-main)] text-[var(--text-main)] transition-colors duration-300">
+        {authState.isAuthenticated && !isPublicCallPage && location.pathname !== ROUTES.ONBOARDING && <Navbar user={authState.user} />}
+        <div className="flex flex-1">
+          {authState.isAuthenticated && !isPublicCallPage && location.pathname !== ROUTES.ONBOARDING && <Sidebar />}
           <main className={`flex-1 ${authState.isAuthenticated && !isPublicCallPage && location.pathname !== ROUTES.ONBOARDING ? "p-6" : ""}`}>
             <ErrorBoundary>
               <Routes>

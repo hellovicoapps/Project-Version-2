@@ -44,7 +44,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = Number(process.env.PORT) || 3000;
 
 app.use(express.json({ limit: '10mb' }));
 app.use(cookieParser());
@@ -143,106 +143,6 @@ app.get("/api/botcake/user", async (req, res) => {
   } catch (error) {
     console.error("Botcake API Error:", error);
     res.status(500).json({ message: "Internal server error" });
-  }
-});
-
-function getGeminiKey() {
-  const sources = [
-    { name: "GEMINI_API_KEY", value: process.env.GEMINI_API_KEY },
-    { name: "GOOGLE_API_KEY", value: process.env.GOOGLE_API_KEY },
-    { name: "API_KEY", value: process.env.API_KEY }
-  ];
-  
-  for (const source of sources) {
-    const key = source.value;
-    if (key && key.length > 10 && !key.includes("YOUR_") && !key.includes("MY_") && !key.includes("TODO_")) {
-      const masked = key.substring(0, 4) + "..." + key.substring(key.length - 4);
-      console.log(`[Gemini Proxy] Using key from ${source.name} (${masked})`);
-      return key;
-    }
-  }
-  
-  console.warn("[Gemini Proxy] No valid API key found. Keys checked:", sources.map(s => `${s.name}: ${s.value ? (s.value.length > 5 ? "Present" : "Too short") : "Missing"}`).join(", "));
-  return null;
-}
-
-// Gemini Proxy
-app.post("/api/gemini/generate", async (req, res) => {
-  try {
-    const apiKey = getGeminiKey();
-    if (!apiKey) {
-      return res.status(500).json({ error: "Gemini API Key not configured on server. Please set GEMINI_API_KEY in Settings > Secrets." });
-    }
-
-    const { contents, config, model } = req.body;
-    console.log(`[Gemini Proxy] Request Body: ${JSON.stringify(req.body)}`);
-    const ai = new GoogleGenAI({ apiKey });
-
-    const targetModel = model || "gemini-3-flash-preview";
-    console.log(`[Gemini Proxy] Calling model: ${targetModel}`);
-
-    try {
-      console.log(`[Gemini Proxy] Sending request to Gemini API. Model: ${targetModel}, Contents length: ${JSON.stringify(contents).length}`);
-      const response = await ai.models.generateContent({
-        model: targetModel,
-        contents,
-        config
-      });
-      console.log(`[Gemini Proxy] Received response from Gemini API.`);
-
-      if (!response || !response.text) {
-        console.error("[Gemini Proxy] Empty or invalid response from Gemini API:", JSON.stringify(response));
-        return res.status(500).json({ error: "Empty or invalid response from Gemini API" });
-      }
-
-      // Return only the text and metadata to ensure clean serialization
-      res.json({
-        text: response.text,
-        finishReason: response.candidates?.[0]?.finishReason,
-        usage: response.usageMetadata
-      });
-    } catch (genAiError: any) {
-      console.error("[Gemini Proxy] GenAI Error:", JSON.stringify(genAiError, Object.getOwnPropertyNames(genAiError)));
-      // If it's a 401/403, it's likely an API key issue
-      const status = genAiError.status || 500;
-      const message = genAiError.message || "Error from Gemini API";
-      res.status(status).json({ error: message });
-    }
-  } catch (error: any) {
-    console.error("[Gemini Proxy] Unexpected Error:", JSON.stringify(error, Object.getOwnPropertyNames(error)));
-    res.status(500).json({ error: error.message || "Internal server error during Gemini generation" });
-  }
-});
-
-app.post("/api/gemini/tts", async (req, res) => {
-  const apiKey = getGeminiKey();
-  if (!apiKey) {
-    console.error("Server: No valid Gemini API Key found for TTS");
-    return res.status(500).json({ error: "Gemini API Key not configured on server. Please set GEMINI_API_KEY in Settings > Secrets." });
-  }
-
-  const { text, voiceName } = req.body;
-  const ai = new GoogleGenAI({ apiKey });
-
-  try {
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash-preview-tts",
-      contents: [{ parts: [{ text }] }],
-      config: {
-        responseModalities: ["AUDIO"],
-        speechConfig: {
-          voiceConfig: {
-            prebuiltVoiceConfig: { voiceName: voiceName || "Kore" },
-          },
-        },
-      },
-    });
-
-    const audioData = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
-    res.json({ audioData });
-  } catch (error: any) {
-    console.error("Server Gemini TTS Error:", error);
-    res.status(500).json({ error: error.message });
   }
 });
 

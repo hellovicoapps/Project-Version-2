@@ -7,6 +7,7 @@ export enum CallStatus {
   DROPPED = "DROPPED",
   PENDING_PROCESSING = "PENDING_PROCESSING",
   PROCESSING_ERROR = "PROCESSING_ERROR",
+  COMPLETED = "COMPLETED",
 }
 
 export enum SubscriptionPlan {
@@ -113,4 +114,11 @@ export interface CalendarEvent {
   };
   location?: string;
   status: string;
+}
+
+export interface Post {
+  userId: number;
+  id: number;
+  title: string;
+  body: string;
 }
