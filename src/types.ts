@@ -44,6 +44,7 @@ export interface Business {
   usedMinutes: number;
   botcakeApiKey?: string;
   botcakePageId?: string;
+  disabled?: boolean;
   createdAt?: any;
 }
 

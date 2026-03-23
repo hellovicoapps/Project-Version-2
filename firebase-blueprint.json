@@ -11,6 +11,7 @@
         "plan": { "type": "string", "enum": ["FREE", "STARTER", "GROWTH", "SCALE"] },
         "totalMinutes": { "type": "number" },
         "usedMinutes": { "type": "number" },
+        "disabled": { "type": "boolean", "description": "Whether the business account is disabled." },
         "settings": {
           "type": "object",
           "properties": {

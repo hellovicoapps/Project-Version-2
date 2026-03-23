@@ -45,13 +45,14 @@ export default function App() {
     </ThemeProvider>
   );
 
-  if (!PAYPAL_CLIENT_ID) {
-    console.warn("PAYPAL_CLIENT_ID is not set. PayPal features will be disabled.");
-    return content;
-  }
-
+  // Always wrap in PayPalScriptProvider if the package is installed.
+  // If PAYPAL_CLIENT_ID is missing, the script won't load, but the hook won't crash the app.
   return (
-    <PayPalScriptProvider options={{ clientId: PAYPAL_CLIENT_ID }}>
+    <PayPalScriptProvider options={{ 
+      clientId: PAYPAL_CLIENT_ID || "test", // Fallback to "test" to avoid provider errors
+      currency: "USD",
+      intent: "capture"
+    }}>
       {content}
     </PayPalScriptProvider>
   );

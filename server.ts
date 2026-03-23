@@ -17,11 +17,16 @@ console.log("Server: Pre-dotenv API_KEY present:", !!process.env.API_KEY);
 if (process.env.GEMINI_API_KEY) {
   console.log("Server: Pre-dotenv GEMINI_API_KEY value:", process.env.GEMINI_API_KEY === "MY_GEMINI_API_KEY" ? "EXACTLY 'MY_GEMINI_API_KEY'" : `Starts with ${process.env.GEMINI_API_KEY.substring(0, 4)} and length is ${process.env.GEMINI_API_KEY.length}`);
 }
-const dotenvResult = dotenv.config({ path: path.resolve(process.cwd(), ".env") });
-if (dotenvResult.error) {
-  console.error("Server: Error loading .env file from " + path.resolve(process.cwd(), ".env") + ":", dotenvResult.error);
+const dotenvPath = path.resolve(process.cwd(), ".env");
+if (fs.existsSync(dotenvPath)) {
+  const dotenvResult = dotenv.config({ path: dotenvPath });
+  if (dotenvResult.error) {
+    console.error("Server: Error loading .env file:", dotenvResult.error);
+  } else {
+    console.log("Server: .env file loaded successfully");
+  }
 } else {
-  console.log("Server: .env file loaded successfully from " + path.resolve(process.cwd(), ".env"));
+  console.log("Server: No .env file found, using environment variables");
 }
 console.log("Server: Post-dotenv GEMINI_API_KEY present:", !!process.env.GEMINI_API_KEY);
 console.log("Server: Post-dotenv API_KEY present:", !!process.env.API_KEY);
@@ -82,6 +87,121 @@ app.post("/api/auth/update-password", async (req, res) => {
       message = "The 'Identity Toolkit API' is not enabled in your Google Cloud Project. This is required for administrative authentication tasks. Please enable it at: https://console.developers.google.com/apis/api/identitytoolkit.googleapis.com/overview?project=617853879776 (or project " + firebaseConfig.projectId + "). If you enabled it recently, please wait 5-10 minutes for it to propagate.";
     }
     res.status(500).json({ success: false, message });
+  }
+});
+
+// Admin Middleware
+const verifyAdmin = async (req: any, res: any, next: any) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+
+  const idToken = authHeader.split("Bearer ")[1];
+  try {
+    const decodedToken = await admin.auth().verifyIdToken(idToken);
+    const uid = decodedToken.uid;
+    
+    const db = firebaseConfig.firestoreDatabaseId && firebaseConfig.firestoreDatabaseId !== "(default)" 
+      ? getFirestore(admin.app(), firebaseConfig.firestoreDatabaseId) 
+      : getFirestore();
+      
+    const userDoc = await db.collection("users").doc(uid).get();
+    const userData = userDoc.data();
+    
+    // Check if admin by email or role
+    if (decodedToken.email === "hello.vicoapps@gmail.com" || userData?.role === "admin") {
+      req.adminUid = uid;
+      next();
+    } else {
+      res.status(403).json({ message: "Forbidden: Admin access required" });
+    }
+  } catch (error) {
+    console.error("Verify Admin Error:", error);
+    res.status(401).json({ message: "Unauthorized" });
+  }
+};
+
+// Admin User Management Routes
+app.post("/api/admin/update-user", verifyAdmin, async (req, res) => {
+  const { userId, updates } = req.body;
+  if (!userId || !updates) return res.status(400).json({ message: "Missing parameters" });
+
+  try {
+    const db = firebaseConfig.firestoreDatabaseId && firebaseConfig.firestoreDatabaseId !== "(default)" 
+      ? getFirestore(admin.app(), firebaseConfig.firestoreDatabaseId) 
+      : getFirestore();
+
+    // Update business doc
+    await db.collection("businesses").doc(userId).update({
+      ...updates,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+
+    res.json({ success: true });
+  } catch (error: any) {
+    console.error("Admin Update User Error:", error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+app.post("/api/admin/change-password", verifyAdmin, async (req, res) => {
+  const { userId, newPassword } = req.body;
+  if (!userId || !newPassword) return res.status(400).json({ message: "Missing parameters" });
+
+  try {
+    await admin.auth().updateUser(userId, { password: newPassword });
+    res.json({ success: true });
+  } catch (error: any) {
+    console.error("Admin Change Password Error:", error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+app.post("/api/admin/toggle-status", verifyAdmin, async (req, res) => {
+  const { userId, disabled } = req.body;
+  if (!userId === undefined) return res.status(400).json({ message: "Missing parameters" });
+
+  try {
+    await admin.auth().updateUser(userId, { disabled });
+    
+    const db = firebaseConfig.firestoreDatabaseId && firebaseConfig.firestoreDatabaseId !== "(default)" 
+      ? getFirestore(admin.app(), firebaseConfig.firestoreDatabaseId) 
+      : getFirestore();
+      
+    await db.collection("businesses").doc(userId).update({
+      disabled,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+
+    res.json({ success: true });
+  } catch (error: any) {
+    console.error("Admin Toggle Status Error:", error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+app.post("/api/admin/delete-user", verifyAdmin, async (req, res) => {
+  const { userId } = req.body;
+  if (!userId) return res.status(400).json({ message: "Missing parameters" });
+
+  try {
+    // Delete from Auth
+    await admin.auth().deleteUser(userId);
+    
+    const db = firebaseConfig.firestoreDatabaseId && firebaseConfig.firestoreDatabaseId !== "(default)" 
+      ? getFirestore(admin.app(), firebaseConfig.firestoreDatabaseId) 
+      : getFirestore();
+
+    // Delete from Firestore (businesses and users)
+    // Note: In a real app, you might want to delete subcollections too (agents, calls, etc.)
+    await db.collection("businesses").doc(userId).delete();
+    await db.collection("users").doc(userId).delete();
+
+    res.json({ success: true });
+  } catch (error: any) {
+    console.error("Admin Delete User Error:", error);
+    res.status(500).json({ message: error.message });
   }
 });
 
@@ -831,8 +951,8 @@ app.get("/api/elevenlabs/conversations/:id", async (req, res) => {
 });
 
 // PayPal Integration
-const PAYPAL_CLIENT_ID = process.env.PAYPAL_CLIENT_ID;
-const PAYPAL_CLIENT_SECRET = process.env.PAYPAL_CLIENT_SECRET;
+const PAYPAL_CLIENT_ID = process.env.PAYPAL_CLIENT_ID || process.env.PAYPAL_ID;
+const PAYPAL_CLIENT_SECRET = process.env.PAYPAL_CLIENT_SECRET || process.env.PAYPAL_SECRET;
 const PAYPAL_MODE = process.env.PAYPAL_MODE || "sandbox";
 const PAYPAL_BASE_URL = PAYPAL_MODE === "live" ? "https://api-m.paypal.com" : "https://api-m.sandbox.paypal.com";
 

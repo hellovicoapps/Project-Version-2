@@ -8,7 +8,16 @@ interface PayPalButtonProps {
 }
 
 export const PayPalButton: React.FC<PayPalButtonProps> = ({ amount, onSuccess, onError }) => {
-  const [{ isPending }] = usePayPalScriptReducer();
+  const [{ isPending, isRejected }] = usePayPalScriptReducer();
+  const clientId = process.env.PAYPAL_CLIENT_ID || "";
+
+  if (isRejected || (!clientId && !isPending)) {
+    return (
+      <div className="p-4 bg-rose-500/10 border border-rose-500/20 rounded-xl text-rose-500 text-sm text-center">
+        PayPal is not configured correctly. Please contact support.
+      </div>
+    );
+  }
 
   const createOrder = async () => {
     try {

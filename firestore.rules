@@ -45,14 +45,17 @@ service cloud.firestore {
     function isValidUser(data) {
       return data.keys().hasAll(['email', 'name', 'role']) &&
              data.email is string && isValidEmail(data.email) &&
-             data.name is string && data.name.size() > 0 &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
              data.role in ['user', 'admin'];
     }
 
     function isValidBusiness(data) {
       return data.keys().hasAll(['name', 'ownerId']) &&
-             data.name is string && data.name.size() > 0 &&
-             data.ownerId is string;
+             data.name is string && data.name.size() > 0 && data.name.size() < 200 &&
+             data.ownerId is string &&
+             (!('disabled' in data) || data.disabled is bool) &&
+             (!('plan' in data) || data.plan is string) &&
+             (!('totalMinutes' in data) || data.totalMinutes is number);
     }
 
     function isValidAgent(data) {
@@ -79,6 +82,13 @@ service cloud.firestore {
     // Rules
     // ===============================================================
 
+    // Collection Group Rules for BookingProcessor
+    match /{path=**}/calls/{callId} {
+      allow read: if true;
+      allow create: if isValidCall(request.resource.data);
+      allow update: if isAdmin() || isValidCall(request.resource.data);
+    }
+
     // User Profiles
     match /users/{userId} {
       allow read: if isOwner(userId) || isAdmin();
@@ -95,8 +105,9 @@ service cloud.firestore {
     match /businesses/{businessId} {
       // Public read for call page branding (logo, name, background)
       allow read: if true; 
-      allow create: if isAuthenticated() && isValidBusiness(request.resource.data) && request.resource.data.ownerUid == request.auth.uid;
+      allow create: if isAuthenticated() && isValidBusiness(request.resource.data) && (request.resource.data.ownerId == request.auth.uid || isAdmin());
       allow update: if (isBusinessOwner(businessId) || isAdmin()) && isValidBusiness(request.resource.data);
+      allow delete: if isAdmin();
       
       // Agents
       match /agents/{agentId} {
