@@ -356,7 +356,10 @@ async function startBookingProcessor() {
                    - Set to "DROPPED" if the call ended abruptly.
                 
                 2. BOOKING DETAILS:
-                   - Extract name, phone, email, dateTime (ISO 8601), and purpose.
+                   - Extract name, phone, email, dateTime, and purpose.
+                   - CRITICAL: The dateTime MUST be in ISO 8601 format (e.g., 2026-03-23T15:00:00). 
+                   - If the user specifies a time without a date, assume the current date (${new Date().toISOString().split('T')[0]}).
+                   - If no specific time is mentioned, leave dateTime as null.
                 
                 3. SUMMARY:
                    - Provide a 1-2 sentence summary.

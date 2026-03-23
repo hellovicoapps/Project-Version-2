@@ -34,6 +34,7 @@ import {
 import { useToast } from "../components/Toast";
 import { ROUTES } from "../constants";
 import { useNavigate } from "react-router-dom";
+import { formatInTimeZone } from "date-fns-tz";
 
 const StatusBadge = ({ status }: { status: string }) => {
   const styles: any = {
@@ -50,6 +51,7 @@ const StatusBadge = ({ status }: { status: string }) => {
 
 export default function ContactsPage() {
   const [contacts, setContacts] = useState<any[]>([]);
+  const [business, setBusiness] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [tab, setTab] = useState("all");
@@ -71,6 +73,13 @@ export default function ContactsPage() {
 
   useEffect(() => {
     if (!businessId) return;
+
+    // Fetch business timezone
+    onSnapshot(doc(db, "businesses", businessId), (snap) => {
+      if (snap.exists()) {
+        setBusiness(snap.data());
+      }
+    });
 
     let contactsQuery = query(
       collection(db, `businesses/${businessId}/contacts`),
@@ -294,7 +303,11 @@ export default function ContactsPage() {
                       <td className="px-6 py-4">
                         <div className="flex items-center space-x-2 text-sm text-[var(--text-muted)]">
                           <Calendar className="w-4 h-4" />
-                          <span>{contact.updatedAt?.toDate ? new Date(contact.updatedAt.toDate()).toLocaleDateString() : "Just now"}</span>
+                          <span>
+                            {contact.updatedAt?.toDate 
+                              ? formatInTimeZone(contact.updatedAt.toDate(), business?.timezone || "UTC", "MMM d, yyyy") 
+                              : "Just now"}
+                          </span>
                         </div>
                       </td>
                       <td className="px-6 py-4 text-right">
@@ -358,7 +371,9 @@ export default function ContactsPage() {
                                           <span className="text-sm text-[var(--text-main)]">Last Interaction</span>
                                         </div>
                                         <span className="text-xs text-[var(--text-muted)]">
-                                          {contact.updatedAt?.toDate ? new Date(contact.updatedAt.toDate()).toLocaleString() : "Just now"}
+                                          {contact.updatedAt?.toDate 
+                                            ? formatInTimeZone(contact.updatedAt.toDate(), business?.timezone || "UTC", "MMM d, yyyy h:mm a") 
+                                            : "Just now"}
                                         </span>
                                       </div>
                                       <div className="p-3 bg-[var(--bg-main)]/50 rounded-xl border border-[var(--border-main)] flex items-center justify-between">
@@ -367,7 +382,9 @@ export default function ContactsPage() {
                                           <span className="text-sm text-[var(--text-main)]">Contact Created</span>
                                         </div>
                                         <span className="text-xs text-[var(--text-muted)]">
-                                          {contact.createdAt?.toDate ? new Date(contact.createdAt.toDate()).toLocaleDateString() : "Just now"}
+                                          {contact.createdAt?.toDate 
+                                            ? formatInTimeZone(contact.createdAt.toDate(), business?.timezone || "UTC", "MMM d, yyyy") 
+                                            : "Just now"}
                                         </span>
                                       </div>
                                     </div>

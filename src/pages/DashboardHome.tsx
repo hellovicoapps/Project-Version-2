@@ -28,6 +28,7 @@ import {
   AreaChart,
   Area
 } from "recharts";
+import { toZonedTime, formatInTimeZone } from "date-fns-tz";
 import { 
   subDays, 
   startOfDay, 
@@ -209,7 +210,8 @@ export default function DashboardHome() {
   useEffect(() => {
     if (allCalls.length === 0) return;
 
-    const now = new Date();
+    const timezone = business?.timezone || "UTC";
+    const now = toZonedTime(new Date(), timezone);
     let currentStart: Date;
     let previousStart: Date;
     let previousEnd: Date;
@@ -260,8 +262,16 @@ export default function DashboardHome() {
       return { total, bookings, inquiries, rate };
     };
 
-    const currentCalls = allCalls.filter(c => c.createdAt >= currentStart);
-    const previousCalls = dateRange === "all" ? [] : allCalls.filter(c => c.createdAt >= previousStart && c.createdAt < previousEnd);
+    // Filter calls based on business timezone
+    const currentCalls = allCalls.filter(c => {
+      const zonedCreatedAt = toZonedTime(c.createdAt, timezone);
+      return zonedCreatedAt >= currentStart;
+    });
+    
+    const previousCalls = dateRange === "all" ? [] : allCalls.filter(c => {
+      const zonedCreatedAt = toZonedTime(c.createdAt, timezone);
+      return zonedCreatedAt >= previousStart && zonedCreatedAt < previousEnd;
+    });
 
     const currentMetrics = calculateMetrics(currentCalls);
     const previousMetrics = calculateMetrics(previousCalls);
@@ -291,7 +301,8 @@ export default function DashboardHome() {
       // Show hourly for today
       const hours = Array.from({ length: 24 }, (_, i) => ({ name: `${i}:00`, calls: 0 }));
       currentCalls.forEach(c => {
-        const hour = c.createdAt.getHours();
+        const zonedCreatedAt = toZonedTime(c.createdAt, timezone);
+        const hour = zonedCreatedAt.getHours();
         hours[hour].calls++;
       });
       setChartData(hours);
@@ -299,7 +310,10 @@ export default function DashboardHome() {
       // Show last 7 days for "all" as a default view
       const last7Days = eachDayOfInterval({ start: subDays(now, 6), end: now });
       const chart = last7Days.map(day => {
-        const count = allCalls.filter(c => isSameDay(c.createdAt, day)).length;
+        const count = allCalls.filter(c => {
+          const zonedCreatedAt = toZonedTime(c.createdAt, timezone);
+          return isSameDay(zonedCreatedAt, day);
+        }).length;
         return { name: format(day, "EEE"), calls: count };
       });
       setChartData(chart);
@@ -308,7 +322,10 @@ export default function DashboardHome() {
       const daysCount = dateRange === "7days" ? 7 : 30;
       const interval = eachDayOfInterval({ start: subDays(now, daysCount - 1), end: now });
       const chart = interval.map(day => {
-        const count = allCalls.filter(c => isSameDay(c.createdAt, day)).length;
+        const count = allCalls.filter(c => {
+          const zonedCreatedAt = toZonedTime(c.createdAt, timezone);
+          return isSameDay(zonedCreatedAt, day);
+        }).length;
         return { name: format(day, daysCount === 7 ? "EEE" : "MMM d"), calls: count };
       });
       setChartData(chart);
@@ -536,7 +553,9 @@ export default function DashboardHome() {
                         )}
                       </div>
                       <p className="text-[10px] text-[var(--text-muted)] mt-0.5">
-                        {call.createdAt?.toDate ? new Date(call.createdAt.toDate()).toLocaleString() : "Just now"} • Duration: {call.duration}s
+                        {call.createdAt?.toDate 
+                          ? formatInTimeZone(call.createdAt.toDate(), business?.timezone || "UTC", "MMM d, yyyy h:mm a") 
+                          : "Just now"} • Duration: {call.duration}s
                       </p>
                     </div>
                   </div>

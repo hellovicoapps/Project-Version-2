@@ -38,6 +38,9 @@ import { ROUTES } from "../constants";
 import { useToast } from "../components/Toast";
 import { updateDoc, doc, serverTimestamp } from "firebase/firestore";
 
+import { toZonedTime, formatInTimeZone } from "date-fns-tz";
+import { parseISO } from "date-fns";
+
 const StatusBadge = ({ status }: { status: CallStatus }) => {
   const styles: any = {
     [CallStatus.BOOKED]: "bg-[var(--color-success)]/10 text-[var(--color-success)] border-[var(--color-success)]/20",
@@ -59,6 +62,7 @@ const StatusBadge = ({ status }: { status: CallStatus }) => {
 
 export default function InboxPage() {
   const [calls, setCalls] = useState<any[]>([]);
+  const [business, setBusiness] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
@@ -70,6 +74,13 @@ export default function InboxPage() {
 
   useEffect(() => {
     if (!businessId) return;
+
+    // Fetch business timezone
+    onSnapshot(doc(db, "businesses", businessId), (snap) => {
+      if (snap.exists()) {
+        setBusiness(snap.data());
+      }
+    });
 
     let callsQuery = query(
       collection(db, `businesses/${businessId}/calls`),
@@ -251,7 +262,11 @@ export default function InboxPage() {
                       <td className="px-6 py-4">
                         <div className="flex items-center space-x-2 text-sm text-[var(--text-muted)]">
                           <Calendar className="w-4 h-4" />
-                          <span>{call.createdAt?.toDate ? new Date(call.createdAt.toDate()).toLocaleString() : "Just now"}</span>
+                          <span>
+                            {call.createdAt?.toDate 
+                              ? formatInTimeZone(call.createdAt.toDate(), business?.timezone || "UTC", "MMM d, yyyy h:mm a") 
+                              : "Just now"}
+                          </span>
                         </div>
                       </td>
                       <td className="px-6 py-4 text-right">
@@ -304,7 +319,18 @@ export default function InboxPage() {
                                       <div className="p-4 bg-[var(--color-accent)]/5 rounded-xl border border-[var(--color-accent)]/10 space-y-3">
                                         <div className="flex justify-between">
                                           <span className="text-xs text-[var(--text-muted)]">Scheduled For</span>
-                                          <span className="text-sm text-[var(--color-accent)] font-bold">{call.bookingTime || "TBD"}</span>
+                                          <span className="text-sm text-[var(--color-accent)] font-bold">
+                                            {(() => {
+                                              if (!call.bookingTime) return "TBD";
+                                              try {
+                                                const date = parseISO(call.bookingTime);
+                                                if (isNaN(date.getTime())) return call.bookingTime;
+                                                return formatInTimeZone(date, business?.timezone || "UTC", "MMM d, yyyy h:mm a");
+                                              } catch (e) {
+                                                return call.bookingTime;
+                                              }
+                                            })()}
+                                          </span>
                                         </div>
                                         <div className="flex flex-col space-y-1">
                                           <span className="text-xs text-[var(--text-muted)]">Purpose</span>

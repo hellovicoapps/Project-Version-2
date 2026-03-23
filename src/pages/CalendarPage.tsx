@@ -36,7 +36,7 @@ import {
   startOfDay,
   endOfDay
 } from "date-fns";
-import { toZonedTime, formatInTimeZone } from "date-fns-tz";
+import { toZonedTime, formatInTimeZone, fromZonedTime } from "date-fns-tz";
 import { 
   collection, 
   query, 
@@ -99,13 +99,18 @@ export default function CalendarPage() {
         
         if (data.bookingTime) {
           try {
-            // Parse the ISO string and convert to zoned time for display
-            const utcDate = parseISO(data.bookingTime);
-            bookingDate = toZonedTime(utcDate, businessTimezone);
+            // Try parsing as ISO first
+            let utcDate = parseISO(data.bookingTime);
             
-            if (isNaN(bookingDate.getTime())) {
+            // Fallback to regular Date constructor if parseISO fails
+            if (isNaN(utcDate.getTime())) {
+              utcDate = new Date(data.bookingTime);
+            }
+
+            if (!isNaN(utcDate.getTime())) {
+              bookingDate = toZonedTime(utcDate, businessTimezone);
+            } else {
               console.warn(`CalendarPage: Invalid bookingTime for call ${doc.id}:`, data.bookingTime);
-              bookingDate = null;
             }
           } catch (e) {
             console.error("Failed to parse booking time:", data.bookingTime);
@@ -141,8 +146,11 @@ export default function CalendarPage() {
       // Create a date object from the local inputs (date and time)
       // and interpret it in the business's timezone
       const dateStr = `${newBooking.date}T${newBooking.time}:00`;
-      const zonedDate = toZonedTime(dateStr, businessTimezone);
-      const bookingTime = zonedDate.toISOString();
+      
+      // Use fromZonedTime to convert the local time string to a UTC Date object
+      // import { fromZonedTime } from 'date-fns-tz';
+      const utcDate = fromZonedTime(dateStr, businessTimezone);
+      const bookingTime = utcDate.toISOString();
       
       const callsRef = collection(db, `businesses/${businessId}/calls`);
       
@@ -210,6 +218,10 @@ export default function CalendarPage() {
     start: startOfWeek(startOfMonth(currentDate), { weekStartsOn: 1 }),
     end: endOfWeek(endOfMonth(currentDate), { weekStartsOn: 1 })
   });
+
+  const isTodayInBusinessTz = (date: Date) => {
+    return format(date, "yyyy-MM-dd") === formatInTimeZone(new Date(), businessTimezone, "yyyy-MM-dd");
+  };
 
   return (
     <div className="h-full flex flex-col space-y-6">
@@ -311,11 +323,11 @@ export default function CalendarPage() {
                   key={i} 
                   className={`p-2 border-r border-b border-[var(--border-main)] last:border-r-0 min-h-[120px] ${
                     !isSameMonth(day, currentDate) ? "bg-[var(--bg-main)]/50" : ""
-                  } ${isToday(day) ? "bg-[var(--brand-primary)]/5" : ""}`}
+                  } ${isTodayInBusinessTz(day) ? "bg-[var(--brand-primary)]/5" : ""}`}
                 >
                   <div className="flex justify-between items-start mb-2">
                     <span className={`text-xs font-bold ${
-                      isToday(day) ? "bg-[var(--brand-primary)] text-white w-6 h-6 flex items-center justify-center rounded-full" : "text-[var(--text-muted)]"
+                      isTodayInBusinessTz(day) ? "bg-[var(--brand-primary)] text-white w-6 h-6 flex items-center justify-center rounded-full" : "text-[var(--text-muted)]"
                     }`}>
                       {format(day, "d")}
                     </span>
@@ -348,14 +360,14 @@ export default function CalendarPage() {
                 <div 
                   key={i} 
                   className={`p-4 text-center border-r border-[var(--brand-secondary)] last:border-r-0 ${
-                    isToday(day) ? "bg-white/10" : ""
+                    isTodayInBusinessTz(day) ? "bg-white/10" : ""
                   }`}
                 >
                   <p className="text-[10px] font-bold text-white/80 uppercase tracking-widest mb-1">
                     {format(day, "EEE")}
                   </p>
                   <p className={`text-lg font-bold ${
-                    isToday(day) ? "text-white" : "text-white/90"
+                    isTodayInBusinessTz(day) ? "text-white" : "text-white/90"
                   }`}>
                     {format(day, "d")}
                   </p>
