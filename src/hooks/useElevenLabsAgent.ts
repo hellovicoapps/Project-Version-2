@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { useConversation } from "@elevenlabs/react";
 import { getElevenLabsService } from "../services/elevenlabsService";
 
@@ -27,48 +27,67 @@ export const useElevenLabsAgent = ({
   const [audioLevel, setAudioLevel] = useState(0);
   const [micMuted, setMicMuted] = useState(false);
 
-  const conversation = useConversation({
-    micMuted,
-    onConnect: () => {
-      console.log("ElevenLabs: Connected");
-      setIsConnecting(false);
-      onStatusChange?.("Connected");
-    },
-    onDisconnect: () => {
-      console.log("ElevenLabs: Disconnected");
-      setIsConnecting(false);
-      onStatusChange?.("Disconnected");
-    },
-    onMessage: (message) => {
-      console.log("ElevenLabs Message:", message);
-      if (message.source === "user" || message.source === "ai") {
-        // The SDK might provide isFinal, let's pass it if available
-        const isFinal = (message as any).isFinal !== undefined ? (message as any).isFinal : true;
-        onTranscript?.(message.message, message.source, isFinal);
-      }
-      
-      // Handle client tool calls
-      if ((message as any).type === "client_tool_call") {
-        const toolCall = message as any;
-        console.log("ElevenLabs Client Tool Call:", toolCall);
-        if (toolCall.tool_name === "end_call") {
-          console.log("AI requested to end the call");
-          onCallEnd?.();
-        }
-      }
+  const onTranscriptRef = useRef(onTranscript);
+  const onStatusChangeRef = useRef(onStatusChange);
+  const onErrorRef = useRef(onError);
+  const onDataExtractedRef = useRef(onDataExtracted);
+  const onCallEndRef = useRef(onCallEnd);
 
-      // Handle data extraction if supported by the message format
-      if ((message as any).type === "data_extraction" || (message as any).data) {
-        onDataExtracted?.((message as any).data || message);
+  useEffect(() => {
+    onTranscriptRef.current = onTranscript;
+    onStatusChangeRef.current = onStatusChange;
+    onErrorRef.current = onError;
+    onDataExtractedRef.current = onDataExtracted;
+    onCallEndRef.current = onCallEnd;
+  }, [onTranscript, onStatusChange, onError, onDataExtracted, onCallEnd]);
+
+  const handleConnect = useCallback(() => {
+    console.log("ElevenLabs: Connected");
+    setIsConnecting(false);
+    onStatusChangeRef.current?.("Connected");
+  }, []);
+
+  const handleDisconnect = useCallback(() => {
+    console.log("ElevenLabs: Disconnected");
+    setIsConnecting(false);
+    onStatusChangeRef.current?.("Disconnected");
+  }, []);
+
+  const handleMessage = useCallback((message: any) => {
+    console.log("ElevenLabs Message:", message);
+    if (message.source === "user" || message.source === "ai") {
+      const isFinal = message.isFinal !== undefined ? message.isFinal : true;
+      onTranscriptRef.current?.(message.message, message.source, isFinal);
+    }
+    
+    if (message.type === "client_tool_call") {
+      console.log("ElevenLabs Client Tool Call:", message);
+      if (message.tool_name === "end_call") {
+        console.log("AI requested to end the call");
+        onCallEndRef.current?.();
       }
-    },
-    onError: (error) => {
-      console.error("ElevenLabs Error:", error);
-      setIsConnecting(false);
-      onStatusChange?.("Error");
-      onError?.(error);
-    },
-  });
+    }
+
+    if (message.type === "data_extraction" || message.data) {
+      onDataExtractedRef.current?.(message.data || message);
+    }
+  }, []);
+
+  const handleError = useCallback((error: any) => {
+    console.error("ElevenLabs Error:", error);
+    setIsConnecting(false);
+    onStatusChangeRef.current?.("Error");
+    onErrorRef.current?.(error);
+  }, []);
+
+  const conversationOptions = useMemo(() => ({
+    onConnect: handleConnect,
+    onDisconnect: handleDisconnect,
+    onMessage: handleMessage,
+    onError: handleError,
+  }), [handleConnect, handleDisconnect, handleMessage, handleError]);
+
+  const conversation = useConversation(conversationOptions);
 
   const startConnection = useCallback(async (dynamicVariables?: Record<string, any>) => {
     if (!agentId) {
@@ -142,7 +161,16 @@ export const useElevenLabsAgent = ({
         conversation.setVolume({ volume });
       }
     },
-    setIsMuted: setMicMuted,
+    setIsMuted: async (muted: boolean) => {
+      setMicMuted(muted);
+      if (typeof (conversation as any).setMicMuted === 'function') {
+        try {
+          await (conversation as any).setMicMuted(muted);
+        } catch (e) {
+          console.warn("Failed to set mic muted via SDK:", e);
+        }
+      }
+    },
     isConnected: conversation.status === "connected",
     isConnecting,
     isAiSpeaking: conversation.isSpeaking,

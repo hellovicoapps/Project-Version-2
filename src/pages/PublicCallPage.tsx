@@ -75,6 +75,8 @@ const LANGUAGE_NAMES: Record<string, string> = {
 export default function PublicCallPage() {
   const { businessId } = useParams<{ businessId: string }>();
   const [searchParams] = useSearchParams();
+  const userName = searchParams.get("userName");
+  const psid = searchParams.get("psid");
   const { showToast } = useToast();
   const [isCalling, setIsCalling] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
@@ -316,6 +318,8 @@ export default function PublicCallPage() {
         status: "PENDING_PROCESSING",
         transcript: transcriptText,
         phoneNumber: "Web Caller",
+        userName: userName || null,
+        psid: psid || null,
         elevenLabsConversationId: finalConversationId || null,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
@@ -378,6 +382,8 @@ export default function PublicCallPage() {
       const dynamicVariables = {
         business_id: businessId,
         business_name: businessName || businessData?.name || "Our Business",
+        user_name: userName || "Customer",
+        psid: psid || "",
         current_date: now.toLocaleDateString('en-US', { 
           weekday: 'long', 
           year: 'numeric', 

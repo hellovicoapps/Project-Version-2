@@ -637,8 +637,8 @@ app.post("/api/auth/register", (req, res) => {
   res.json({ user: userWithoutPassword, token: "mock-token" });
 });
 
-app.get("/api/botcake/user", async (req, res) => {
-  const { pageId, psid, apiKey } = req.query;
+app.post("/api/botcake/user", async (req, res) => {
+  const { pageId, psid, apiKey } = req.body;
   if (!pageId || !psid || !apiKey) {
     return res.status(400).json({ message: "Missing parameters" });
   }
@@ -1063,7 +1063,7 @@ app.post("/api/send-email", verifyUser, async (req: any, res) => {
 
   try {
     // Fetch business details for Reply-To and From Name
-    const businessDoc = await database.collection("businesses").doc(req.userUid).get();
+    const businessDoc = await runWithDbRetry(db => db.collection("businesses").doc(req.userUid).get());
     const businessData = businessDoc.data() || {};
     const businessName = businessData.name || "Vico";
     const businessEmail = businessData.email || process.env.SMTP_USER;
