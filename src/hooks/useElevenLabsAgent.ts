@@ -102,7 +102,9 @@ export const useElevenLabsAgent = ({
 
   const stopConnection = useCallback(async () => {
     try {
-      await conversation.endSession();
+      if (conversation.status === "connected") {
+        await conversation.endSession();
+      }
     } catch (error) {
       console.error("Failed to end ElevenLabs conversation:", error);
     }
@@ -110,6 +112,10 @@ export const useElevenLabsAgent = ({
 
   const sendText = useCallback(async (text: string) => {
     try {
+      if (conversation.status !== "connected") {
+        console.warn("Cannot send text: ElevenLabs conversation is not connected");
+        return;
+      }
       if (typeof conversation.sendUserMessage === 'function') {
         await conversation.sendUserMessage(text);
       } else {
@@ -131,7 +137,11 @@ export const useElevenLabsAgent = ({
     startConnection,
     stopConnection,
     sendText,
-    setVolume: (volume: number) => conversation.setVolume({ volume }),
+    setVolume: (volume: number) => {
+      if (conversation.status === "connected") {
+        conversation.setVolume({ volume });
+      }
+    },
     setIsMuted: setMicMuted,
     isConnected: conversation.status === "connected",
     isConnecting,

@@ -44,7 +44,12 @@ export default function BotcakeRedirectPage() {
         }
 
         // 2. Fetch user info from Botcake via our proxy
-        const response = await fetch(`/api/botcake/user?pageId=${botcakePageId}&psid=${psid}&apiKey=${botcakeApiKey}`);
+        const queryParams = new URLSearchParams({
+          pageId: botcakePageId,
+          psid: psid,
+          apiKey: botcakeApiKey
+        });
+        const response = await fetch(`/api/botcake/user?${queryParams.toString()}`);
         
         if (!response.ok) {
           console.error("Failed to fetch Botcake user info");

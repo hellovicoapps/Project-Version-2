@@ -644,21 +644,23 @@ app.get("/api/botcake/user", async (req, res) => {
   }
 
   try {
-    const response = await fetch(`https://api.botcake.io/v1/pages/${pageId}/subscribers/${psid}`, {
+    const response = await fetch(`https://api.botcake.io/v1/pages/${encodeURIComponent(String(pageId))}/subscribers/${encodeURIComponent(String(psid))}`, {
       headers: {
         "Authorization": `Bearer ${apiKey}`
       }
     });
 
     if (!response.ok) {
-      return res.status(response.status).json({ message: "Botcake API error" });
+      const errorText = await response.text();
+      console.error("Botcake API error response:", errorText);
+      return res.status(response.status).json({ message: "Botcake API error", details: errorText });
     }
 
     const data = await response.json();
     res.json(data);
   } catch (error) {
     console.error("Botcake API Error:", error);
-    res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({ message: "Internal server error", error: String(error) });
   }
 });
 
