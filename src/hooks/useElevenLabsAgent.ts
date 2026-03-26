@@ -69,7 +69,7 @@ export const useElevenLabsAgent = ({
           // Give it a small delay so the user can actually hear the full sentence before it cuts off
           setTimeout(() => {
             onCallEndRef.current?.();
-          }, 2000);
+          }, 6000);
         }
       }
       
