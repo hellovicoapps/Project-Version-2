@@ -100,6 +100,7 @@ export default function PublicCallPage() {
 
   const elevenLabsAgent = useElevenLabsAgent({
     agentId: agent?.elevenLabsAgentId || "",
+    clientReferenceId: psid || undefined,
     onTranscript: (text, role) => {
       // Filter out bracketed instructions like [confirming], [polite], etc.
       const cleanText = text.replace(/\[.*?\]/g, '').trim();
@@ -383,6 +384,7 @@ export default function PublicCallPage() {
         business_id: businessId,
         business_name: businessName || businessData?.name || "Our Business",
         user_name: userName || "Customer",
+        user_id: psid || "anonymous",
         psid: psid || "",
         current_date: now.toLocaleDateString('en-US', { 
           weekday: 'long', 
@@ -398,6 +400,7 @@ export default function PublicCallPage() {
         }),
         business_hours: businessData?.businessHours ? businessData.businessHours.map((h: any) => `${h.day}: ${h.closed ? 'Closed' : `${h.open} - ${h.close}`}`).join(", ") : "Not provided",
         timezone: timezone,
+        call_source: "web"
       };
 
       console.log("PublicCallPage: Starting call with dynamic variables:", dynamicVariables);

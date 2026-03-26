@@ -107,11 +107,16 @@ export const useElevenLabsAgent = ({
       // Get a signed URL for secure connection
       const signedUrl = await elevenlabsService.getSignedUrl(agentId);
       
-      await (conversation as any).startSession({
+      const sessionOptions: any = {
         signedUrl,
-        clientReferenceId,
         dynamicVariables: { ...defaultDynamicVariables, ...dynamicVariables }
-      });
+      };
+      
+      if (clientReferenceId) {
+        sessionOptions.userId = clientReferenceId;
+      }
+      
+      await (conversation as any).startSession(sessionOptions);
     } catch (error) {
       console.error("Failed to start ElevenLabs conversation:", error);
       setIsConnecting(false);

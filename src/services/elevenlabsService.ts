@@ -69,9 +69,14 @@ export class ElevenLabsService {
             dynamic_variables: {
               dynamic_variable_placeholders: {
                 current_time: "current_time",
+                current_date: "current_date",
                 user_id: "user_id",
+                user_name: "user_name",
+                psid: "psid",
                 business_id: "business_id",
                 business_name: "business_name",
+                business_hours: "business_hours",
+                timezone: "timezone",
                 call_source: "call_source"
               }
             },
@@ -139,9 +144,14 @@ export class ElevenLabsService {
             dynamic_variables: {
               dynamic_variable_placeholders: {
                 current_time: "current_time",
+                current_date: "current_date",
                 user_id: "user_id",
+                user_name: "user_name",
+                psid: "psid",
                 business_id: "business_id",
                 business_name: "business_name",
+                business_hours: "business_hours",
+                timezone: "timezone",
                 call_source: "call_source"
               }
             },

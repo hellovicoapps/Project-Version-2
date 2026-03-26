@@ -57,12 +57,17 @@ export default function BotcakeRedirectPage() {
         });
         
         if (!response.ok) {
-          console.error("Failed to fetch Botcake user info");
+          const errorData = await response.json().catch(() => ({}));
+          console.error("Failed to fetch Botcake user info:", response.status, errorData);
           navigate(`/call/${businessId}?psid=${psid}`);
           return;
         }
 
         const botcakeData = await response.json();
+        if (botcakeData.success === false) {
+          console.warn("Botcake API returned success: false. The PSID, Page ID, or API Key might be invalid.", botcakeData);
+        }
+        
         const userName = botcakeData.data?.full_name || botcakeData.data?.first_name || "";
 
         // 3. Redirect to call page with user info

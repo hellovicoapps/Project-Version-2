@@ -223,6 +223,7 @@ export default function OnboardingPage() {
     audioLevel 
   } = useElevenLabsAgent({
     agentId: data.elevenLabsAgentId || "",
+    clientReferenceId: AuthService.getAuthState().user?.id || undefined,
     onTranscript: (text, role, isFinal) => {
       setTranscript(prev => {
         const newTranscript = [...prev];

@@ -644,7 +644,7 @@ app.post("/api/botcake/user", async (req, res) => {
   }
 
   try {
-    const response = await fetch(`https://api.botcake.io/v1/pages/${encodeURIComponent(String(pageId))}/subscribers/${encodeURIComponent(String(psid))}`, {
+    const response = await fetch(`https://botcake.io/api/v1/pages/${encodeURIComponent(String(pageId))}/subscribers/${encodeURIComponent(String(psid))}`, {
       headers: {
         "Authorization": `Bearer ${apiKey}`
       }
@@ -657,6 +657,9 @@ app.post("/api/botcake/user", async (req, res) => {
     }
 
     const data = await response.json();
+    if (data.success === false) {
+      console.warn(`Botcake API returned success: false for pageId: ${pageId}, psid: ${psid}. Check API Key, Page ID, and PSID.`);
+    }
     res.json(data);
   } catch (error) {
     console.error("Botcake API Error:", error);
