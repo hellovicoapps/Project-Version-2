@@ -148,6 +148,42 @@ export default function LinksPage() {
             </div>
           </div>
 
+          <div className="glass-card p-8 space-y-6 border-green-500/20 bg-green-500/5">
+            <div className="flex items-center space-x-4">
+              <div className="p-3 bg-green-500/20 rounded-2xl border border-green-500/30 shadow-lg shadow-green-500/10">
+                <LinkIcon className="w-6 h-6 text-green-400" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-[var(--text-main)]">Call Result Link</h3>
+                <p className="text-sm text-[var(--text-muted)]">Send this link to callers so they can view the summary and status of their call.</p>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div className="flex items-center space-x-2 p-4 bg-[var(--bg-main)] border border-[var(--border-main)] rounded-xl">
+                <div className="flex-1 truncate font-mono text-sm text-green-400/80">
+                  {`${PRODUCTION_URL}/call-status/${businessId}?psid={{psid}}`}
+                </div>
+                <button 
+                  onClick={() => {
+                    navigator.clipboard.writeText(`${PRODUCTION_URL}/call-status/${businessId}?psid={{psid}}`);
+                    showToast("Call Result link copied!", "success");
+                  }}
+                  className="p-2 hover:bg-[var(--bg-card-hover)] rounded-lg text-[var(--text-muted)] hover:text-[var(--text-main)] transition-all"
+                >
+                  <Copy className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="p-4 bg-[var(--bg-card)]/50 rounded-xl border border-[var(--border-main)]/50">
+                <h4 className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest mb-2">Usage Instructions</h4>
+                <p className="text-xs text-[var(--text-muted)] leading-relaxed">
+                  Use this link in your Botcake flow after a call is completed. Botcake will replace <code className="text-[var(--brand-primary)] bg-[var(--brand-primary)]/10 px-1 rounded">{"{{psid}}"}</code> with the customer's ID, allowing them to see their specific call result.
+                </p>
+              </div>
+            </div>
+          </div>
+
           <div className="glass-card p-8">
             <h3 className="text-lg font-semibold text-[var(--text-main)] mb-4">How it works</h3>
             <div className="space-y-4">

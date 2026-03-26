@@ -321,13 +321,22 @@ export default function VoiceInterface() {
     }
   };
 
-  const dynamicVariables = useMemo(() => ({
-    current_time: new Date().toLocaleString(),
-    business_name: authState.user?.businessName || "Vico Business",
-    user_id: authState.user?.id || "anonymous",
-    business_id: businessId || "anonymous",
-    call_source: "Vico Web Interface"
-  }), [businessId, authState.user?.id, authState.user?.businessName]);
+  const dynamicVariables = useMemo(() => {
+    const now = new Date();
+    return {
+      current_date: now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }),
+      current_time: now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+      upcoming_days: Array.from({length: 7}, (_, i) => {
+        const d = new Date(now);
+        d.setDate(d.getDate() + i + 1);
+        return d.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+      }).join(", "),
+      business_name: authState.user?.businessName || "Vico Business",
+      user_id: authState.user?.id || "anonymous",
+      business_id: businessId || "anonymous",
+      call_source: "Vico Web Interface"
+    };
+  }, [businessId, authState.user?.id, authState.user?.businessName]);
 
   const elevenLabsAgent = useElevenLabsAgent({
     agentId: agent.elevenLabsAgentId || "",

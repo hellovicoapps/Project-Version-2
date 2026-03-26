@@ -58,7 +58,8 @@ export default function CallStatusPage() {
   useEffect(() => {
     if (!businessId || !psid) {
       setLoading(false);
-      if (!psid) setError("No caller ID provided.");
+      if (!businessId) setError("Invalid link: Business ID is missing.");
+      else if (!psid) setError("No caller ID provided.");
       return;
     }
 

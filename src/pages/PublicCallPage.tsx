@@ -398,6 +398,11 @@ export default function PublicCallPage() {
           minute: '2-digit',
           timeZone: timezone 
         }),
+        upcoming_days: Array.from({length: 7}, (_, i) => {
+          const d = new Date(now);
+          d.setDate(d.getDate() + i + 1);
+          return d.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', timeZone: timezone });
+        }).join(", "),
         business_hours: businessData?.businessHours ? businessData.businessHours.map((h: any) => `${h.day}: ${h.closed ? 'Closed' : `${h.open} - ${h.close}`}`).join(", ") : "Not provided",
         timezone: timezone,
         call_source: "web"

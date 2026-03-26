@@ -44,7 +44,7 @@ export const ROUTES = {
   ADMIN_DASHBOARD: "/admin",
   PUBLIC_CALL: "/call/:businessId",
   BOTCAKE_REDIRECT: "/botcake/:businessId",
-  CALL_STATUS: "/call-status/:callId",
+  CALL_STATUS: "/call-status/:businessId",
   HELP_CENTER: "/help",
 };
 

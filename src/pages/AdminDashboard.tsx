@@ -116,12 +116,14 @@ export default function AdminDashboard() {
               // Reconstruct instructions (similar to AgentPage.tsx)
               const fullInstructions = `
                 DATE AND TIME AWARENESS:
-                Current date and time: {{current_time}}.
+                Today's date is {{current_date}}.
+                The current time is {{current_time}}.
+                The dates for the upcoming 7 days are: {{upcoming_days}}.
                 User ID: {{user_id}}.
                 Business ID: {{business_id}}.
                 Business Name: {{business_name}}.
                 Call Source: {{call_source}}.
-                Use this information to resolve relative dates like "today", "tomorrow", "this Wednesday", or "next week".
+                Use this information to accurately resolve relative dates like "today", "tomorrow", "this Monday", or "next week".
                 
                 CRITICAL INSTRUCTION:
                 NEVER output placeholders like "[insert date here]" or "[name]". 

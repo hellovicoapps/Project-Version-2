@@ -249,7 +249,8 @@ export default function AgentPage() {
         DATE AND TIME AWARENESS:
         Today's date is {{current_date}}.
         The current time is {{current_time}}.
-        Use this information to resolve relative dates like "tomorrow", "this Wednesday", or "next week".
+        The dates for the upcoming 7 days are: {{upcoming_days}}.
+        Use this information to accurately resolve relative dates like "tomorrow", "this Monday", or "next week".
         
         BUSINESS INFORMATION:
         Business Name: {{business_name}}
