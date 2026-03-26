@@ -269,6 +269,7 @@ export default function AgentPage() {
         ENDING THE CALL:
         You have the ability to end the call when the conversation is finished. 
         When you have provided all the information the user needs and the conversation has naturally reached its conclusion (e.g., after saying goodbye), you MUST call the "end_call" tool to hang up.
+        CRITICAL: NEVER say the words "end_call" out loud. ONLY use the tool. Do not mention the tool to the user.
         Do not end the call abruptly; always ensure the user is satisfied before terminating.
 
         AGENT ROLE AND INSTRUCTIONS:

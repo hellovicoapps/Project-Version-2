@@ -57,7 +57,25 @@ export const useElevenLabsAgent = ({
     console.log("ElevenLabs Message:", message);
     if (message.source === "user" || message.source === "ai") {
       const isFinal = message.isFinal !== undefined ? message.isFinal : true;
-      onTranscriptRef.current?.(message.message, message.source, isFinal);
+      let text = message.message;
+      
+      // Filter out system messages or tool names that the AI might accidentally speak
+      if (message.source === "ai" && text) {
+        text = text.replace(/\[?\{?end_call\}?\]?/gi, "").trim();
+        
+        // Trigger end call if AI says "Have a great day"
+        if (text.toLowerCase().includes("have a great day")) {
+          console.log("AI said 'Have a great day', triggering end call");
+          // Give it a small delay so the user can actually hear the full sentence before it cuts off
+          setTimeout(() => {
+            onCallEndRef.current?.();
+          }, 2000);
+        }
+      }
+      
+      if (text) {
+        onTranscriptRef.current?.(text, message.source, isFinal);
+      }
     }
     
     if (message.type === "client_tool_call") {

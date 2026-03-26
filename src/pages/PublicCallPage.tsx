@@ -355,7 +355,7 @@ export default function PublicCallPage() {
     return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
-  const startCall = async () => {
+  const startCall = useCallback(async () => {
     if (isCalling || status === "Connecting...") {
       return;
     }
@@ -421,7 +421,17 @@ export default function PublicCallPage() {
         showToast("Failed to start voice session. Check console for details.", "error");
       }
     }
-  };
+  }, [isCalling, status, agent, businessId, businessTimezone, businessName, userName, psid, startConnection, showToast]);
+
+  // Auto-start call when agent is loaded
+  const autoStartAttempted = useRef(false);
+  useEffect(() => {
+    if (!loading && agent && !isCalling && status === "Ready to call" && !autoStartAttempted.current) {
+      console.log("PublicCallPage: Auto-starting call...");
+      autoStartAttempted.current = true;
+      startCall();
+    }
+  }, [loading, agent, isCalling, status, startCall]);
 
   const endCall = async () => {
     stopConnection();
