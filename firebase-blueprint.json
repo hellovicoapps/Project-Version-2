@@ -13,6 +13,16 @@
         "usedMinutes": { "type": "number" },
         "disabled": { "type": "boolean", "description": "Whether the business account is disabled." },
         "hasPendingFollowUps": { "type": "boolean", "description": "Flag indicating if the business has calls pending follow-up." },
+        "services": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "price": { "type": "number" }
+            }
+          }
+        },
         "settings": {
           "type": "object",
           "properties": {
@@ -64,6 +74,7 @@
         "transcript": { "type": "string" },
         "psid": { "type": "string", "description": "Facebook Page Scoped ID from Botcake." },
         "callerName": { "type": "string" },
+        "estimatedPrice": { "type": "number", "description": "Estimated earnings from the booking based on the service price." },
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["businessId", "phoneNumber", "status", "createdAt"]

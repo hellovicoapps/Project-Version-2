@@ -13,7 +13,8 @@ import {
   Zap,
   MessageSquare,
   ChevronDown,
-  Filter
+  Filter,
+  Banknote
 } from "lucide-react";
 import { 
   BarChart, 
@@ -103,7 +104,7 @@ export default function DashboardHome() {
   const [stats, setStats] = useState({
     totalCalls: 0,
     activeBookings: 0,
-    totalInquiries: 0,
+    estimatedEarnings: 0,
     successRate: 0,
     remainingMinutes: 0,
     newContacts: 0,
@@ -111,7 +112,7 @@ export default function DashboardHome() {
   const [trends, setTrends] = useState({
     totalCalls: 0,
     activeBookings: 0,
-    totalInquiries: 0,
+    estimatedEarnings: 0,
     successRate: 0,
   });
   const [dateRange, setDateRange] = useState<"today" | "7days" | "30days" | "all">("7days");
@@ -162,7 +163,7 @@ export default function DashboardHome() {
           ...(dateRange === "all" ? {
             totalCalls: data.totalCalls || 0,
             activeBookings: data.totalBookings || 0,
-            totalInquiries: data.totalInquiries || 0,
+            estimatedEarnings: data.estimatedEarnings || 0,
             successRate: data.totalCalls ? Math.round(((data.totalSuccess || 0) / data.totalCalls) * 100) : 0
           } : {})
         }));
@@ -267,15 +268,17 @@ export default function DashboardHome() {
     const calculateMetrics = (calls: any[]) => {
       const total = calls.length;
       let bookings = 0;
-      let inquiries = 0;
+      let earnings = 0;
       let successful = 0;
 
       calls.forEach(c => {
         if (c.status === CallStatus.BOOKED) {
           bookings++;
           successful++;
+          if (c.estimatedPrice) {
+            earnings += Number(c.estimatedPrice);
+          }
         } else if (c.status === CallStatus.INQUIRY) {
-          inquiries++;
           successful++;
         } else if (c.status === CallStatus.COMPLAINT || c.status === CallStatus.FOLLOW_UP) {
           successful++;
@@ -283,7 +286,7 @@ export default function DashboardHome() {
       });
 
       const rate = total > 0 ? Math.round((successful / total) * 100) : 0;
-      return { total, bookings, inquiries, rate };
+      return { total, bookings, earnings, rate };
     };
 
     // Filter calls based on business timezone
@@ -309,14 +312,14 @@ export default function DashboardHome() {
       ...prev,
       totalCalls: currentMetrics.total,
       activeBookings: currentMetrics.bookings,
-      totalInquiries: currentMetrics.inquiries,
+      estimatedEarnings: currentMetrics.earnings,
       successRate: currentMetrics.rate
     }));
 
     setTrends({
       totalCalls: calculateTrend(currentMetrics.total, previousMetrics.total),
       activeBookings: calculateTrend(currentMetrics.bookings, previousMetrics.bookings),
-      totalInquiries: calculateTrend(currentMetrics.inquiries, previousMetrics.inquiries),
+      estimatedEarnings: calculateTrend(currentMetrics.earnings, previousMetrics.earnings),
       successRate: calculateTrend(currentMetrics.rate, previousMetrics.rate),
     });
 
@@ -477,11 +480,11 @@ export default function DashboardHome() {
           trendValue={Math.abs(trends.activeBookings)} 
         />
         <StatCard 
-          title="Inquiries" 
-          value={stats.totalInquiries || "0"} 
-          icon={MessageSquare} 
-          trend={trends.totalInquiries >= 0 ? "up" : "down"} 
-          trendValue={Math.abs(trends.totalInquiries)} 
+          title="Estimated Earnings" 
+          value={`₱${stats.estimatedEarnings.toLocaleString()}`} 
+          icon={Banknote} 
+          trend={trends.estimatedEarnings >= 0 ? "up" : "down"} 
+          trendValue={Math.abs(trends.estimatedEarnings)} 
         />
         <StatCard 
           title="Success Rate" 

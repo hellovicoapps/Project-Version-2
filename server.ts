@@ -349,15 +349,23 @@ async function startBookingProcessor() {
               continue;
             }
 
-            // Get business timezone
+            // Get business timezone and services
             const businessDoc = await getDoc(doc(db, "businesses", businessId));
-            const timezone = businessDoc.data()?.timezone || "UTC";
+            const businessData = businessDoc.data() || {};
+            const timezone = businessData.timezone || "UTC";
+            const services = businessData.services || [];
+            const servicesList = services.length > 0 
+              ? services.map((s: any) => `- ${s.name}: ₱${s.price}`).join('\n')
+              : "No specific services/prices defined.";
 
             // Process with Gemini
             const prompt = `Analyze the following call transcript between an AI Agent and a User.
               
               Current Date/Time: ${new Date().toISOString()}
               Business Timezone: ${timezone}
+              
+              Business Services & Pricing:
+              ${servicesList}
               
               Transcript:
               ${callData.transcript}
@@ -377,11 +385,12 @@ async function startBookingProcessor() {
                  - CRITICAL: The dateTime MUST be in ISO 8601 format WITH the correct timezone offset for ${timezone} (e.g., 2026-03-23T15:00:00+08:00). 
                  - If the user specifies a time without a date, assume the current date (${new Date().toISOString().split('T')[0]}).
                  - If no specific time is mentioned, leave dateTime as null.
+                 - Determine the estimatedPrice (number) based on the purpose and the provided Business Services & Pricing. If no match or not booked, set to 0.
               
               3. SUMMARY:
                  - Provide a 1-2 sentence summary.
               
-              Return ONLY a JSON object with keys: summary, status, bookingDetails (name, phone, email, dateTime, purpose).`;
+              Return ONLY a JSON object with keys: summary, status, bookingDetails (name, phone, email, dateTime, purpose, estimatedPrice).`;
 
             const resultResponse = await ai.models.generateContent({
               model: "gemini-3-flash-preview",
@@ -400,7 +409,8 @@ async function startBookingProcessor() {
                         phone: { type: Type.STRING },
                         email: { type: Type.STRING },
                         dateTime: { type: Type.STRING },
-                        purpose: { type: Type.STRING }
+                        purpose: { type: Type.STRING },
+                        estimatedPrice: { type: Type.NUMBER }
                       }
                     }
                   },
@@ -425,6 +435,7 @@ async function startBookingProcessor() {
               if (result.bookingDetails.email) updateData.callerEmail = result.bookingDetails.email;
               if (result.bookingDetails.dateTime) updateData.bookingTime = result.bookingDetails.dateTime;
               if (result.bookingDetails.purpose) updateData.bookingPurpose = result.bookingDetails.purpose;
+              if (result.bookingDetails.estimatedPrice !== undefined) updateData.estimatedPrice = result.bookingDetails.estimatedPrice;
             }
 
             await setDoc(callDoc.ref, updateData, { merge: true });
@@ -505,6 +516,9 @@ async function startBookingProcessor() {
 
             if (updateData.status === "BOOKED") {
               statsUpdate.totalBookings = increment(1);
+              if (updateData.estimatedPrice) {
+                statsUpdate.estimatedEarnings = increment(updateData.estimatedPrice);
+              }
               if (callData.psid && updateData.bookingTime) {
                 statsUpdate.hasPendingFollowUps = true;
               }

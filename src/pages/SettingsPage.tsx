@@ -25,7 +25,10 @@ import {
   Image as ImageIcon,
   Upload,
   Loader2,
-  MessageSquare
+  MessageSquare,
+  Plus,
+  Trash2,
+  Banknote
 } from "lucide-react";
 
 import { useToast } from "../components/Toast";
@@ -111,6 +114,7 @@ export default function SettingsPage() {
       const docRef = doc(db, "businesses", businessId);
       await setDoc(docRef, {
         ...business,
+        ownerId: business.ownerId || businessId,
         updatedAt: serverTimestamp()
       }, { merge: true });
       showToast(`${section} settings saved successfully!`, "success");
@@ -235,6 +239,7 @@ export default function SettingsPage() {
             const docRef = doc(db, "businesses", businessId);
             await setDoc(docRef, {
               ...updatedBusiness,
+              ownerId: updatedBusiness.ownerId || businessId,
               updatedAt: serverTimestamp()
             }, { merge: true });
 
@@ -335,6 +340,73 @@ export default function SettingsPage() {
                 <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)] rotate-90 pointer-events-none" />
               </div>
             </div>
+          </div>
+        </SettingSection>
+
+        <SettingSection 
+          title="Services & Pricing" 
+          description="Define the services you offer and their prices (in PHP). AI will use this to estimate earnings."
+          onSave={() => handleSave("Services")}
+          isSaving={isSaving}
+        >
+          <div className="space-y-4">
+            {(!business?.services || business.services.length === 0) ? (
+              <p className="text-sm text-[var(--text-muted)]">No services added yet.</p>
+            ) : (
+              <div className="space-y-3">
+                {business.services.map((service: any, index: number) => (
+                  <div key={index} className="flex items-center space-x-4 bg-[var(--bg-main)] p-3 rounded-xl border border-[var(--border-main)]">
+                    <div className="flex-1">
+                      <input 
+                        type="text" 
+                        value={service.name} 
+                        onChange={(e) => {
+                          const newServices = [...business.services];
+                          newServices[index].name = e.target.value;
+                          setBusiness({ ...business, services: newServices });
+                        }}
+                        placeholder="Service Name (e.g., Consultation)" 
+                        className="w-full bg-transparent border-none outline-none text-sm text-[var(--text-main)] placeholder-[var(--text-muted)]"
+                      />
+                    </div>
+                    <div className="w-px h-6 bg-[var(--border-main)]" />
+                    <div className="w-32 flex items-center space-x-2">
+                      <span className="text-[var(--text-muted)] text-sm">₱</span>
+                      <input 
+                        type="number" 
+                        value={service.price} 
+                        onChange={(e) => {
+                          const newServices = [...business.services];
+                          newServices[index].price = Number(e.target.value);
+                          setBusiness({ ...business, services: newServices });
+                        }}
+                        placeholder="0.00" 
+                        className="w-full bg-transparent border-none outline-none text-sm text-[var(--text-main)] placeholder-[var(--text-muted)]"
+                      />
+                    </div>
+                    <button 
+                      onClick={() => {
+                        const newServices = business.services.filter((_: any, i: number) => i !== index);
+                        setBusiness({ ...business, services: newServices });
+                      }}
+                      className="p-2 hover:bg-red-500/10 text-[var(--text-muted)] hover:text-red-500 rounded-lg transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+            <button 
+              onClick={() => {
+                const newServices = [...(business?.services || []), { name: "", price: 0 }];
+                setBusiness({ ...business, services: newServices });
+              }}
+              className="btn-secondary flex items-center space-x-2 py-2 px-4 text-xs mt-2"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Add Service</span>
+            </button>
           </div>
         </SettingSection>
 
