@@ -33,7 +33,7 @@ import {
 } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { CallStatus } from "../types";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { ROUTES } from "../constants";
 import { useToast } from "../components/Toast";
 import { updateDoc, doc, serverTimestamp } from "firebase/firestore";
@@ -66,7 +66,8 @@ export default function InboxPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
-  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const location = useLocation();
+  const [expandedId, setExpandedId] = useState<string | null>(location.state?.expandedId || null);
   const navigate = useNavigate();
   const { showToast } = useToast();
   const authState = AuthService.getAuthState();

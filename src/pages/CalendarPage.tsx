@@ -52,6 +52,8 @@ import {
 } from "firebase/firestore";
 import { db, auth, handleFirestoreError, OperationType } from "../firebase";
 import { AuthService } from "../services/authService";
+import { useNavigate } from "react-router-dom";
+import { ROUTES } from "../constants";
 import { useToast } from "../components/Toast";
 import { CallStatus } from "../types";
 import { TIMEZONES } from "../constants";
@@ -64,7 +66,9 @@ export default function CalendarPage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [selectedBooking, setSelectedBooking] = useState<any | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const navigate = useNavigate();
   const [newBooking, setNewBooking] = useState({
     callerName: "",
     callerEmail: "",
@@ -399,7 +403,7 @@ export default function CalendarPage() {
                       .filter(b => isSameDay(b.parsedDate, day))
                       .slice(0, 3)
                       .map(b => (
-                        <div key={b.id} className="text-[10px] p-1 bg-[var(--color-success)]/10 border border-[var(--color-success)]/20 rounded text-[var(--color-success)] truncate">
+                        <div key={b.id} onClick={() => setSelectedBooking(b)} className="text-[10px] p-1 bg-[var(--color-success)]/10 border border-[var(--color-success)]/20 rounded text-[var(--color-success)] truncate cursor-pointer hover:bg-[var(--color-success)]/20">
                           {format(b.parsedDate, "h:mm")} {b.callerName}
                         </div>
                       ))}
@@ -507,6 +511,7 @@ export default function CalendarPage() {
                         return (
                           <motion.div
                             key={booking.id}
+                            onClick={() => setSelectedBooking(booking)}
                             initial={{ opacity: 0, scale: 0.9 }}
                             animate={{ opacity: 1, scale: 1 }}
                             className="absolute p-1 rounded-lg bg-[var(--color-success)]/10 border border-[var(--color-success)]/20 shadow-lg backdrop-blur-sm z-10 cursor-pointer hover:bg-[var(--color-success)]/20 transition-all group overflow-hidden"
@@ -633,6 +638,88 @@ export default function CalendarPage() {
                   ) : (
                     "Save"
                   )}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+
+        {selectedBooking && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSelectedBooking(null)}
+              className="absolute inset-0 bg-zinc-950/80 backdrop-blur-sm"
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative w-full max-w-md bg-[var(--bg-card)] border border-[var(--border-main)] rounded-3xl p-8 shadow-2xl"
+            >
+              <h3 className="text-2xl font-bold text-[var(--text-main)] mb-6">Booking Details</h3>
+              <div className="space-y-4">
+                <div className="flex items-center space-x-3 p-3 bg-[var(--bg-main)] rounded-xl border border-[var(--border-main)]">
+                  <User className="w-5 h-5 text-[var(--text-muted)]" />
+                  <div>
+                    <p className="text-xs text-[var(--text-muted)] uppercase tracking-widest font-bold">Caller Name</p>
+                    <p className="text-sm font-medium text-[var(--text-main)]">{selectedBooking.callerName || "Unknown"}</p>
+                  </div>
+                </div>
+                
+                {selectedBooking.callerEmail && (
+                  <div className="flex items-center space-x-3 p-3 bg-[var(--bg-main)] rounded-xl border border-[var(--border-main)]">
+                    <User className="w-5 h-5 text-[var(--text-muted)]" />
+                    <div>
+                      <p className="text-xs text-[var(--text-muted)] uppercase tracking-widest font-bold">Email</p>
+                      <p className="text-sm font-medium text-[var(--text-main)]">{selectedBooking.callerEmail}</p>
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex items-center space-x-3 p-3 bg-[var(--bg-main)] rounded-xl border border-[var(--border-main)]">
+                  <Phone className="w-5 h-5 text-[var(--text-muted)]" />
+                  <div>
+                    <p className="text-xs text-[var(--text-muted)] uppercase tracking-widest font-bold">Phone</p>
+                    <p className="text-sm font-medium text-[var(--text-main)]">{selectedBooking.phoneNumber || "N/A"}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-3 p-3 bg-[var(--bg-main)] rounded-xl border border-[var(--border-main)]">
+                  <Clock className="w-5 h-5 text-[var(--text-muted)]" />
+                  <div>
+                    <p className="text-xs text-[var(--text-muted)] uppercase tracking-widest font-bold">Date & Time</p>
+                    <p className="text-sm font-medium text-[var(--text-main)]">
+                      {format(selectedBooking.parsedDate, "MMMM d, yyyy 'at' h:mm a")}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start space-x-3 p-3 bg-[var(--bg-main)] rounded-xl border border-[var(--border-main)]">
+                  <CalendarIcon className="w-5 h-5 text-[var(--text-muted)] mt-0.5" />
+                  <div>
+                    <p className="text-xs text-[var(--text-muted)] uppercase tracking-widest font-bold">Purpose</p>
+                    <p className="text-sm font-medium text-[var(--text-main)]">{selectedBooking.bookingPurpose || "Appointment"}</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex space-x-3 mt-8">
+                <button 
+                  onClick={() => setSelectedBooking(null)}
+                  className="flex-1 px-6 py-3 bg-[var(--bg-card-hover)] text-[var(--text-main)] font-bold rounded-xl hover:opacity-80 transition-all"
+                >
+                  Close
+                </button>
+                <button 
+                  onClick={() => {
+                    navigate(ROUTES.INBOX, { state: { expandedId: selectedBooking.id } });
+                  }}
+                  className="flex-1 px-6 py-3 bg-[var(--brand-primary)] text-white font-bold rounded-xl hover:opacity-90 transition-all shadow-lg shadow-brand-primary/20"
+                >
+                  Go to Call Details
                 </button>
               </div>
             </motion.div>
