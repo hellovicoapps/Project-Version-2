@@ -46,6 +46,8 @@ export interface Business {
   totalBookings?: number;
   totalInquiries?: number;
   totalSuccess?: number;
+  estimatedEarnings?: number;
+  services?: { name: string; price: number }[];
   hasPendingFollowUps?: boolean;
   botcakeApiKey?: string;
   botcakePageId?: string;

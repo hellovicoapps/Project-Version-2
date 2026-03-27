@@ -359,9 +359,11 @@ async function startBookingProcessor() {
               : "No specific services/prices defined.";
 
             // Process with Gemini
+            const now = new Date();
+            const currentLocalTime = formatInTimeZone(now, timezone, "EEEE, MMMM d, yyyy 'at' h:mm a zzz");
             const prompt = `Analyze the following call transcript between an AI Agent and a User.
               
-              Current Date/Time: ${new Date().toISOString()}
+              Current Local Date and Time: ${currentLocalTime}
               Business Timezone: ${timezone}
               
               Business Services & Pricing:
@@ -382,8 +384,9 @@ async function startBookingProcessor() {
               
               2. BOOKING DETAILS:
                  - Extract name, phone, email, dateTime, and purpose.
+                 - CRITICAL: Use the "Current Local Date and Time" provided above to accurately calculate relative dates (e.g., "tomorrow", "next Monday").
                  - CRITICAL: The dateTime MUST be in ISO 8601 format WITH the correct timezone offset for ${timezone} (e.g., 2026-03-23T15:00:00+08:00). 
-                 - If the user specifies a time without a date, assume the current date (${new Date().toISOString().split('T')[0]}).
+                 - If the user specifies a time without a date, assume the current date (${formatInTimeZone(now, timezone, "yyyy-MM-dd")}).
                  - If no specific time is mentioned, leave dateTime as null.
                  - Determine the estimatedPrice (number) based on the purpose and the provided Business Services & Pricing. If no match or not booked, set to 0.
               
@@ -703,9 +706,11 @@ app.post("/api/gemini/process-transcript", async (req, res) => {
   }
 
   try {
+    const now = new Date();
+    const currentLocalTime = formatInTimeZone(now, timezone, "EEEE, MMMM d, yyyy 'at' h:mm a zzz");
     const prompt = `Analyze the following call transcript between an AI Agent and a User.
       
-      Current Date/Time: ${new Date().toISOString()}
+      Current Local Date and Time: ${currentLocalTime}
       Business Timezone: ${timezone}
       
       Transcript:
@@ -723,6 +728,7 @@ app.post("/api/gemini/process-transcript", async (req, res) => {
       
       2. BOOKING DETAILS:
          - Extract name, phone, email, dateTime (ISO 8601 with timezone offset for ${timezone}), and purpose.
+         - CRITICAL: Use the "Current Local Date and Time" provided above to accurately calculate relative dates (e.g., "tomorrow", "next Monday").
       
       3. SUMMARY:
          - Provide a 1-2 sentence summary.

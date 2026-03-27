@@ -27,6 +27,9 @@ export const useElevenLabsAgent = ({
   const [audioLevel, setAudioLevel] = useState(0);
   const [micMuted, setMicMuted] = useState(false);
 
+  const [pendingEndCall, setPendingEndCall] = useState(false);
+  const endCallTriggeredRef = useRef(false);
+
   const onTranscriptRef = useRef(onTranscript);
   const onStatusChangeRef = useRef(onStatusChange);
   const onErrorRef = useRef(onError);
@@ -64,12 +67,10 @@ export const useElevenLabsAgent = ({
         text = text.replace(/\[?\{?end_call\}?\]?/gi, "").trim();
         
         // Trigger end call if AI says "Have a great day"
-        if (text.toLowerCase().includes("have a great day")) {
-          console.log("AI said 'Have a great day', triggering end call");
-          // Give it a small delay so the user can actually hear the full sentence before it cuts off
-          setTimeout(() => {
-            onCallEndRef.current?.();
-          }, 6000);
+        if (text.toLowerCase().includes("have a great day") && !endCallTriggeredRef.current) {
+          console.log("AI said 'Have a great day', marking for end call after speaking finishes");
+          setPendingEndCall(true);
+          endCallTriggeredRef.current = true;
         }
       }
       
@@ -80,9 +81,10 @@ export const useElevenLabsAgent = ({
     
     if (message.type === "client_tool_call") {
       console.log("ElevenLabs Client Tool Call:", message);
-      if (message.tool_name === "end_call") {
-        console.log("AI requested to end the call");
-        onCallEndRef.current?.();
+      if (message.tool_name === "end_call" && !endCallTriggeredRef.current) {
+        console.log("AI requested end_call tool, marking for end call after speaking finishes");
+        setPendingEndCall(true);
+        endCallTriggeredRef.current = true;
       }
     }
 
@@ -115,6 +117,8 @@ export const useElevenLabsAgent = ({
 
     setIsConnecting(true);
     onStatusChange?.("Connecting...");
+    setPendingEndCall(false);
+    endCallTriggeredRef.current = false;
 
     try {
       const elevenlabsService = await getElevenLabsService();
@@ -174,6 +178,24 @@ export const useElevenLabsAgent = ({
     // but we can mock it or use a default if not available.
     // In a real app, we'd use the Web Audio API on the stream if the SDK provides it.
   }, []);
+
+  // Effect to handle delayed termination after AI finishes speaking
+  useEffect(() => {
+    let timer: any;
+    if (pendingEndCall) {
+      if (!conversation.isSpeaking) {
+        // If not speaking, wait 3 seconds of silence before ending to be sure
+        timer = setTimeout(() => {
+          if (!conversation.isSpeaking && pendingEndCall) {
+            console.log("AI finished speaking and stayed silent. Ending call now.");
+            onCallEndRef.current?.();
+            setPendingEndCall(false);
+          }
+        }, 3000);
+      }
+    }
+    return () => clearTimeout(timer);
+  }, [pendingEndCall, conversation.isSpeaking]);
 
   return {
     startConnection,
