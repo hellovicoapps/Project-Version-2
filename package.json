@@ -42,6 +42,7 @@
     "vite": "^6.2.0"
   },
   "devDependencies": {
+    "@firebase/rules-unit-testing": "^5.0.0",
     "@types/cookie-parser": "^1.4.10",
     "@types/express": "^5.0.6",
     "@types/jsonwebtoken": "^9.0.10",
