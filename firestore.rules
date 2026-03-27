@@ -30,7 +30,8 @@ service cloud.firestore {
       return isAuthenticated() && (
         (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin') ||
-        (request.auth.token.email == "hello.vicoapps@gmail.com")
+        (request.auth.token.email == "hello.vicoapps@gmail.com") ||
+        (request.auth.token.email == "backend@vicoapps.com")
       );
     }
 
@@ -65,6 +66,12 @@ service cloud.firestore {
              (!('backgroundUrl' in data) || data.backgroundUrl is string) &&
              (!('botcakeApiKey' in data) || data.botcakeApiKey is string) &&
              (!('botcakePageId' in data) || data.botcakePageId is string) &&
+             (!('botcakeFollowUpEnabled' in data) || data.botcakeFollowUpEnabled is bool) &&
+             (!('totalCalls' in data) || data.totalCalls is number) &&
+             (!('totalBookings' in data) || data.totalBookings is number) &&
+             (!('totalInquiries' in data) || data.totalInquiries is number) &&
+             (!('totalSuccess' in data) || data.totalSuccess is number) &&
+             (!('hasPendingFollowUps' in data) || data.hasPendingFollowUps is bool) &&
              (!('updatedAt' in data) || data.updatedAt is timestamp || data.updatedAt is string) &&
              (!('createdAt' in data) || data.createdAt is timestamp || data.createdAt is string);
     }

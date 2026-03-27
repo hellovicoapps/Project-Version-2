@@ -24,7 +24,8 @@ import {
   Lock,
   Image as ImageIcon,
   Upload,
-  Loader2
+  Loader2,
+  MessageSquare
 } from "lucide-react";
 
 import { useToast } from "../components/Toast";
@@ -462,6 +463,27 @@ export default function SettingsPage() {
               value={business?.botcakePageId} 
               onChange={(val: string) => setBusiness({ ...business, botcakePageId: val })}
             />
+          </div>
+          <div className="flex items-center justify-between p-4 bg-[var(--bg-main)]/50 border border-[var(--border-main)] rounded-xl">
+            <div className="flex items-center space-x-3">
+              <MessageSquare className="w-5 h-5 text-[var(--brand-primary)]" />
+              <div>
+                <p className="text-sm font-semibold text-[var(--text-main)]">Automated Appointment Follow-up</p>
+                <p className="text-xs text-[var(--text-muted)]">Send a reminder via Botcake 24 hours before appointments.</p>
+              </div>
+            </div>
+            <button 
+              onClick={() => setBusiness({ ...business, botcakeFollowUpEnabled: !business?.botcakeFollowUpEnabled })}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
+                business?.botcakeFollowUpEnabled ? 'bg-[var(--brand-primary)]' : 'bg-[var(--bg-card-hover)]'
+              }`}
+            >
+              <span
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  business?.botcakeFollowUpEnabled ? 'translate-x-6' : 'translate-x-1'
+                }`}
+              />
+            </button>
           </div>
           <div className="p-4 bg-[var(--brand-primary)]/5 border border-[var(--brand-primary)]/10 rounded-xl">
             <p className="text-xs text-[var(--brand-primary)] leading-relaxed">

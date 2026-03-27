@@ -153,28 +153,38 @@ export default function DashboardHome() {
         const currentPlan = data.plan as SubscriptionPlan || SubscriptionPlan.FREE;
         const planMinutes = PLAN_DETAILS[currentPlan]?.minutes || 30;
         const remaining = Math.max(0, (data.totalMinutes || planMinutes) - (data.usedMinutes || 0));
-        setStats(prev => ({ ...prev, remainingMinutes: Number(remaining.toFixed(1)) }));
+        
+        // Use aggregated fields if available
+        setStats(prev => ({ 
+          ...prev, 
+          remainingMinutes: Number(remaining.toFixed(1)),
+          // Use aggregated fields for "All Time" if that's the current range
+          ...(dateRange === "all" ? {
+            totalCalls: data.totalCalls || 0,
+            activeBookings: data.totalBookings || 0,
+            totalInquiries: data.totalInquiries || 0,
+            successRate: data.totalCalls ? Math.round(((data.totalSuccess || 0) / data.totalCalls) * 100) : 0
+          } : {})
+        }));
       }
     }, (error) => {
       handleFirestoreError(error, OperationType.GET, `businesses/${businessId}`);
     });
 
-    // Listen for calls
-    const callsQuery = query(
+    // Listen for recent calls (limit to 5)
+    const recentCallsQuery = query(
       collection(db, `businesses/${businessId}/calls`),
       orderBy("createdAt", "desc"),
       limit(5)
     );
-    const unsubscribeCalls = onSnapshot(callsQuery, (snapshot) => {
-      console.log(`DashboardHome: Received ${snapshot.size} calls for business ${businessId}`);
+    const unsubscribeRecentCalls = onSnapshot(recentCallsQuery, (snapshot) => {
       const calls = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setRecentActivity(calls);
     }, (error) => {
-      console.error("DashboardHome: Calls snapshot error:", error);
       handleFirestoreError(error, OperationType.GET, `businesses/${businessId}/calls`);
     });
 
-    // Listen for contacts
+    // Listen for contacts (limit to 100)
     const contactsQuery = query(
       collection(db, `businesses/${businessId}/contacts`),
       limit(100)
@@ -185,26 +195,40 @@ export default function DashboardHome() {
       handleFirestoreError(error, OperationType.GET, `businesses/${businessId}/contacts`);
     });
 
-    // Listen for total calls count and derive metrics
-    const totalCallsQuery = query(collection(db, `businesses/${businessId}/calls`));
-    const unsubscribeTotalCalls = onSnapshot(totalCallsQuery, (snapshot) => {
+    // Listen for calls in the selected date range
+    let rangeStart = subDays(new Date(), 30); // Default to 30 days
+    if (dateRange === "today") rangeStart = startOfDay(new Date());
+    else if (dateRange === "7days") rangeStart = subDays(new Date(), 7);
+    else if (dateRange === "30days") rangeStart = subDays(new Date(), 30);
+    else if (dateRange === "all") rangeStart = subDays(new Date(), 365); // Limit "all" to 1 year for performance, or use aggregated fields
+
+    const rangeCallsQuery = query(
+      collection(db, `businesses/${businessId}/calls`),
+      where("createdAt", ">=", Timestamp.fromDate(rangeStart)),
+      orderBy("createdAt", "desc"),
+      limit(500)
+    );
+
+    const unsubscribeRangeCalls = onSnapshot(rangeCallsQuery, (snapshot) => {
       const calls = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
-        createdAt: doc.data().createdAt?.toDate ? doc.data().createdAt.toDate() : new Date()
+        createdAt: (doc.data() as any).createdAt?.toDate ? (doc.data() as any).createdAt.toDate() : new Date()
       }));
       setAllCalls(calls);
     }, (error) => {
+      console.error("DashboardHome: Range calls snapshot error:", error);
+      // If index is missing, we might get an error. We should handle it.
       handleFirestoreError(error, OperationType.GET, `businesses/${businessId}/calls`);
     });
 
     return () => {
       unsubscribeBusiness();
-      unsubscribeCalls();
-      unsubscribeTotalCalls();
+      unsubscribeRecentCalls();
+      unsubscribeRangeCalls();
       unsubscribeContacts();
     };
-  }, [businessId]);
+  }, [businessId, dateRange]);
 
   // Calculate stats and trends whenever allCalls or dateRange changes
   useEffect(() => {

@@ -42,8 +42,14 @@ export interface Business {
   plan: SubscriptionPlan;
   totalMinutes: number;
   usedMinutes: number;
+  totalCalls?: number;
+  totalBookings?: number;
+  totalInquiries?: number;
+  totalSuccess?: number;
+  hasPendingFollowUps?: boolean;
   botcakeApiKey?: string;
   botcakePageId?: string;
+  botcakeFollowUpEnabled?: boolean;
   disabled?: boolean;
   createdAt?: any;
 }
@@ -72,6 +78,9 @@ export interface CallLog {
   callerEmail?: string;
   bookingTime?: string;
   bookingPurpose?: string;
+  followUpSent?: boolean;
+  followUpScheduledAt?: any;
+  followUpSentAt?: any;
   answeredCorrectly?: boolean;
   createdAt: any;
 }

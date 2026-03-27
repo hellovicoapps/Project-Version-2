@@ -44,6 +44,7 @@ import {
   where, 
   onSnapshot,
   orderBy,
+  limit,
   doc,
   getDoc,
   addDoc,
@@ -91,11 +92,13 @@ export default function CalendarPage() {
     const callsRef = collection(db, `businesses/${businessId}/calls`);
     const q = query(
       callsRef, 
-      orderBy("createdAt", "desc")
+      where("status", "==", CallStatus.BOOKED),
+      orderBy("createdAt", "desc"),
+      limit(200) // Limit to 200 bookings for performance
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      console.log(`CalendarPage: Found ${snapshot.docs.length} total calls`);
+      console.log(`CalendarPage: Found ${snapshot.docs.length} booked calls`);
       const bookingData = snapshot.docs.map(doc => {
         const data = doc.data();
         let utcDateObj = null;
